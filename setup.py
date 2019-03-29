@@ -82,7 +82,7 @@ VERSION = imp.load_source("spatial_index.version", "spatial_index/version.py").V
 
 
 setup(
-    name='spatial_index',
+    name='spatial-index',
     version=VERSION,
     author='Eleftherios Zisis',
     author_email='eleftherios.zisis@epfl.ch',
