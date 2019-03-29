@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 import os
-import platform
 import re
-import subprocess
 import sys
+import imp
+import platform
 import sysconfig
-from distutils.version import LooseVersion
+import subprocess
 from shutil import copyfile, copymode
+from distutils.version import LooseVersion
 
+from setuptools import find_packages
 from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
 from setuptools.command.test import test as TestCommand
@@ -30,6 +32,7 @@ def find_cmake():
             pass
 
     raise RuntimeError("CMake >= 3.2.0 must be installed to build SpatialIndex")
+
 
 class CMakeBuild(build_ext):
     def run(self):
@@ -75,20 +78,18 @@ class CMakeBuild(build_ext):
             raise
 
 
-with open('VERSION') as versionf:
-    version = versionf.readline().strip()
+VERSION = imp.load_source("spatial_index.version", "spatial_index/version.py").VERSION
 
 
 setup(
     name='spatial_index',
-    version=version,
+    version=VERSION,
     author='Eleftherios Zisis',
     author_email='eleftherios.zisis@epfl.ch',
     description='Spatial Index',
-    long_description='',
+    packages = ['spatial_index'],
     install_requires=['numpy>=1.13.1'],
     ext_modules=[CMakeExtension('spatial_index')],
     cmdclass=dict(build_ext=CMakeBuild),
-    zip_safe=False,
-    classifiers=[]
+    include_package_data = True
 )

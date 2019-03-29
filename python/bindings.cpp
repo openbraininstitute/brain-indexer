@@ -12,7 +12,7 @@
 namespace py = pybind11;
 using namespace py::literals;
 
-PYBIND11_MODULE(spatial_index, m) {
+PYBIND11_MODULE(_spatial_index, m) {
 
     bind_point_rtree(m);
     bind_sphere_rtree(m);

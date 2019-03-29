@@ -13,11 +13,11 @@ set(PYBIND11_SOURCES
 
 set(PYBIND11_CPP_STANDARD -std=c++11)
 
-pybind11_add_module(spatial_index
+pybind11_add_module(_spatial_index
 					${PYBIND11_SOURCES}
 					${SI_HEADERS}
 					${Boost_INCLUDE_DIRS})
 
-target_link_libraries(spatial_index PUBLIC SpatialIndex)
+target_link_libraries(_spatial_index PUBLIC SpatialIndex)
 
-target_include_directories(spatial_index INTERFACE ${si_include_directory})
+target_include_directories(_spatial_index INTERFACE ${si_include_directory})

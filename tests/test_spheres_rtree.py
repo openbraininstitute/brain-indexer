@@ -142,8 +142,6 @@ def test_intersection_random():
 	assert len(np.setdiff1d(idx, expected_result)) == 0, (idx, expected_result)
 
 
-
-
 def test_data():
 
 	col = np.arange(5).astype(np.float32)

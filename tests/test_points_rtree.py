@@ -17,7 +17,7 @@ def test_point_intersection_all():
 	t = PointIndex(points)
 
 
-	idx = t.intersection(p1, p2)
+	idx = t.intersection(p1[0], p1[1], p1[2], p2[0], p2[1], p2[2])
 
 	expected_result = np.arange(10, dtype=np.uintp)
 
@@ -45,7 +45,7 @@ def test_intersection_packed_random():
 
 	t = PointIndex(points)
 
-	idx = t.intersection(q1, q2)
+	idx = t.intersection(q1[0], q1[1], q1[2], q2[0], q2[1], q2[2])
 
 	assert len(np.setdiff1d(idx, expected_result)) == 0, (idx, expected_result)
 
