@@ -58,47 +58,135 @@ private:
 
 namespace spatial_index {
 
-    namespace bgi = boost::geometry::index;
 
-    typedef boost::variant<Sphere> IndexEntry;
+// Type of the pieces identifiers
+using identifier_t = unsigned long;
 
-    typedef bgi::rtree< IndexEntry, bgi::linear<16, 1> > IndexTree;
 
-    template<typename... T>
-    void index_dump(bgi::rtree<T...> rtree, const std::string& filename) {
-        std::ofstream ofs(filename, std::ios::binary | std::ios::trunc);
-        boost::archive::binary_oarchive oa(ofs);
-        oa << rtree;
+/**
+ * \brief
+ */
+
+template <typename ShapeT>
+struct IShape : public ShapeT
+{
+    typedef IShape<ShapeT> type;
+
+    identifier_t id;
+
+    inline IShape() = default;
+    inline IShape(type const&) = default;
+    inline IShape(type&&) = default;
+    inline type& operator=(type const&) = default;
+    inline type& operator=(type&&) = default;
+
+
+    // Deduct / Convert matching types
+    inline IShape(identifier_t id_, ShapeT const& geom_)
+        : ShapeT{geom_}
+        , id{id_} {}
+
+    template <typename U>
+    inline IShape(identifier_t id_, U&& geom_)
+        : ShapeT{std::forward<U>(geom_)}
+        , id{id_} {}
+
+    inline bool operator==(type const& o) const {
+        return id == o.id;
     }
 
-    IndexTree index_load(const std::string& filename) {
-        IndexTree loaded_tree;
-        std::ifstream ifs(filename, std::ios::binary);
-        boost::archive::binary_iarchive ia(ifs);
-        ia >> loaded_tree;
-        return loaded_tree;
+
+private:
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive &ar, const unsigned int version) {
+        ar & id;
+        ar & *static_cast<ShapeT*>(this);
     }
 
+};
+
+
+template <typename ShapeT>
+struct NeuronPiece : public IShape<ShapeT>
+{
+    using IShape<ShapeT>::IShape;
+    typedef NeuronPiece<ShapeT> type;
+
+    inline NeuronPiece(identifier_t gid, unsigned segment_i, ShapeT const& geom_)
+        : super{(gid<<12) + segment_i, geom_} {}
+
+    template <typename U>
+    inline NeuronPiece(identifier_t gid, unsigned segment_i, U&& geom_)
+        : super{(gid<<12) + segment_i, std::forward<U>(geom_)} {}
+
+    inline identifier_t gid() const {
+        return this->id>>12;
+    }
+
+    inline unsigned segment_i() const {
+        return static_cast<unsigned>(this->id & 0x0fff);
+    }
+
+private:
+    typedef IShape<ShapeT> super;
+};
+
+
+
+struct ISoma : public NeuronPiece<Sphere>
+{
+    using NeuronPiece<Sphere>::NeuronPiece;
+
+    // Override to pass segment id 0
+    inline ISoma(identifier_t gid, Sphere const& geom_)
+        : type{gid, 0, geom_} {}
+
+    template <typename U>
+    inline ISoma(identifier_t gid, unsigned segment_i, U&& geom_)
+        : type{gid, 0, std::forward<U>(geom_)} {}
+
+
+};
+
+
+struct ISegment : public NeuronPiece<Cylinder>
+{
+    using NeuronPiece<Cylinder>::NeuronPiece;
+
+    // Disable "upstream" ctor with two args
+    inline ISegment(identifier_t id_, Cylinder const& geom_) = delete;
+
+    template <typename U>
+    inline ISegment(identifier_t gid, U&& geom_) = delete;
+
+
+};
+
+
+
+
+typedef boost::variant<ISoma, ISegment> IndexEntry;
+typedef bgi::rtree< IndexEntry, bgi::linear<16, 2> > IndexTree;
+
+
+template<typename... T>
+void index_dump(bgi::rtree<T...> rtree, const std::string& filename) {
+    std::ofstream ofs(filename, std::ios::binary | std::ios::trunc);
+    boost::archive::binary_oarchive oa(ofs);
+    oa << rtree;
 }
 
 
-// struct NeuronGeometry
-// {
-//     id_type id;
+IndexTree index_load(const std::string& filename) {
+    IndexTree loaded_tree;
+    std::ifstream ifs(filename, std::ios::binary);
+    boost::archive::binary_iarchive ia(ifs);
+    ia >> loaded_tree;
+    return loaded_tree;
+}
 
-//     NeuronGeometry(id_type id_)
-//         : id(id_) {}
-
-//     inline id_type gid() const {
-//         return id;
-//     }
-
-//     inline bool operator==(const NeuronGeometry& other) const {
-//         return (id == other.id);
-//     }
-// };
-
-
-
+}  // namespace spatial_index
 
 

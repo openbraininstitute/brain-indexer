@@ -48,7 +48,7 @@ public:
           )
     {}
 
-    void intersection(const point_type& min_corner, 
+    void intersection(const point_type& min_corner,
                       const point_type& max_corner,
                       std::vector<size_type>& idx)
     {
@@ -60,7 +60,7 @@ public:
         }
     }
 
-    void intersection(const point_type& min_corner, 
+    void intersection(const point_type& min_corner,
                       const point_type& max_corner,
                       std::vector<coordinate_type>& coordinates)
     {

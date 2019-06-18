@@ -89,7 +89,7 @@ public:
     using indexable_getter = entry_indexable<entry_type, size_type>;
 
     SphereRTree(): rtree_()
-    {}    
+    {}
 
     SphereRTree(const std::vector<value_type>& indexed_entries): rtree_(indexed_entries)
     {}
@@ -169,7 +169,7 @@ private:
                     value_type,
                     bgi::rstar<16, 4>,
                     indexable_getter,
-    equal_to
+                    equal_to
               > rtree_;
 
 };

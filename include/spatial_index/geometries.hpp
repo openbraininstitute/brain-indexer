@@ -22,6 +22,12 @@ struct Sphere
         return Box3D(min_corner, max_corner);
     }
 
+
+    inline bool intersects(Sphere const& other)  {
+        CoordType radii_sum = radius + other.radius;
+        return (radii_sum * radii_sum) < Point3Dx(centroid).dist_sq(other.centroid);
+    }
+
 private:
     friend class boost::serialization::access;
 
@@ -46,10 +52,11 @@ struct Cylinder
 
     inline Box3D bounding_box() const
     {
-        Point3D vec((Point3Dx(p2) - p1).get());
-        Point3Dx e = radius + (1.0 - Point3Dx(vec) * vec / bg::dot_product(vec, vec)).sqrt();
-        return Box3D(min(p1 - e, p2 - e).get(),
-                     max(p1 + e, p2 + e).get());
+        Point3Dx vec{Point3Dx(p2) - p1};
+        Point3Dx x = vec * vec / vec.dot(vec);
+        Point3Dx e = radius * (1.0 - x).sqrt();
+        return Box3D(min(p1 - e, p2 - e),
+                     max(p1 + e, p2 + e));
     }
 
 private:

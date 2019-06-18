@@ -43,7 +43,7 @@ def test_nearest():
 	center = np.array([0., 0., 0.]).astype(np.float32)
 	radius = 0.001
 
-	idx = t.nearest(center[0], center[1], center[2], 10)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+	idx = t.nearest(center[0], center[1], center[2], 10)
 
 	assert np.all(idx == np.array([9, 8, 7, 6, 5, 4, 3, 2, 1, 0], dtype=np.uintp))
 

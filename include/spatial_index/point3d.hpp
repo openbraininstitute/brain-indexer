@@ -6,7 +6,6 @@
 
 namespace spatial_index {
 
-namespace b = boost;
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
 
@@ -27,101 +26,125 @@ using Box3D = bg::model::box<Point3D>;
  * \brief An OO augmented point to improve code readability
  *         with sequences of operations
  */
-struct Point3Dx
-{
 
-    inline Point3Dx(Point3D const& p)
-        : point_(p) {}
+struct Point3Dx : public Point3D
+{
+    using Point3D::Point3D;
+
+    Point3Dx(const Point3D& o)
+        : Point3D(o) {}
+
+    Point3Dx(Point3D&& o)
+        : Point3D(std::move(o)) {}
+
 
     /// Vector component-wise
 
-    inline Point3Dx operator+(Point3Dx other) const {
-        bg::add_point(other.point_, point_);
-        return other;
-    }
-
-    inline Point3Dx operator-(Point3Dx const& other) const {
-        Point3Dx copy(point_);
-        bg::subtract_point(copy.point_, other.point_);
+    inline Point3Dx operator+(Point3D const& other) const {
+        Point3Dx copy(*this);
+        bg::add_point<Point3D>(copy, other);
         return copy;
     }
 
-    inline Point3Dx operator*(Point3Dx other) const {
-        bg::multiply_point(other.point_, point_);
-        return other;
+    inline Point3Dx operator-(Point3D const& other) const {
+        Point3Dx copy(*this);
+        bg::subtract_point<Point3D>(copy, other);
+        return copy;
     }
 
-    inline CoordType dot(Point3Dx const& p) const {
-        return bg::dot_product(point_, p.point_);
+    inline Point3Dx operator*(Point3D const& other) const {
+        Point3Dx copy(*this);
+        bg::multiply_point<Point3D>(copy, other);
+        return copy;
     }
 
-    inline Point3D cross(Point3Dx const& p) const {
-        return bg::cross_product(point_, p.point_);
+    inline CoordType dot(Point3D const& other) const {
+        return bg::dot_product<Point3D,Point3D>(*this, other);
+    }
+
+    inline Point3D cross(Point3D const& other) const {
+        return bg::cross_product<Point3D,Point3D,Point3D>(*this, other);
     }
 
 
     /// Operations with scalar
 
     inline Point3Dx operator+(CoordType val) const {
-        Point3Dx copy(point_);
-        bg::add_value(copy.point_, val);
+        Point3Dx copy(*this);
+        bg::add_value<Point3D>(copy, val);
         return copy;
     }
 
     inline Point3Dx operator-(CoordType val) const {
-        Point3Dx copy(point_);
-        bg::subtract_value(copy.point_, val);
+        Point3Dx copy(*this);
+        bg::subtract_value<Point3D>(copy, val);
         return copy;
     }
 
     inline Point3Dx operator*(CoordType val) const {
-        Point3Dx copy(point_);
-        bg::multiply_value(copy.point_, val);
+        Point3Dx copy(*this);
+        bg::multiply_value<Point3D>(copy, val);
         return copy;
     }
 
     inline Point3Dx operator/(CoordType val) const {
-        Point3Dx copy(point_);
-        bg::divide_value(copy.point_, val);
+        Point3Dx copy(*this);
+        bg::divide_value<Point3D>(copy, val);
         return copy;
     }
 
     /// Self operands
 
     inline Point3Dx sqrt() const {
-        return Point3D{std::sqrt(point_.get<0>()), std::sqrt(point_.get<1>()), std::sqrt(point_.get<2>())};
+        return {std::sqrt(get<0>()), std::sqrt(get<1>()), std::sqrt(get<2>())};
     }
 
-
-    inline Point3D get() const {
-        return point_;
+    inline CoordType dist_sq(Point3D const& other) const {
+        CoordType const coords[] = {get<0>() - other.get<0>(),
+                                    get<1>() - other.get<1>(),
+                                    get<2>() - other.get<2>()};
+        return coords[0] * coords[0] + coords[1] * coords[1] + coords[2] * coords[2];
     }
 
+    inline CoordType norm() const {
+        return std::sqrt(dist_sq({.0,.0,.0}));
+    }
 
-private:
-    friend Point3Dx max(Point3Dx const& p1, Point3Dx const& p2);
-    friend Point3Dx min(Point3Dx const& p1, Point3Dx const& p2);
-    Point3D point_;
+    inline Point3D unwrap() const {
+        return *this;
+    }
+
+    inline void print() {
+        ::printf("<Point3Dx: %f %f %f>\n", get<0>(), get<1>(), get<2>());
+    }
+
 };
 
+//
+// Helpers to allow operations with Point3Dx when they'r the second operand
+//
+template<typename T, typename std::enable_if< !std::is_same<T, Point3Dx>::value, int >::type = 0>
+inline Point3Dx operator+(const T& v, const Point3Dx& point) { return point + v; }
 
-template<typename T> inline
-Point3Dx operator+(const T& v, const Point3Dx& point) { return point + v; }
-template<typename T> inline
-Point3Dx operator-(const T& v, const Point3Dx& point) { return (point * -1.) + v; }
-template<typename T> inline
-Point3Dx operator*(const T& v, const Point3Dx& point) { return point * v; }
+template<typename T, typename std::enable_if< !std::is_same<T, Point3Dx>::value, int >::type = 0>
+inline Point3Dx operator-(const T& v, const Point3Dx& point) { return (point * -1.) + v; }
 
-Point3Dx max(Point3Dx const& p1, Point3Dx const& p2) {
-    return Point3D{std::max(p1.point_.get<0>(), p2.point_.get<0>()),
-                   std::max(p1.point_.get<1>(), p2.point_.get<1>()),
-                   std::max(p1.point_.get<2>(), p2.point_.get<2>())};
+template<typename T, typename std::enable_if< !std::is_same<T, Point3Dx>::value, int >::type = 0>
+inline Point3Dx operator*(const T& v, const Point3Dx& point) { return point * v; }
+
+
+inline Point3D max(Point3D const& p1, Point3D const& p2) {
+    return Point3D{std::max(p1.get<0>(), p2.get<0>()),
+                   std::max(p1.get<1>(), p2.get<1>()),
+                   std::max(p1.get<2>(), p2.get<2>())};
 }
 
-Point3Dx min(Point3Dx const& p1, Point3Dx const& p2) {
-    return Point3D{std::min(p1.point_.get<0>(), p2.point_.get<0>()),
-                   std::min(p1.point_.get<1>(), p2.point_.get<1>()),
-                   std::min(p1.point_.get<2>(), p2.point_.get<2>())};
+inline Point3D min(Point3D const& p1, Point3D const& p2) {
+    return Point3D{std::min(p1.get<0>(), p2.get<0>()),
+                   std::min(p1.get<1>(), p2.get<1>()),
+                   std::min(p1.get<2>(), p2.get<2>())};
 }
+
 
 }  // namespace spatial_index
+
