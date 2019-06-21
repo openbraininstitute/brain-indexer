@@ -19,6 +19,8 @@ find_package(Boost 1.65.0 REQUIRED COMPONENTS serialization)
 
 set(si_include_directory ${PROJECT_SOURCE_DIR}/include)
 
+add_definitions("-std=c++14")
+
 add_library(SpatialIndex INTERFACE)
 target_include_directories(SpatialIndex INTERFACE ${si_include_directory})
 

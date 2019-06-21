@@ -8,7 +8,7 @@ set(PYBIND11_SOURCES
 include_directories(${si_include_directory})
 
 
-set(PYBIND11_CPP_STANDARD -std=c++11)
+set(PYBIND11_CPP_STANDARD -std=c++14)
 
 pybind11_add_module(_spatial_index
 					${PYBIND11_SOURCES}

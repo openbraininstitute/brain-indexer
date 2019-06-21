@@ -20,10 +20,13 @@ using namespace py::literals;
 
 void bind_rtree_sphere(py::module &m)
 {
+    using Entry = si::ISoma;
+
     using Class = si::IndexTree<si::ISoma>;
 
-    using array_t =
-        py::array_t<si::CoordType, py::array::c_style | py::array::forcecast>;
+    using coord_t = si::CoordType;
+
+    using array_t = py::array_t<si::CoordType, py::array::c_style | py::array::forcecast>;
 
     using wrapper_t = ArrayWrapper<si::identifier_t>;
 
@@ -43,30 +46,28 @@ void bind_rtree_sphere(py::module &m)
             std::vector<si::ISoma> indexed_entries;
             indexed_entries.reserve(c.shape(0));
 
-            for(size_t i = 0; i < r.shape(0); ++i)
-            {
+            for(size_t i = 0; i < r.shape(0); ++i) {
                 indexed_entries.emplace_back(i, si::Point3D{c(i, 0), c(i, 1), c(i, 2)}, r(i));
             }
 
             return std::unique_ptr<Class>{new Class(indexed_entries)};
         }))
 
-        // .def("intersection", [](Class& obj, CoordinateType cx, CoordinateType cy, CoordinateType cz, CoordinateType r){
+        .def("insert", [](Class& obj, unsigned long i, coord_t cx, coord_t cy, coord_t cz, coord_t r)
+        {
+            obj.insert(Entry{i, si::Point3D{cx, cy, cz}, r});
+        })
 
-        //     wrapper_t wrapper{};
+        .def("find_intersecting", [](Class& obj, coord_t cx, coord_t cy, coord_t cz, coord_t r){
 
-        //     const auto& q_sphere = entry_t::from_raw_data( cx, cy, cz, r );
+            wrapper_t wrapper;
+            auto& vec = wrapper.as_vector();
+            for (const Entry* soma : obj.find_intersecting(si::Sphere{{cx, cy, cz}, r})) {
+                vec.push_back(soma->gid());
+            }
+            return wrapper.as_array();
+        })
 
-        //     obj.intersection(q_sphere, wrapper.as_vector());
-
-        //     return wrapper.as_array();
-        // })
-
-        // .def("insert", [](Class& obj, CoordinateType cx, CoordinateType cy, CoordinateType cz, CoordinateType r)
-        //     {
-        //         auto&& i_sphere = entry_t::from_raw_data( cx, cy, cz, r );
-        //         obj.insert(std::move(i_sphere));
-        //     })
 
 
         // .def("is_intersecting", [](Class& obj, CoordinateType cx, CoordinateType cy, CoordinateType cz, CoordinateType r)
@@ -86,7 +87,7 @@ void bind_rtree_sphere(py::module &m)
 
         // .def("data", [](Class& obj)
         // {
-        //     ArrayWrapper<CoordinateType> wrapper{};
+        //     ArrayWrapper<coord_t> wrapper{};
 
         //     obj.data(wrapper.as_vector());
 

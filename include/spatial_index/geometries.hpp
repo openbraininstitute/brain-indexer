@@ -23,9 +23,9 @@ struct Sphere
     }
 
 
-    inline bool intersects(Sphere const& other)  {
+    inline bool intersects(Sphere const& other) const {
         CoordType radii_sum = radius + other.radius;
-        return (radii_sum * radii_sum) < Point3Dx(centroid).dist_sq(other.centroid);
+        return (radii_sum * radii_sum) > Point3Dx(centroid).dist_sq(other.centroid);
     }
 
 private:
@@ -70,5 +70,16 @@ private:
     }
 
 };
+
+
+// Generic API for getting intersection among geometries
+
+template <typename T1, typename T2>
+bool geometry_intersects(const T1& geom1, const T2& geom2) {
+    // Geometries should know how to intersect each other
+    return geom1.intersects(geom2);
+}
+
+
 
 }

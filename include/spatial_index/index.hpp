@@ -131,16 +131,6 @@ struct ISegment : public NeuronPiece<Cylinder>
 };
 
 
-// User can use Rtree directly with Geometries or use morphology
-// pieces, the main difference being that MorphoEntry(s) include
-// identifiers for the gid (and segment id for segments)
-
-typedef boost::variant<Sphere, Cylinder> GeometryEntry;
-typedef boost::variant<ISoma,  ISegment> MorphoEntry;
-
-template <typename T>
-using IndexTree = bgi::rtree<T, bgi::linear<16, 2> >;
-
 
 } //namespace spatial_index
 
@@ -155,7 +145,7 @@ namespace boost { namespace geometry { namespace index {
 using namespace ::spatial_index;
 
 // Generic
-template<typename T>
+template <typename T>
 struct indexable_with_bounding_box {
     typedef T V;
     typedef Box3D const result_type;
@@ -180,122 +170,80 @@ struct indexable< boost::variant<VariantArgs...> >
 
     typedef spatial_index::Box3D const result_type;
 
-    struct BoundingBoxVisitor : boost::static_visitor<result_type> {
-        template<class T>
-        inline result_type operator()(const T& t)const { return t.bounding_box(); }
-    };
-
     inline result_type operator()(V const& v) const {
-        return boost::apply_visitor(bbox_visitor_, v);
+        return boost::apply_visitor(
+            [](const auto& t){ return t.bounding_box(); }, v);
     }
 
-private:
-    BoundingBoxVisitor bbox_visitor_;
 };
 
 
 }}} // namespace boost::geometry::index
 
 
-namespace spatial_index {
-
 
 //////////////////////////////////////////////
 // High Level API
 //////////////////////////////////////////////
 
-struct result_ids_getter {
-    result_ids_getter(std::vector<identifier_t> & output)
-        : output_(output) {}
+namespace spatial_index {
 
-    // Works with whatever has an 'id' field
-    template<typename T>
-    inline result_ids_getter& operator=(const IShape<T>& result_entry) {
-        output_.push_back(result_entry.id);
-        return *this;
+
+// User can use Rtree directly with Any of the single Geometries or
+// use combined variantGeometries or use morphology
+// pieces, the main difference being that MorphoEntry(s) include
+// identifiers for the gid (and segment id for segments)
+
+typedef boost::variant<Sphere, Cylinder> GeometryEntry;
+typedef boost::variant<ISoma,  ISegment> MorphoEntry;
+
+
+
+template <typename T>
+struct IndexTree : public bgi::rtree<T, bgi::linear<16, 2> > {
+    using bgi::rtree<T, bgi::linear<16, 2>>::rtree;
+
+    template<typename Shap>
+    inline std::vector<const T*> find_intersecting(const Shap& shape) const;
+
+    inline void dump(const std::string& filename) const {
+        index_dump(*this);
     }
 
-    // Specialization for variants
-    struct GetIdVisitor : boost::static_visitor<identifier_t> {
-        template<class T>
-        inline identifier_t operator()(const T& t) const { return t.id; }
-    };
-
-    template<typename... ManyT>
-    inline result_ids_getter& operator=(const boost::variant<ManyT...>& v) {
-        static GetIdVisitor id_visitor;
-        output_.push_back(boost::apply_visitor(id_visitor, v));
-        return *this;
+    template<class Archive>
+    void serialize(Archive &ar, const unsigned int version) {
+        ar & *static_cast<super*>(this);
     }
-
-    inline result_ids_getter& operator*()  { return *this; }
-    inline result_ids_getter& operator++() { return *this; }
-    inline result_ids_getter& operator--(int) { return *this; }
 
 private:
-    // Keep a ref to modify the original vec
-    std::vector<identifier_t> & output_;
+    typedef bgi::rtree<T, bgi::linear<16, 2>> super;
 };
 
 
-struct gid_segm_t {
-    identifier_t gid;
-    unsigned segment_i;
-};
+template <typename... T>
+inline void index_dump(const bgi::rtree<T...>& rtree, const std::string& filename);
+
+template <typename T>
+inline IndexTree<T> index_load(const std::string& filename);
 
 
-struct result_gid_segm_getter {
-    result_gid_segm_getter(std::vector<gid_segm_t> & output)
-        : output_(output) {}
+///
+/// Result processing iterators
+///
 
-    // Works with whatever has gi() and segment_i()
-    template<typename T>
-    inline result_gid_segm_getter& operator=(const NeuronPiece<T>& result_entry) {
-        output_.emplace_back(result_entry.gid(), result_entry.segment_i());
-        return *this;
-    }
+/// \brief result iterator to run a given callback
+template <typename ArgT>
+struct iter_callback;
 
-    // Specialization for variants
-    struct GetIdVisitor : boost::static_visitor<gid_segm_t> {
-        template<class T>
-        inline gid_segm_t operator()(const T& t) const {
-            return {t.gid(), t.segment_i()};
-        }
-    };
+/// \brief result iterator to collect gids
+struct iter_ids_getter;
 
-    template<typename... ManyT>
-    inline result_gid_segm_getter& operator=(const boost::variant<ManyT...>& v) {
-        static GetIdVisitor id_visitor;
-        output_.emplace_back(boost::apply_visitor(id_visitor, v));
-        return *this;
-    }
-
-    inline result_gid_segm_getter& operator* ()    { return *this; }
-    inline result_gid_segm_getter& operator++()    { return *this; }
-    inline result_gid_segm_getter& operator--(int) { return *this; }
-
-private:
-    std::vector<gid_segm_t> & output_;
-};
+/// \brief result iterator to collect gids and segment ids
+struct iter_gid_segm_getter;
 
 
-
-template<typename... T>
-inline void index_dump(bgi::rtree<T...> rtree, const std::string& filename) {
-    std::ofstream ofs(filename, std::ios::binary | std::ios::trunc);
-    boost::archive::binary_oarchive oa(ofs);
-    oa << rtree;
-}
-
-template<typename T>
-inline IndexTree<T> index_load(const std::string& filename) {
-    IndexTree<T> loaded_tree;
-    std::ifstream ifs(filename, std::ios::binary);
-    boost::archive::binary_iarchive ia(ifs);
-    ia >> loaded_tree;
-    return loaded_tree;
-}
 
 }  // namespace spatial_index
 
+#include "detail/index.hpp"
 

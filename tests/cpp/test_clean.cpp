@@ -21,7 +21,7 @@ int main() {
 
     std::vector<gid_segm_t> result_s;
 
-    rtree.query(bgi::intersects(query_box), result_gid_segm_getter(result_s));
+    rtree.query(bgi::intersects(query_box), iter_gid_segm_getter(result_s));
 
     printf("Num objects: %lu\n", result_s.size());
     printf("Selected gid: %lu\n", result_s.front().gid);
@@ -31,7 +31,7 @@ int main() {
     {
         auto t2{index_load<MorphoEntry>("myrtree.tree")};
         result_s.clear();
-        t2.query(bgi::intersects(query_box), result_gid_segm_getter(result_s));
+        t2.query(bgi::intersects(query_box), iter_gid_segm_getter(result_s));
         printf("Num objects: %lu\n", result_s.size());
         printf("Selected gid: %lu\n", result_s.front().gid);
     }
