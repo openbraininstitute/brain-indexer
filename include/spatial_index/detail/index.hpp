@@ -41,6 +41,19 @@ inline std::vector<const T*> IndexTree<T>::find_intersecting(const Shap& shape) 
 }
 
 
+template <typename T>
+template <typename Shap>
+inline bool IndexTree<T>::is_intersecting(const Shap& shape) const {
+    bgi::indexable<Shap> box_from;
+    for(auto it = this->qbegin(bgi::intersects(box_from(shape))); it != this->qend(); ++it) {
+        if (geometry_intersects(shape, *it)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
 template <typename... T>
 inline void index_dump(const bgi::rtree<T...>& rtree, const std::string& filename) {
     std::ofstream ofs(filename, std::ios::binary | std::ios::trunc);

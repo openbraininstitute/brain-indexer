@@ -121,10 +121,7 @@ def test_intersection_random():
 	N_spheres = 100
 
 	centroids = np.random.uniform(low=p1, high=p2, size=(N_spheres, 3)).astype(np.float32)
-
-
 	radii = np.random.uniform(low=0.01, high=10., size=N_spheres).astype(np.float32)
-
 
 	q_centroid = np.random.uniform(low=p1, high=p2).astype(np.float32)
 	q_radius = np.float32(np.random.uniform(low=0.01, high=10.))

@@ -6,7 +6,7 @@
 #include <boost/serialization/split_free.hpp>
 #include <boost/serialization/variant.hpp>
 #else
-#error("SpatialIndex requires BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL")
+#error "SpatialIndex requires BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL"
 #endif
 
 #include <boost/geometry/index/rtree.hpp>
@@ -155,24 +155,22 @@ struct indexable_with_bounding_box {
     }
 };
 
-// // Specializations of boost indexable
+// Specializations of boost indexable
 
 template<> struct indexable<Sphere> :   public indexable_with_bounding_box<Sphere> {};
 template<> struct indexable<Cylinder> : public indexable_with_bounding_box<Cylinder> {};
 template<> struct indexable<ISoma> :    public indexable_with_bounding_box<ISoma> {};
 template<> struct indexable<ISegment> : public indexable_with_bounding_box<ISegment> {};
 
-
 template <typename... VariantArgs>
-struct indexable< boost::variant<VariantArgs...> >
-{
+struct indexable< boost::variant<VariantArgs...> >{
     typedef boost::variant<VariantArgs...> V;
-
-    typedef spatial_index::Box3D const result_type;
+    typedef Box3D const result_type;
 
     inline result_type operator()(V const& v) const {
         return boost::apply_visitor(
-            [](const auto& t){ return t.bounding_box(); }, v);
+            [](const auto& t){ return t.bounding_box(); },
+            v);
     }
 
 };
@@ -205,6 +203,9 @@ struct IndexTree : public bgi::rtree<T, bgi::linear<16, 2> > {
 
     template<typename Shap>
     inline std::vector<const T*> find_intersecting(const Shap& shape) const;
+
+    template<typename Shap>
+    inline bool is_intersecting(const Shap& shape) const;
 
     inline void dump(const std::string& filename) const {
         index_dump(*this);
