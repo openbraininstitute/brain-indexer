@@ -24,6 +24,8 @@ void bind_rtree_sphere(py::module &m)
 
     using Class = si::IndexTree<si::ISoma>;
 
+    using point_t = si::Point3D;
+
     using coord_t = si::CoordType;
 
     using array_t = py::array_t<si::CoordType, py::array::c_style | py::array::forcecast>;
@@ -47,7 +49,7 @@ void bind_rtree_sphere(py::module &m)
             indexed_entries.reserve(c.shape(0));
 
             for(size_t i = 0; i < r.shape(0); ++i) {
-                indexed_entries.emplace_back(i, si::Point3D{c(i, 0), c(i, 1), c(i, 2)}, r(i));
+                indexed_entries.emplace_back(i, point_t{c(i, 0), c(i, 1), c(i, 2)}, r(i));
             }
 
             return std::unique_ptr<Class>{new Class(indexed_entries)};
@@ -76,14 +78,13 @@ void bind_rtree_sphere(py::module &m)
         //     return obj.is_intersecting(q_sphere);
         // })
 
-        // .def("nearest", [](Class& obj, CoordinateType cx, CoordinateType cy, CoordinateType cz, int k_neighbors)
-        // {
-        //     wrapper_t wrapper{};
-        //     const point_t centroid(cx, cy, cz);
-        //     obj.nearest(centroid, k_neighbors, wrapper.as_vector());
+        .def("find_nearest", [](Class& obj, coord_t cx, coord_t cy, coord_t cz, int k_neighbors)
+        {
+            wrapper_t wrapper;
+            obj.query(bgi::nearest(point_t{cx, cy, cz}, k_neighbors), si::iter_ids_getter(wrapper.as_vector()));
 
-        //     return wrapper.as_array();
-        // })
+            return wrapper.as_array();
+        })
 
         // .def("data", [](Class& obj)
         // {

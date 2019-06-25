@@ -39,7 +39,12 @@ struct iter_ids_getter : public detail::iter_append_only<iter_ids_getter>{
     iter_ids_getter(std::vector<identifier_t> & output)
         : output_(output) {}
 
-    // Works with whatever has an 'id' field
+    template<typename T>
+    inline iter_ids_getter& operator=(const NeuronPiece<T>& result_entry) {
+        output_.emplace_back(result_entry.gid());
+        return *this;
+    }
+
     template<typename T>
     inline iter_ids_getter& operator=(const IShape<T>& result_entry) {
         output_.push_back(result_entry.id);
