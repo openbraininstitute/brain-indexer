@@ -74,6 +74,10 @@ private:
 };
 
 
+/**
+ * \brief A neuron piece extends IShape in concept, adding gid() and segment_i()
+ *        accessors where both infos are encoded in the id
+ */
 template <typename ShapeT>
 struct NeuronPiece : public IShape<ShapeT>
 {
@@ -127,6 +131,9 @@ struct ISegment : public NeuronPiece<Cylinder>
     template <typename U>
     inline ISegment(identifier_t gid, U&& geom_) = delete;
 
+    template <typename U>
+    inline ISegment(identifier_t gid, unsigned segment_i, U&& center1, U&& center2, const CoordType& radius)
+        : type(gid, segment_i, Cylinder{std::forward<U>(center1), std::forward<U>(center2), radius}) {}
 
 };
 
@@ -188,18 +195,22 @@ namespace spatial_index {
 
 
 // User can use Rtree directly with Any of the single Geometries or
-// use combined variantGeometries or use morphology
-// pieces, the main difference being that MorphoEntry(s) include
-// identifiers for the gid (and segment id for segments)
+// use combined variant<geometries...> or variant<morphologies...>
+// the latters include gid() and segment_id() methods.
+//
+// To simplify typing, GeometryEntry and MorphoEntry are predefined
 
 typedef boost::variant<Sphere, Cylinder> GeometryEntry;
 typedef boost::variant<ISoma,  ISegment> MorphoEntry;
 
 
-
-template <typename T>
-struct IndexTree : public bgi::rtree<T, bgi::linear<16, 2> > {
-    using bgi::rtree<T, bgi::linear<16, 2>>::rtree;
+///
+/// IndexTree is a Boost::rtree spatial index tree
+/// It adds methods for finding intersections and serialization.
+///
+template <typename T, typename A=bgi::linear<16, 2>>
+struct IndexTree : public bgi::rtree<T,  A> {
+    using bgi::rtree<T, A>::rtree;
 
     template<typename Shap>
     inline std::vector<const T*> find_intersecting(const Shap& shape) const;
@@ -207,25 +218,17 @@ struct IndexTree : public bgi::rtree<T, bgi::linear<16, 2> > {
     template<typename Shap>
     inline bool is_intersecting(const Shap& shape) const;
 
-    inline void dump(const std::string& filename) const {
-        index_dump(*this);
-    }
+    // Load / Dump serialization
+    inline explicit IndexTree(const std::string& filename);
+    inline explicit IndexTree(const char* dump_file)
+        : IndexTree(std::string(dump_file)) {}
 
-    template<class Archive>
-    void serialize(Archive &ar, const unsigned int version) {
-        ar & *static_cast<super*>(this);
-    }
+    inline void dump(const std::string& filename) const;
+
 
 private:
-    typedef bgi::rtree<T, bgi::linear<16, 2>> super;
+    typedef bgi::rtree<T, A> super;
 };
-
-
-template <typename... T>
-inline void index_dump(const bgi::rtree<T...>& rtree, const std::string& filename);
-
-template <typename T>
-inline IndexTree<T> index_load(const std::string& filename);
 
 
 ///

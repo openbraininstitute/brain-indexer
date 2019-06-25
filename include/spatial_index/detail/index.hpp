@@ -23,11 +23,13 @@ bool geometry_intersects(const T& geom1, const boost::variant<VarT...>& geom2) {
 }
 
 
-// IndexTree
+/////////////////////////////////////////
+// class IndexTree
+/////////////////////////////////////////
 
-template <typename T>
+template <typename T, typename A>
 template <typename Shap>
-inline std::vector<const T*> IndexTree<T>::find_intersecting(const Shap& shape) const {
+inline std::vector<const T*> IndexTree<T, A>::find_intersecting(const Shap& shape) const {
     std::vector<const T*> results;  // To avoid copies we keep pointers
     bgi::indexable<Shap> box_from;
 
@@ -41,9 +43,9 @@ inline std::vector<const T*> IndexTree<T>::find_intersecting(const Shap& shape) 
 }
 
 
-template <typename T>
+template <typename T, typename A>
 template <typename Shap>
-inline bool IndexTree<T>::is_intersecting(const Shap& shape) const {
+inline bool IndexTree<T, A>::is_intersecting(const Shap& shape) const {
     bgi::indexable<Shap> box_from;
     for(auto it = this->qbegin(bgi::intersects(box_from(shape))); it != this->qend(); ++it) {
         if (geometry_intersects(shape, *it)) {
@@ -53,23 +55,22 @@ inline bool IndexTree<T>::is_intersecting(const Shap& shape) const {
     return false;
 }
 
-
-template <typename... T>
-inline void index_dump(const bgi::rtree<T...>& rtree, const std::string& filename) {
-    std::ofstream ofs(filename, std::ios::binary | std::ios::trunc);
-    boost::archive::binary_oarchive oa(ofs);
-    oa << rtree;
-}
-
-
-template <typename T>
-inline IndexTree<T> index_load(const std::string& filename) {
-    IndexTree<T> loaded_tree;
+// Serialization: Load ctor
+template <typename T, typename A>
+inline IndexTree<T, A>::IndexTree(const std::string& filename) {
     std::ifstream ifs(filename, std::ios::binary);
     boost::archive::binary_iarchive ia(ifs);
-    ia >> loaded_tree;
-    return loaded_tree;
+    ia >> static_cast<super&>(*this);
 }
+
+template <typename T, typename A>
+inline void IndexTree<T, A>::dump(const std::string& filename) const {
+    std::ofstream ofs(filename, std::ios::binary | std::ios::trunc);
+    boost::archive::binary_oarchive oa(ofs);
+    oa << static_cast<const super&>(*this);
+}
+
+
 
 
 

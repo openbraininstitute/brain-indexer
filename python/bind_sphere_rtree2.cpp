@@ -28,7 +28,7 @@ void bind_rtree_sphere(py::module &m)
 
     using coord_t = si::CoordType;
 
-    using array_t = py::array_t<si::CoordType, py::array::c_style | py::array::forcecast>;
+    using array_t = py::array_t<coord_t, py::array::c_style | py::array::forcecast>;
 
     using wrapper_t = ArrayWrapper<si::identifier_t>;
 

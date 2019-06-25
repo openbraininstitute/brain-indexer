@@ -52,10 +52,22 @@ struct iter_ids_getter : public detail::iter_append_only<iter_ids_getter>{
     }
 
     // Specialization for variants
+    struct ids_visitor : public boost::static_visitor<identifier_t> {
+        template<typename T>
+        inline identifier_t operator()(const NeuronPiece<T>& result_entry) {
+            return result_entry.gid();
+        }
+        template<typename T>
+        inline identifier_t operator()(const IShape<T>& result_entry) {
+            return result_entry.id;
+        }
+    };
+
     template<typename... ManyT>
     inline iter_ids_getter& operator=(const boost::variant<ManyT...>& v){
+        static ids_visitor ids_getter;
         output_.push_back(
-            boost::apply_visitor([](const auto& t){ return t.id; }, v));
+            boost::apply_visitor(ids_getter, v));
         return *this;
     }
 

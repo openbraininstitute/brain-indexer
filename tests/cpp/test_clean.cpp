@@ -26,14 +26,14 @@ int main() {
     printf("Num objects: %lu\n", result_s.size());
     printf("Selected gid: %lu\n", result_s.front().gid);
 
-    index_dump(rtree, "myrtree.tree");
+    rtree.dump("myrtree.tree");
 
     {
-        auto t2{index_load<MorphoEntry>("myrtree.tree")};
-        result_s.clear();
-        t2.query(bgi::intersects(query_box), iter_gid_segm_getter(result_s));
-        printf("Num objects: %lu\n", result_s.size());
-        printf("Selected gid: %lu\n", result_s.front().gid);
+        IndexTree<MorphoEntry>t2("myrtree.tree");
+        std::vector<identifier_t> gids;
+        t2.query(bgi::intersects(query_box), iter_ids_getter(gids));
+        printf("Num objects: %lu\n", gids.size());
+        printf("Selected gid: %lu\n", gids.front());
     }
 
     return 0;
