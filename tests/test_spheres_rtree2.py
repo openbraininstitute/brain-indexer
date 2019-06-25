@@ -124,7 +124,8 @@ def test_nearest_all():
 
 
 def test_nearest_random():
-    """We use the internal nearest() predicate, which uses the distance to the
+    """
+    We use the internal nearest() predicate, which uses the distance to the
     bouding box. As so results might not completely match but are good enough.
     In this test we get 100% match 80-90% of the times.
     """
