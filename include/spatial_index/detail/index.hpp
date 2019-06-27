@@ -57,6 +57,57 @@ inline bool IndexTree<T, A>::is_intersecting(const Shap& shape) const {
     return false;
 }
 
+
+template <typename T, typename A>
+template <typename S>
+inline bool IndexTree<T, A>::place(const Box3D& region, S& shape) {
+    // Align shape bbox to region bbox
+    const Box3D region_bbox = bgi::indexable<Box3D>{}(region);
+    Box3D bbox = bgi::indexable<S>{}(shape);
+    Point3Dx offset = Point3Dx(region_bbox.min_corner()) - bbox.min_corner();
+    shape.translate(offset);
+
+    // Reset offsets. We require previous offset to make relative geometric translations
+    offset = {.0, .0, .0};
+    Point3Dx previous_offset{.0, .0, .0};
+
+    // Calc iteration step. We are doing at most 8 steps in each direction
+    // Worst case is user provides a cubic region and shape fits in the very end -> 512 iters
+    const Point3Dx diffs = Point3Dx(region_bbox.max_corner()) - region_bbox.min_corner();
+    const CoordType base_step = std::max(
+            std::max(diffs.get<0>(), diffs.get<1>()), diffs.get<2>() ) / 8;
+    const int nsteps[] = {int(diffs.get<0>() / base_step),
+                          int(diffs.get<1>() / base_step),
+                          int(diffs.get<2>() / base_step)};
+    const CoordType step[] = {
+            diffs.get<0>() / nsteps[0], diffs.get<1>() / nsteps[1], diffs.get<2>() / nsteps[2]};
+
+    // Loop and Test for each step
+    for(int x_i=0; x_i < nsteps[0]; x_i++) {
+        offset.set<1>(0.);
+
+        for(int y_i=0; y_i < nsteps[1]; y_i++) {
+            offset.set<2>(0.);
+
+            for(int z_i=0; z_i < nsteps[2]; z_i++) {
+                shape.translate(offset - previous_offset);
+                if (! is_intersecting(shape)) {
+                    this->insert(shape);
+                    return true;
+                }
+                previous_offset = offset;
+                offset.set<2>(offset.get<2>() + step[2]);
+            }
+            offset.set<1>(offset.get<1>() + step[1]);
+        }
+        offset.set<0>(offset.get<0>() + step[0]);
+    }
+
+    return false;
+}
+
+
+
 // Serialization: Load ctor
 template <typename T, typename A>
 inline IndexTree<T, A>::IndexTree(const std::string& filename) {

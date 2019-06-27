@@ -167,3 +167,24 @@ BOOST_AUTO_TEST_CASE(VariantNeuronPieces) {
 
 }
 
+
+//////////////////////////////////////////////////////////////////
+// Advanced features
+//////////////////////////////////////////////////////////////////
+
+BOOST_AUTO_TEST_CASE(NonOverlapPlacement) {
+    std::vector<Sphere> spheres;
+    fill_vec(spheres, N_ITEMS, centers, radius);
+
+    IndexTree<Sphere> rtree(spheres);
+    Sphere toplace{{0., 0., 0.}, 2.};
+
+    BOOST_TEST( rtree.place(Box3D{{.0, .0, -2.}, {20., 5., 2.}}, toplace) );
+    BOOST_TEST( toplace.centroid.get<0>() > 1.0 );
+
+    // Next one will be even further
+    Sphere toplace2{{0., 0., 0.}, 2.};
+    BOOST_TEST( rtree.place(Box3D{{.0, .0, -2.}, {20., 5., 2.}}, toplace2) );
+    BOOST_TEST( toplace2.centroid.get<0>() > toplace.centroid.get<0>() );
+
+}

@@ -38,6 +38,10 @@ struct Sphere
 
     inline bool intersects(Cylinder const& c) const;
 
+    inline void translate(Point3D const& vec) {
+        bg::add_point(centroid, vec);
+    };
+
 private:
     friend class boost::serialization::access;
 
@@ -75,6 +79,10 @@ struct Cylinder
         return s.intersects(*this);  //delegate to sphere
     }
 
+    inline void translate(Point3D const& vec) {
+        bg::add_point(p1, vec);
+        bg::add_point(p2, vec);
+    };
 
 private:
     friend class boost::serialization::access;

@@ -157,7 +157,8 @@ typedef boost::variant<ISoma,  ISegment> MorphoEntry;
 /// It adds methods for finding intersections and serialization.
 ///
 template <typename T, typename A=bgi::linear<16, 2>>
-struct IndexTree : public bgi::rtree<T,  A> {
+struct IndexTree : public bgi::rtree<T,  A>
+{
     using bgi::rtree<T, A>::rtree;
 
     template<typename Shap>
@@ -173,9 +174,9 @@ struct IndexTree : public bgi::rtree<T,  A> {
 
     inline void dump(const std::string& filename) const;
 
-    /// Non-overlapping placement of new objects given radius.
-    inline T place(Box3D region, CoordType radius) { }
-
+    /// Non-overlapping placement of Shapes
+    template <typename S>
+    inline bool place(const Box3D& region, S& shape);
 
 private:
     typedef bgi::rtree<T, A> super;
