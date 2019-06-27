@@ -1,13 +1,13 @@
 #pragma once
 
-#ifdef BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL
+#ifndef BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL
+#error "SpatialIndex requires BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL"
+#endif
+
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/nvp.hpp>
 #include <boost/serialization/split_free.hpp>
 #include <boost/serialization/variant.hpp>
-#else
-#error "SpatialIndex requires BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL"
-#endif
 
 #include <boost/geometry/index/rtree.hpp>
 #include <boost/variant.hpp>
@@ -173,6 +173,9 @@ struct IndexTree : public bgi::rtree<T,  A> {
         : IndexTree(std::string(dump_file)) {}
 
     inline void dump(const std::string& filename) const;
+
+    /// Non-overlapping placement of new objects given radius.
+    inline T place(Box3D region, CoordType radius) { }
 
 
 private:

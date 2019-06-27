@@ -6,6 +6,14 @@
 namespace spatial_index {
 
 
+struct Cylinder;  // FWDecl
+
+
+/**
+ * \brief A Sphere represention. Base abstraction for somas
+ *
+ * For compat with indexing Geometries must implement bounding_box() and intersects()
+ */
 struct Sphere
 {
     Point3D centroid;
@@ -28,6 +36,8 @@ struct Sphere
         return (radii_sum * radii_sum) > Point3Dx(centroid).dist_sq(other.centroid);
     }
 
+    inline bool intersects(Cylinder const& c) const;
+
 private:
     friend class boost::serialization::access;
 
@@ -40,7 +50,9 @@ private:
 };
 
 
-
+/**
+ * \brief A Cylinder represention. Base abstraction for Segments
+ */
 struct Cylinder
 {
     Point3D p1, p2;
@@ -59,6 +71,11 @@ struct Cylinder
                      max(p1 + e, p2 + e));
     }
 
+    inline bool intersects(Sphere const& s) const {
+        return s.intersects(*this);  //delegate to sphere
+    }
+
+
 private:
     friend class boost::serialization::access;
 
@@ -70,6 +87,26 @@ private:
     }
 
 };
+
+
+bool Sphere::intersects(Cylinder const& c) const {
+    // First Assume infinite long cylinder
+    Point3Dx u = Point3Dx(centroid) - c.p1;
+    Point3Dx v = Point3Dx(c.p2) - c.p1;
+    CoordType proj = u.dot(v);
+    CoordType distance = std::sqrt(u.dot(u) - (proj * proj / v.dot(v)));
+    CoordType radii_sum = radius + c.radius;
+
+    if (distance > radii_sum) {
+        return false;
+    }
+    // Now, check for caps. Calculate sphere distance from it using projections
+    // They intersect if the largest is smaller than ||v|| + sphere_radius
+    Point3Dx w = Point3Dx(centroid) - c.p2;
+    CoordType v_norm = v.norm();
+    CoordType max_proj = std::max(std::abs(proj), std::abs(w.dot(v))) / v_norm;
+    return max_proj < v_norm + radius;
+}
 
 
 // Generic API for getting intersection among geometries

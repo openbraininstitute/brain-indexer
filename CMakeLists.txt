@@ -4,9 +4,10 @@ project(SpatialIndex VERSION 0.0.0
 					 DESCRIPTION "Spatial indexing tools for all the family"
 					 LANGUAGES CXX)
 
-set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+if (NOT CMAKE_BUILD_TYPE)
+	set(CMAKE_BUILD_TYPE Release)
+endif()
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -24,6 +25,7 @@ add_definitions("-std=c++14")
 add_library(SpatialIndex INTERFACE)
 target_include_directories(SpatialIndex INTERFACE ${si_include_directory})
 
+enable_testing()
 add_subdirectory(tests)
 
 

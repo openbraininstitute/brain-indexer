@@ -21,12 +21,10 @@ using Point3D = bg::model::point<CoordType, 3, bg::cs::cartesian>;
 using Box3D = bg::model::box<Point3D>;
 
 
-
 /**
  * \brief An OO augmented point to improve code readability
  *         with sequences of operations
  */
-
 struct Point3Dx : public Point3D
 {
     using Point3D::Point3D;
@@ -58,8 +56,8 @@ struct Point3Dx : public Point3D
         return copy;
     }
 
-    inline CoordType dot(Point3D const& other) const {
-        return bg::dot_product<Point3D,Point3D>(*this, other);
+    inline CoordType dot(Point3D const& o2) const {
+        return get<0>() * o2.get<0>() + get<1>() * o2.get<1>() + get<2>() * o2.get<2>();
     }
 
     inline Point3D cross(Point3D const& other) const {
@@ -99,15 +97,13 @@ struct Point3Dx : public Point3D
         return {std::sqrt(get<0>()), std::sqrt(get<1>()), std::sqrt(get<2>())};
     }
 
-    inline CoordType dist_sq(Point3D const& other) const {
-        CoordType const coords[] = {get<0>() - other.get<0>(),
-                                    get<1>() - other.get<1>(),
-                                    get<2>() - other.get<2>()};
-        return coords[0] * coords[0] + coords[1] * coords[1] + coords[2] * coords[2];
+    inline CoordType dist_sq(Point3D const& b) const {
+        Point3Dx p = (*this) - b;
+        return p.dot(p);
     }
 
     inline CoordType norm() const {
-        return std::sqrt(dist_sq({.0,.0,.0}));
+        return std::sqrt(get<0>() * get<0>() + get<1>() * get<1>() + get<2>() * get<2>());
     }
 
     inline Point3D unwrap() const {

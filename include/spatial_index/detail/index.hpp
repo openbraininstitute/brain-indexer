@@ -33,6 +33,8 @@ inline std::vector<const T*> IndexTree<T, A>::find_intersecting(const Shap& shap
     std::vector<const T*> results;  // To avoid copies we keep pointers
     bgi::indexable<Shap> box_from;
 
+    // Using a callback makes the query slightly faster than using qbegin()...qend()
+    // maybe because there's no need to dereference
     this->query(bgi::intersects(box_from(shape)), iter_callback<T>(
         [&shape, &results](const T& v) {
             if (geometry_intersects(shape, v)) {

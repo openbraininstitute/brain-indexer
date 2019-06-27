@@ -70,13 +70,10 @@ void bind_rtree_sphere(py::module &m)
             return wrapper.as_array();
         })
 
-
-
-        // .def("is_intersecting", [](Class& obj, CoordinateType cx, CoordinateType cy, CoordinateType cz, CoordinateType r)
-        // {
-        //     const auto& q_sphere = entry_t::from_raw_data( cx, cy, cz, r );
-        //     return obj.is_intersecting(q_sphere);
-        // })
+        .def("is_intersecting", [](Class& obj, coord_t cx, coord_t cy, coord_t cz, coord_t r)
+        {
+            return obj.is_intersecting(si::Sphere{{cx, cy, cz}, r});
+        })
 
         .def("find_nearest", [](Class& obj, coord_t cx, coord_t cy, coord_t cz, int k_neighbors)
         {
