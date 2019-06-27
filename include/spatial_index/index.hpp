@@ -117,7 +117,6 @@ struct ISoma : public NeuronPiece<Sphere>
     inline ISoma(identifier_t gid, U&& center, const CoordType& radius)
         : type(gid, 0, Sphere{std::forward<U>(center), radius}) {}
 
-
 };
 
 
