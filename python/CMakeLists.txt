@@ -1,14 +1,12 @@
 
 
 set(PYBIND11_SOURCES
-	bind_sphere_rtree2.cpp
+	bind_rtree_soma.cpp
 	bindings.cpp
 )
 
 include_directories(${si_include_directory})
 
-
-set(PYBIND11_CPP_STANDARD -std=c++14)
 
 pybind11_add_module(_spatial_index
 					${PYBIND11_SOURCES}

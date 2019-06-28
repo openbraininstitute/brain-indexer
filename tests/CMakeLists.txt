@@ -10,5 +10,5 @@ add_test(NAME ${test_src} COMMAND ${test_src})
 
 
 set(BUILD_BASENAME "test_clean")
-add_executable(${BUILD_BASENAME} cpp/${BUILD_BASENAME}.cpp)
+add_executable(${BUILD_BASENAME} cpp/examples/${BUILD_BASENAME}.cpp)
 target_link_libraries(${BUILD_BASENAME} ${Boost_LIBRARIES})

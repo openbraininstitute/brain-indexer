@@ -1,14 +1,6 @@
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <pybind11/stl_bind.h>
-#include <pybind11/numpy.h>
-#include <pybind11/iostream.h>
-#include <pybind11/operators.h>
-#include <memory>
-
 #include <spatial_index/index.hpp>
 
-#include "bind_utils.cpp"
+#include "bind11_utils.hpp"
 
 
 namespace py = pybind11;
@@ -18,7 +10,7 @@ namespace si = spatial_index;
 using namespace py::literals;
 
 
-void bind_rtree_sphere(py::module &m)
+void bind_rtree_soma(py::module &m)
 {
     using Entry = si::ISoma;
 
@@ -82,25 +74,6 @@ void bind_rtree_sphere(py::module &m)
 
             return wrapper.as_array();
         })
-
-        // .def("data", [](Class& obj)
-        // {
-        //     ArrayWrapper<coord_t> wrapper{};
-
-        //     obj.data(wrapper.as_vector());
-
-        //     size_t size = wrapper.size();
-
-        //     auto array = wrapper.as_array();
-
-        //     ssize_t n_rows(size / 4);
-        //     ssize_t n_cols = 4;
-
-        //     array.resize({n_rows, n_cols});
-
-        //     return array;
-
-        // })
 
         .def("__len__", &Class::size);
 
