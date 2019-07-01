@@ -1,0 +1,6 @@
+[gerrit]
+host=bbpcode.epfl.ch
+port=22
+project=hpc/SpatialIndex
+defaultbranch=master
+defaultremote=origin
