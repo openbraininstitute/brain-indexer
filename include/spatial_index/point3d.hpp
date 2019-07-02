@@ -1,3 +1,4 @@
+#pragma once
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/box.hpp>
@@ -28,28 +29,43 @@ using Box3D = bg::model::box<Point3D>;
 struct Point3Dx: public Point3D {
     using Point3D::Point3D;
 
-    Point3Dx(const Point3D& o) noexcept
+    inline Point3Dx(const Point3D& o) noexcept
         : Point3D(o) {}
 
-    Point3Dx(Point3D&& o) noexcept
+    inline Point3Dx(Point3D&& o) noexcept
         : Point3D(std::move(o)) {}
 
 
     /// Vector component-wise
 
-    inline Point3Dx operator+(Point3D const& other) const {
+    // Modify temporaries right away
+    inline Point3Dx& operator+(Point3D const& other) && {
+        bg::add_point<Point3D>(*this, other);
+        return *this;
+    }
+    inline Point3Dx& operator-(Point3D const& other) && {
+        bg::subtract_point<Point3D>(*this, other);
+        return *this;
+    }
+    inline Point3Dx& operator*(Point3D const& other) && {
+        bg::multiply_point<Point3D>(*this, other);
+        return *this;
+    }
+
+    // Return new objects if lvalue
+    inline Point3Dx operator+(Point3D const& other) const& {
         Point3Dx copy(*this);
         bg::add_point<Point3D>(copy, other);
         return copy;
     }
 
-    inline Point3Dx operator-(Point3D const& other) const {
+    inline Point3Dx operator-(Point3D const& other) const& {
         Point3Dx copy(*this);
         bg::subtract_point<Point3D>(copy, other);
         return copy;
     }
 
-    inline Point3Dx operator*(Point3D const& other) const {
+    inline Point3Dx operator*(Point3D const& other) const& {
         Point3Dx copy(*this);
         bg::multiply_point<Point3D>(copy, other);
         return copy;
@@ -66,25 +82,42 @@ struct Point3Dx: public Point3D {
 
     /// Operations with scalar
 
-    inline Point3Dx operator+(CoordType val) const {
+    inline Point3Dx& operator+(CoordType val) && {
+        bg::add_value<Point3D>(*this, val);
+        return *this;
+    }
+    inline Point3Dx& operator-(CoordType val) && {
+        bg::subtract_value<Point3D>(*this, val);
+        return *this;
+    }
+    inline Point3Dx& operator*(CoordType val) && {
+        bg::multiply_value<Point3D>(*this, val);
+        return *this;
+    }
+    inline Point3Dx& operator/(CoordType val) && {
+        bg::divide_value<Point3D>(*this, val);
+        return *this;
+    }
+
+    inline Point3Dx operator+(CoordType val) const& {
         Point3Dx copy(*this);
         bg::add_value<Point3D>(copy, val);
         return copy;
     }
 
-    inline Point3Dx operator-(CoordType val) const {
+    inline Point3Dx operator-(CoordType val) const& {
         Point3Dx copy(*this);
         bg::subtract_value<Point3D>(copy, val);
         return copy;
     }
 
-    inline Point3Dx operator*(CoordType val) const {
+    inline Point3Dx operator*(CoordType val) const& {
         Point3Dx copy(*this);
         bg::multiply_value<Point3D>(copy, val);
         return copy;
     }
 
-    inline Point3Dx operator/(CoordType val) const {
+    inline Point3Dx operator/(CoordType val) const& {
         Point3Dx copy(*this);
         bg::divide_value<Point3D>(copy, val);
         return copy;
@@ -105,7 +138,7 @@ struct Point3Dx: public Point3D {
         return std::sqrt(get<0>() * get<0>() + get<1>() * get<1>() + get<2>() * get<2>());
     }
 
-    inline Point3D unwrap() const {
+    inline Point3D& unwrap() {
         return *this;
     }
 
