@@ -34,26 +34,29 @@ bool geometry_intersects(const T& geom1, const boost::variant<VarT...>& geom2) {
 /////////////////////////////////////////
 
 template <typename T, typename A>
-template <typename Shap>
-inline std::vector<typename IndexTree<T, A>::cref_t> IndexTree<T, A>
-::find_intersecting(const Shap& shape) const {
-    std::vector<cref_t> results;
-    bgi::indexable<Shap> box_from;
+template <typename ShapeT, typename OutputIt>
+inline void IndexTree<T, A>::find_intersecting(const ShapeT& shape, const OutputIt& iter) const {
     // Using a callback makes the query slightly faster than using qbegin()...qend()
-    // maybe because there's no need to dereference
-    this->query(bgi::intersects(box_from(shape)), iter_callback<T>([&shape, &results](const T& v) {
-                    if (geometry_intersects(shape, v)) {
-                        results.emplace_back(v);
-                    }
-                }));
+    auto real_intersection = [&shape](const T& v){ return geometry_intersects(shape, v); };
+    this->query(bgi::intersects(bgi::indexable<ShapeT>{}(shape)) && bgi::satisfies(real_intersection),
+                iter);
+}
+
+
+template <typename T, typename A>
+template <typename ShapeT>
+inline std::vector<typename IndexTree<T, A>::cref_t> IndexTree<T, A>
+::find_intersecting(const ShapeT& shape) const {
+    std::vector<cref_t> results;
+    find_intersecting(shape, std::back_inserter(results));
     return results;
 }
 
 
 template <typename T, typename A>
-template <typename Shap>
-inline bool IndexTree<T, A>::is_intersecting(const Shap& shape) const {
-    bgi::indexable<Shap> box_from;
+template <typename ShapeT>
+inline bool IndexTree<T, A>::is_intersecting(const ShapeT& shape) const {
+    const bgi::indexable<ShapeT> box_from;
     for (auto it = this->qbegin(bgi::intersects(box_from(shape))); it != this->qend(); ++it) {
         if (geometry_intersects(shape, *it)) {
             return true;
@@ -64,11 +67,11 @@ inline bool IndexTree<T, A>::is_intersecting(const Shap& shape) const {
 
 
 template <typename T, typename A>
-template <typename S>
-inline bool IndexTree<T, A>::place(const Box3D& region, S& shape) {
+template <typename ShapeT>
+inline bool IndexTree<T, A>::place(const Box3D& region, ShapeT& shape) {
     // Align shape bbox to region bbox
     const Box3D region_bbox = bgi::indexable<Box3D>{}(region);
-    Box3D bbox = bgi::indexable<S>{}(shape);
+    const Box3D bbox = bgi::indexable<ShapeT>{}(shape);
     Point3Dx offset = Point3Dx(region_bbox.min_corner()) - bbox.min_corner();
     shape.translate(offset);
 

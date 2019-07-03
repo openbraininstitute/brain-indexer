@@ -145,32 +145,44 @@ typedef boost::variant<Sphere, Cylinder> GeometryEntry;
 typedef boost::variant<ISoma, ISegment> MorphoEntry;
 
 
-///
-/// IndexTree is a Boost::rtree spatial index tree
-/// It adds methods for finding intersections and serialization.
-///
+/**
+ * \brief IndexTree is a Boost::rtree spatial index tree
+ * It adds methods for finding intersections and serialization.
+ */
 template <typename T, typename A = bgi::linear<16, 2>>
 struct IndexTree: public bgi::rtree<T, A> {
     using bgi::rtree<T, A>::rtree;
 
     using cref_t = std::reference_wrapper<const T>;
 
-    template <typename Shap>
-    inline std::vector<cref_t> find_intersecting(const Shap& shape) const;
+    /**
+     * \brief Find elements in tree intersecting the given shape.
+     *
+     * \param iter: An iterator object used to collect matching entries.
+     *   Consider using the builtin transformation iterators: iter_ids_getter and
+     *   iter_gid_segm_getter. For finer control check the alternate overload
+     */
+    template <typename ShapeT, typename OutputIt>
+    inline void find_intersecting(const ShapeT& shape, const OutputIt& iter) const;
 
-    template <typename Shap>
-    inline bool is_intersecting(const Shap& shape) const;
+    template <typename ShapeT>
+    inline std::vector<cref_t> find_intersecting(const ShapeT& shape) const;
 
-    // Load / Dump serialization
+    /// Checks whether a given shape intersects any object in the tree
+    template <typename ShapeT>
+    inline bool is_intersecting(const ShapeT& shape) const;
+
+    /// Constructor to rebuild from binary data file
     inline explicit IndexTree(const std::string& filename);
     inline explicit IndexTree(const char* dump_file)
         : IndexTree(std::string(dump_file)) {}
 
+    /// Output tree to binary data file
     inline void dump(const std::string& filename) const;
 
     /// Non-overlapping placement of Shapes
-    template <typename S>
-    inline bool place(const Box3D& region, S& shape);
+    template <typename ShapeT>
+    inline bool place(const Box3D& region, ShapeT& shape);
 
   private:
     typedef bgi::rtree<T, A> super;

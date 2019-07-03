@@ -16,3 +16,15 @@ set(BUILD_BASENAME "test_clean")
 add_executable(${BUILD_BASENAME} cpp/examples/${BUILD_BASENAME}.cpp)
 target_link_libraries(${BUILD_BASENAME} SpatialIndex)
 add_test(NAME ${BUILD_BASENAME} COMMAND ${BUILD_BASENAME})
+
+
+# Python tests
+if(SI_PYTHON_BINDINGS)
+    add_test(NAME PyBindings
+             COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/test_rtree_soma.py)
+    set_tests_properties(PyBindings PROPERTIES ENVIRONMENT
+                         PYTHONPATH=${CMAKE_BINARY_DIR}/python:$ENV{PYTHONPATH})
+endif()
+
+
+

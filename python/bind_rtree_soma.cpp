@@ -4,10 +4,12 @@
 
 
 namespace bgi = boost::geometry::index;
-namespace py = pybind11;
 namespace si = spatial_index;
+namespace py = pybind11;
+namespace pyutil = pybind_utils;
 
 using namespace py::literals;
+
 
 
 void bind_rtree_soma(py::module& m) {
@@ -16,7 +18,6 @@ void bind_rtree_soma(py::module& m) {
     using point_t = si::Point3D;
     using coord_t = si::CoordType;
     using array_t = py::array_t<coord_t, py::array::c_style | py::array::forcecast>;
-    using wrapper_t = ArrayWrapper<si::identifier_t>;
 
     std::string class_name("SomaTree");
 
@@ -48,14 +49,15 @@ void bind_rtree_soma(py::module& m) {
 
         .def("find_intersecting",
              [](Class& obj, coord_t cx, coord_t cy, coord_t cz, coord_t r) {
-                 wrapper_t wrapper;
-                 auto& vec = wrapper.as_vector();
-                 const auto entries = obj.find_intersecting(si::Sphere{{cx, cy, cz}, r});
-                 vec.reserve(entries.size());
-                 for (const Entry& soma: entries) {
-                     vec.push_back(soma.gid());
-                 }
-                 return wrapper.as_pyarray();
+                 std::vector<si::identifier_t> vec;
+                 /** This commented code block is an alternative for finer control */
+                 // auto entries = obj.find_intersecting(si::Sphere{{cx, cy, cz}, r});
+                 // vec.reserve(entries.size());
+                 // for (const Entry& soma: entries) {
+                 //     vec.push_back(soma.gid());
+                 // }
+                 obj.find_intersecting(si::Sphere{{cx, cy, cz}, r}, si::iter_ids_getter(vec));
+                 return pyutil::as_pyarray(std::move(vec));
              },
              "Searches objects intersecting the given sphere, and returns their ids.")
 
@@ -67,10 +69,10 @@ void bind_rtree_soma(py::module& m) {
 
         .def("find_nearest",
              [](Class& obj, coord_t cx, coord_t cy, coord_t cz, int k_neighbors) {
-                 wrapper_t wrapper;
+                 std::vector<si::identifier_t> vec;
                  obj.query(bgi::nearest(point_t{cx, cy, cz}, k_neighbors),
-                           si::iter_ids_getter(wrapper.as_vector()));
-                 return wrapper.as_pyarray();
+                           si::iter_ids_getter(vec));
+                return pyutil::as_pyarray(std::move(vec));
              },
              "Searches and returns the ids of the nearest K objects to the given point.")
 
