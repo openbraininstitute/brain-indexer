@@ -3,6 +3,7 @@
 #ifndef BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL
 #error "SpatialIndex requires definition BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL"
 #endif
+#include <functional>
 
 #include <boost/serialization/nvp.hpp>
 #include <boost/serialization/serialization.hpp>
@@ -152,8 +153,10 @@ template <typename T, typename A = bgi::linear<16, 2>>
 struct IndexTree: public bgi::rtree<T, A> {
     using bgi::rtree<T, A>::rtree;
 
+    using cref_t = std::reference_wrapper<const T>;
+
     template <typename Shap>
-    inline std::vector<const T*> find_intersecting(const Shap& shape) const;
+    inline std::vector<cref_t> find_intersecting(const Shap& shape) const;
 
     template <typename Shap>
     inline bool is_intersecting(const Shap& shape) const;

@@ -35,15 +35,15 @@ bool geometry_intersects(const T& geom1, const boost::variant<VarT...>& geom2) {
 
 template <typename T, typename A>
 template <typename Shap>
-inline std::vector<const T*> IndexTree<T, A>::find_intersecting(const Shap& shape) const {
-    std::vector<const T*> results;  // To avoid copies we keep pointers
+inline std::vector<typename IndexTree<T, A>::cref_t> IndexTree<T, A>
+::find_intersecting(const Shap& shape) const {
+    std::vector<cref_t> results;
     bgi::indexable<Shap> box_from;
-
     // Using a callback makes the query slightly faster than using qbegin()...qend()
     // maybe because there's no need to dereference
     this->query(bgi::intersects(box_from(shape)), iter_callback<T>([&shape, &results](const T& v) {
                     if (geometry_intersects(shape, v)) {
-                        results.push_back(&v);
+                        results.emplace_back(v);
                     }
                 }));
     return results;

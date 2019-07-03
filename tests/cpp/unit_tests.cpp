@@ -55,11 +55,11 @@ bool test_intesecting_ids(IndexTree<T> const& tree,
                           S const& shape,
                           std::vector<identifier_t> expected) {
     int cur_i = 0;
-    for (const auto& item: tree.find_intersecting(shape)) {
+    for (const T& item: tree.find_intersecting(shape)) {
         if (cur_i >= expected.size())
             return false;
-        if (item->gid() != expected[cur_i]) {
-            std::cout << "Error: " << item->gid() << " != " << expected[cur_i] << std::endl;
+        if (item.gid() != expected[cur_i]) {
+            std::cout << "Error: " << item.gid() << " != " << expected[cur_i] << std::endl;
             return false;
         }
         cur_i++;
@@ -70,11 +70,12 @@ template <typename S, typename... T>
 bool test_intesecting_ids(IndexTree<boost::variant<T...>> const& tree,
                           S const& shape,
                           std::vector<identifier_t> expected) {
+    using item_t = boost::variant<T...>;
     int cur_i = 0;
-    for (const auto& item: tree.find_intersecting(shape)) {
+    for (const item_t& item: tree.find_intersecting(shape)) {
         if (cur_i >= expected.size())
             return false;
-        identifier_t gid = boost::apply_visitor([](const auto& t) { return t.gid(); }, *item);
+        identifier_t gid = boost::apply_visitor([](const auto& t) { return t.gid(); }, item);
         if (gid != expected[cur_i]) {
             std::cout << "Error: " << gid << " != " << expected[cur_i] << std::endl;
             return false;

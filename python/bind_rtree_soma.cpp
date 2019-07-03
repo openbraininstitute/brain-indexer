@@ -50,10 +50,10 @@ void bind_rtree_soma(py::module& m) {
              [](Class& obj, coord_t cx, coord_t cy, coord_t cz, coord_t r) {
                  wrapper_t wrapper;
                  auto& vec = wrapper.as_vector();
-                 auto entries = obj.find_intersecting(si::Sphere{{cx, cy, cz}, r});
+                 const auto entries = obj.find_intersecting(si::Sphere{{cx, cy, cz}, r});
                  vec.reserve(entries.size());
-                 for (const Entry* soma: entries) {
-                     vec.push_back(soma->gid());
+                 for (const Entry& soma: entries) {
+                     vec.push_back(soma.gid());
                  }
                  return wrapper.as_pyarray();
              },
