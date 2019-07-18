@@ -14,6 +14,8 @@ project(SpatialIndex VERSION ${proj_version}
 
 option(SI_PYTHON_BINDINGS "Build the python bindings" ON)
 option(SI_UNIT_TESTS "Build the c++ unit tests" ON)
+option(SI_BENCHMARKS "Build benchmarks tests" OFF)
+
 
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
@@ -29,7 +31,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #
 set(BOOST_REQ_COMPONENTS serialization)
 if(SI_UNIT_TESTS)
-    set(BOOST_REQ_COMPONENTS ${BOOST_REQ_COMPONENTS} unit_test_framework)
+    list(APPEND BOOST_REQ_COMPONENTS unit_test_framework)
+    if(SI_BENCHMARKS)
+        list(APPEND BOOST_REQ_COMPONENTS timer)
+    endif()
 endif()
 find_package(Boost 1.65.0 REQUIRED COMPONENTS ${BOOST_REQ_COMPONENTS})
 

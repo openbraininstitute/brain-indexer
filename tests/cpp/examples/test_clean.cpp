@@ -13,9 +13,9 @@ int main() {
     Sphere spheres[] = {Sphere{{.0, .0}, 1.}, Sphere{{4., 0.}, 1.5}};
     unsigned long i = 1;
     for (auto const& x: spheres) {
-        rtree.insert(ISoma{i++, x});
+        rtree.insert(Soma{i++, x});
     }
-    rtree.insert(ISegment{i++, 1, {{2., 0.}, {4., 0.}, 1.}});
+    rtree.insert(Segment{i++, 1, {{2., 0.}, {4., 0.}, 1.}});
 
     Box3D query_box(Point3D(2, 0), Point3D(3, 1));
 

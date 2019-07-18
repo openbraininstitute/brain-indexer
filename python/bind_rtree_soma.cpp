@@ -13,8 +13,8 @@ using namespace py::literals;
 
 
 void bind_rtree_soma(py::module& m) {
-    using Entry = si::ISoma;
-    using Class = si::IndexTree<si::ISoma>;
+    using Entry = si::Soma;
+    using Class = si::IndexTree<Entry>;
     using point_t = si::Point3D;
     using coord_t = si::CoordType;
     using array_t = py::array_t<coord_t, py::array::c_style | py::array::forcecast>;
@@ -32,7 +32,7 @@ void bind_rtree_soma(py::module& m) {
             auto r = radii.template unchecked<1>();
             auto points = reinterpret_cast<const point_t*>(c.data(0, 0));
 
-            std::vector<si::ISoma> indexed_entries;
+            std::vector<Entry> indexed_entries;
             indexed_entries.reserve(c.shape(0));
 
             for (size_t i = 0; i < r.shape(0); ++i) {

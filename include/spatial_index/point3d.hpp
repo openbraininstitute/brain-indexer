@@ -18,7 +18,6 @@ using CoordType = float;
 #endif
 
 using Point3D = bg::model::point<CoordType, 3, bg::cs::cartesian>;
-
 using Box3D = bg::model::box<Point3D>;
 
 

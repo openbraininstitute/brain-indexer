@@ -37,7 +37,7 @@ struct Sphere {
     friend class boost::serialization::access;
 
     template <class Archive>
-    inline void serialize(Archive& ar, const unsigned int version) {
+    inline void serialize(Archive& ar, const unsigned int /*version*/) {
         ar& centroid;
         ar& radius;
     }
@@ -84,7 +84,7 @@ struct Cylinder {
     friend class boost::serialization::access;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int version) {
+    void serialize(Archive& ar, const unsigned int /*version*/) {
         ar & p1;
         ar & p2;
         ar & radius;

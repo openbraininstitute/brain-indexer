@@ -34,7 +34,7 @@ template <typename T, typename S>
 bool test_intesecting_ids(IndexTree<T> const& tree,
                           S const& shape,
                           std::vector<identifier_t> expected) {
-    int cur_i = 0;
+    size_t cur_i = 0;
     for (const T& item: tree.find_intersecting(shape)) {
         if (cur_i >= expected.size())
             return false;
@@ -46,12 +46,13 @@ bool test_intesecting_ids(IndexTree<T> const& tree,
     }
     return true;
 }
+
 template <typename S, typename... T>
 bool test_intesecting_ids(IndexTree<boost::variant<T...>> const& tree,
                           S const& shape,
                           std::vector<identifier_t> expected) {
     using item_t = boost::variant<T...>;
-    int cur_i = 0;
+    size_t cur_i = 0;
     for (const item_t& item: tree.find_intersecting(shape)) {
         if (cur_i >= expected.size())
             return false;
@@ -98,9 +99,9 @@ BOOST_AUTO_TEST_CASE(BasicCylinderTree) {
 
 
 BOOST_AUTO_TEST_CASE(SomaTree) {
-    auto somas = util::make_vec<ISoma>(N_ITEMS, util::identity(), centers, radius);
+    auto somas = util::make_vec<Soma>(N_ITEMS, util::identity(), centers, radius);
 
-    IndexTree<ISoma> rtree(somas);
+    IndexTree<Soma> rtree(somas);
 
     TESTS_INTERSECTING_CHECKS(true, false, true, false);
 
@@ -109,10 +110,10 @@ BOOST_AUTO_TEST_CASE(SomaTree) {
 
 
 BOOST_AUTO_TEST_CASE(SegmentTree) {
-    auto segs = util::make_vec<ISegment>(N_ITEMS, util::identity(), util::constant<0>(),
+    auto segs = util::make_vec<Segment>(N_ITEMS, util::identity(), util::constant<0>(),
                                          centers, centers2, radius);
 
-    IndexTree<ISegment> rtree(segs);
+    IndexTree<Segment> rtree(segs);
 
     TESTS_INTERSECTING_CHECKS(true, false, false, true);
 
@@ -131,17 +132,17 @@ BOOST_AUTO_TEST_CASE(VariantGeometries) {
 
 
 BOOST_AUTO_TEST_CASE(VariantNeuronPieces) {
-    auto somas = util::make_vec<ISoma>(N_ITEMS, util::identity(), centers, radius);
+    auto somas = util::make_vec<Soma>(N_ITEMS, util::identity(), centers, radius);
 
     IndexTree<MorphoEntry> rtree(somas);
-    rtree.insert(ISegment{10ul, 0, centers[0], centers2[0], radius[0]});
+    rtree.insert(Segment{10ul, 0, centers[0], centers2[0], radius[0]});
 
     TESTS_INTERSECTING_CHECKS(true, false, true, true);
 
     TEST_INTERSECTING_IDS({2}, {}, {0}, {10});
 
     // Extra test... add a segment that spans across all test geometries
-    rtree.insert(ISegment{20ul, 0, centers[0], centers[2], 10});
+    rtree.insert(Segment{20ul, 0u, centers[0], centers[2], 10.0f});
 
     TESTS_INTERSECTING_CHECKS(true, true, true, true);
 

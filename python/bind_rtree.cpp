@@ -36,14 +36,14 @@ void bind_rtree(py::module& m) {
             auto points = reinterpret_cast<const point_t*>(c.data(0, 0));
 
             auto enum_ = si::util::identity{size_t(c.shape(0))};
-            auto soa = si::util::make_soa_reader<si::ISoma>(enum_, points, r);
+            auto soa = si::util::make_soa_reader<si::Soma>(enum_, points, r);
 
             return std::unique_ptr<Class>{new Class(soa.begin(), soa.end())};
         }))
 
         .def("insert",
             [](Class& obj, id_t i, coord_t cx, coord_t cy, coord_t cz, coord_t r) {
-                obj.insert(si::ISoma{i,point_t{cx, cy, cz}, r});
+                obj.insert(si::Soma{i,point_t{cx, cy, cz}, r});
             },
             "Inserts a new soma object in the tree.")
 
@@ -52,7 +52,11 @@ void bind_rtree(py::module& m) {
                     coord_t p1_cx, coord_t p1_cy, coord_t p1_cz,
                     coord_t p2_cx, coord_t p2_cy, coord_t p2_cz,
                     coord_t r) {
-                obj.insert(si::ISegment{i, part_id, point_t{p1_cx, p1_cy, p1_cz}, si::Point3D{p2_cx, p2_cy, p2_cz}, r});
+                obj.insert(si::Segment{i,
+                                       part_id,
+                                       point_t{p1_cx, p1_cy, p1_cz},
+                                       point_t{p2_cx, p2_cy, p2_cz},
+                                       r});
             },
             "Inserts a new segment object in the tree.")
 

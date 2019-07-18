@@ -1,7 +1,6 @@
 #define BOOST_TEST_MODULE SpatialIndex_UnitTests
 #include <boost/test/unit_test.hpp>
 
-#include <numeric>
 #include <spatial_index/util.hpp>
 
 
@@ -31,22 +30,14 @@ BOOST_AUTO_TEST_CASE(ConstantVector) {
 }
 
 
-#define INIT_SOA_DATA     \
-    struct S {            \
-        int a, b;         \
-    };                    \
-                          \
-    std::vector<int>      \
-        v1{1, 2, 3, 4},   \
-        v2{5, 6, 7, 8};
-
 
 BOOST_AUTO_TEST_CASE(SOA_Reader) {
-    INIT_SOA_DATA;
+    struct S { int a, b; };
+    std::vector<int> v1{1, 2, 3, 4}, v2{5, 6, 7, 8};
     auto soa = util::make_soa_reader<S>(v1, v2);
 
-    for (int i; i < v1.size(); i++) {
-        auto item = soa.get(i);
+    for (size_t i=0; i < v1.size(); i++) {
+        auto item = soa[i];
         BOOST_TEST(item.a == v1[i]);
         BOOST_TEST(item.b == v2[i]);
     }
@@ -54,7 +45,8 @@ BOOST_AUTO_TEST_CASE(SOA_Reader) {
 
 
 BOOST_AUTO_TEST_CASE(SOA_Iterator) {
-    INIT_SOA_DATA;
+    struct S { int a, b; };
+    std::vector<int> v1{1, 2, 3, 4}, v2{5, 6, 7, 8};
     auto soa = util::make_soa_reader<S>(v1, v2);
 
     int i=0;
@@ -64,5 +56,58 @@ BOOST_AUTO_TEST_CASE(SOA_Iterator) {
         BOOST_TEST(item.b == v2[i]);
     }
     BOOST_TEST( i == 4 );
+
+    // Awesome range loops
+    i=0;
+    for(auto item : soa) {
+        BOOST_TEST(item.a == v1[i]);
+        BOOST_TEST(item.b == v2[i]);
+        i++;
+    }
 }
 
+
+struct S {
+    int a, b;
+    inline S(int a_, int b_) noexcept : a(a_), b(b_) { printf("CTOR!\n"); }
+    inline S(const S& rhs) noexcept : a(rhs.a), b(rhs.b) { printf("COPY Ctor!\n"); }
+    inline S(S&& rhs) noexcept : a(rhs.a), b(rhs.b) { printf("MOVE Ctor!\n"); }
+    inline S& operator=(const S& rhs) noexcept { a = rhs.a; b = rhs.b; printf("COPY (=)!\n"); return *this; }
+    inline S& operator=(S&& rhs) noexcept{ a = rhs.a; b = rhs.b; printf("MOVE (=)\n"); return *this; }
+    inline ~S() noexcept { printf("Destroy!\n"); };
+
+    template <typename... U>
+    inline S(std::tuple<U...> tup)
+        : S(std::get<0>(tup), std::get<1>(tup)) { printf("Using Tuple directly!\n"); }
+};
+
+
+BOOST_AUTO_TEST_CASE(SOA_Performance) {
+    std::vector<int> v1{1, 2}, v2{5, 6};
+    auto soa = util::make_soa_reader<S>(v1, v2);
+    std::vector<S> vec;
+    vec.reserve(v1.size());
+
+    {
+        printf("Test 0\n");
+        for(auto iter=soa.begin(); iter < soa.end(); ++iter) {
+            vec.emplace_back(*iter);
+        }
+        vec.clear();
+    }
+
+    {
+        printf("Test 1\n");
+        for(auto iter=soa.begin(); iter < soa.end(); ++iter) {
+            vec.emplace_back(iter.get_tuple());  // Will be able to construct inplace?
+        }
+        vec.clear();
+    }
+
+    {
+        printf("Test 2 \n");
+        for(auto item : soa) {
+            vec.emplace_back(std::move(item));
+        }
+    }
+}

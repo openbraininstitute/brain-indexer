@@ -1,5 +1,5 @@
 
-add_definitions("-Wfatal-errors")
+add_definitions("-Wfatal-errors -Wall -Wextra")
 
 
 function(SI_UNIT_TEST test_src)
@@ -14,6 +14,10 @@ endfunction()
 
 si_unit_test("test_input_iters")
 si_unit_test("unit_tests")
+if(SI_BENCHMARKS)
+    si_unit_test("benchmarks")
+    target_link_libraries(benchmarks Boost::timer)
+endif()
 
 
 # Base example uses serialization

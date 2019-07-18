@@ -29,9 +29,17 @@ std::vector<T> make_vec(int count, const Args&... args) {
 
 /// \brief Virtual array where each position returns the index
 struct identity {
-    inline identity(size_t size=0) : size_(size) {};
-    inline constexpr size_t operator[](size_t x) const noexcept { return x; }
-    inline size_t size() const noexcept { return size_; }
+    inline identity(size_t size = 0)
+        : size_(size){};
+
+    inline constexpr size_t operator[](size_t x) const noexcept {
+        return x;
+    }
+
+    inline size_t size() const noexcept {
+        return size_;
+    }
+
   private:
     const size_t size_;
 };
@@ -39,16 +47,17 @@ struct identity {
 
 /// \brief Virtual array where each position always returns the same number
 template <size_t X>
-struct constant : public identity {
+struct constant: public identity {
     using identity::identity;
-    inline constexpr size_t operator[](int) const noexcept { return X; }
+    inline constexpr size_t operator[](int) const noexcept {
+        return X;
+    }
 };
-
 
 
 /// \Brief Iterator reading SOA and offering AOS interface
 template <typename T, typename... Fields>
-struct SoA;
+class SoA;
 
 
 /**

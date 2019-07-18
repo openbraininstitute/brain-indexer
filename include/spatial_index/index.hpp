@@ -25,42 +25,35 @@ using identifier_t = unsigned long;
 
 
 /**
- * \brief IShape is an Indexed shape.
- *     It Adds an 'id' field to the underlying struct.
+ * \brief IndexedShape adds an 'id' field to the underlying struct
  */
 template <typename ShapeT>
-struct IShape: public ShapeT {
-    typedef IShape<ShapeT> type;
+struct IndexedShape: public ShapeT {
+    typedef IndexedShape<ShapeT> type;
 
     identifier_t id;
 
-    inline IShape() = default;
-    inline IShape(type const&) = default;
-    inline IShape(type&&) = default;
-    inline type& operator=(type const&) = default;
-    inline type& operator=(type&&) = default;
-
+    inline IndexedShape() = default;
 
     // Deduct / Convert matching types
-    inline IShape(identifier_t id_, ShapeT const& geom_)
+    inline IndexedShape(identifier_t id_, ShapeT const& geom_) noexcept
         : ShapeT{geom_}
         , id{id_} {}
 
-    template <typename U>
-    inline IShape(identifier_t id_, U&& geom_)
-        : ShapeT{std::forward<U>(geom_)}
+    template <typename... U>
+    inline IndexedShape(identifier_t id_, U&&... geom_) noexcept
+        : ShapeT{std::forward<U>(geom_)...}
         , id{id_} {}
 
     inline bool operator==(type const& o) const noexcept {
         return id == o.id;
     }
 
-
   private:
     friend class boost::serialization::access;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int version) {
+    void serialize(Archive& ar, const unsigned int/* version*/) {
         ar& id;
         ar&* static_cast<ShapeT*>(this);
     }
@@ -68,20 +61,17 @@ struct IShape: public ShapeT {
 
 
 /**
- * \brief A neuron piece extends IShape in concept, adding gid() and segment_i()
+ * \brief A neuron piece extends IndexedShape in concept, adding gid() and segment_i()
  *        accessors where both infos are encoded in the id
  */
 template <typename ShapeT>
-struct NeuronPiece: public IShape<ShapeT> {
-    using IShape<ShapeT>::IShape;
+struct NeuronPiece: public IndexedShape<ShapeT> {
     typedef NeuronPiece<ShapeT> type;
 
-    inline NeuronPiece(identifier_t gid, unsigned segment_i, ShapeT const& geom_)
-        : super{(gid << 12) + segment_i, geom_} {}
+    inline NeuronPiece() = default;
 
-    template <typename U>
-    inline NeuronPiece(identifier_t gid, unsigned segment_i, U&& geom_)
-        : super{(gid << 12) + segment_i, std::forward<U>(geom_)} {}
+    inline NeuronPiece(identifier_t gid, unsigned segment_i, ShapeT const& geom_) noexcept
+        : super{pack_ids(gid, segment_i), geom_} {}
 
     inline identifier_t gid() const noexcept {
         return this->id >> 12;
@@ -91,42 +81,62 @@ struct NeuronPiece: public IShape<ShapeT> {
         return static_cast<unsigned>(this->id & 0x0fff);
     }
 
+  protected:
+    inline static constexpr identifier_t pack_ids(identifier_t gid, unsigned segment_i=0) {
+        return (gid << 12) + segment_i;
+    }
+
   private:
-    typedef IShape<ShapeT> super;
+    typedef IndexedShape<ShapeT> super;
 };
 
 
-struct ISoma: public NeuronPiece<Sphere> {
+struct Soma: public NeuronPiece<Sphere> {
     using NeuronPiece<Sphere>::NeuronPiece;
 
-    // Override to pass segment id 0
-    inline ISoma(identifier_t gid, Sphere const& geom_)
-        : type{gid, 0, geom_} {}
+    inline Soma() = default;
 
+    inline Soma(identifier_t gid, Sphere const& geom_) noexcept
+        : type{gid, 0u, geom_} {}
+
+    /**
+      * \brief Initialize the Soma directly from ids and gemetric properties
+      *  Note: This was changed from a more encapsulated version since initializing
+      *    using super constructors ends up in 3 chained function calls (all way up)
+      */
     template <typename U>
-    inline ISoma(identifier_t gid, U&& center, const CoordType& radius)
-        : type(gid, 0, Sphere{std::forward<U>(center), radius}) {}
+    inline Soma(identifier_t gid, U&& center, CoordType const& r) noexcept {
+        id = pack_ids(gid);
+        centroid = center;
+        radius = r;
+    }
+
+    template <typename... T>
+    inline Soma(std::tuple<T...> const& param) noexcept
+        : Soma(std::get<0>(param), std::get<1>(param), std::get<2>(param)) {
+        static_assert(sizeof...(T) == 3, "Wrong parameter tuple size");
+    }
 };
 
 
-struct ISegment: public NeuronPiece<Cylinder> {
+struct Segment: public NeuronPiece<Cylinder> {
     using NeuronPiece<Cylinder>::NeuronPiece;
 
-    // Disable "upstream" ctor with two args
-    inline ISegment(identifier_t id_, Cylinder const& geom_) = delete;
-
     template <typename U>
-    inline ISegment(identifier_t gid, U&& geom_) = delete;
+    inline Segment(identifier_t gid, unsigned segment_i,
+                   U&& center1, U&& center2,
+                   CoordType const& r) noexcept {
+        id = pack_ids(gid, segment_i);
+        p1 = center1;
+        p2 = center2;
+        radius = r;
+    }
 
-    template <typename U>
-    inline ISegment(identifier_t gid,
-                    unsigned segment_i,
-                    U&& center1,
-                    U&& center2,
-                    const CoordType& radius)
-        : type(gid,
-               segment_i,
-               Cylinder{std::forward<U>(center1), std::forward<U>(center2), radius}) {}
+    template <typename... T>
+    inline Segment(std::tuple<T...> const& param) noexcept
+        : Segment(std::get<0>(param), std::get<1>(param), std::get<2>(param), std::get<3>(param)) {
+        static_assert(sizeof...(T) == 4, "Wrong parameter tuple size");
+    }
 };
 
 
@@ -142,7 +152,7 @@ struct ISegment: public NeuronPiece<Cylinder> {
 // To simplify typing, GeometryEntry and MorphoEntry are predefined
 
 typedef boost::variant<Sphere, Cylinder> GeometryEntry;
-typedef boost::variant<ISoma, ISegment> MorphoEntry;
+typedef boost::variant<Soma, Segment> MorphoEntry;
 
 
 /**

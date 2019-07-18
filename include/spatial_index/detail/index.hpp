@@ -135,7 +135,7 @@ inline void IndexTree<T, A>::dump(const std::string& filename) const {
 }  // namespace spatial_index
 
 
-// It's fundamental to specialize indexable for our new Value type
+// It's fundamental to specialize bgi::indexable for our new Value type
 // on how to retrieve the bounding box
 // In this case we have a boost::variant of the existing shapes
 // where all classes shall implement bounding_box()
@@ -159,10 +159,10 @@ struct indexable_with_bounding_box {
 
 // Specializations of boost indexable
 
-template<> struct indexable<Sphere> :   public indexable_with_bounding_box<Sphere> {};
+template<> struct indexable<Sphere>   : public indexable_with_bounding_box<Sphere> {};
 template<> struct indexable<Cylinder> : public indexable_with_bounding_box<Cylinder> {};
-template<> struct indexable<ISoma> :    public indexable_with_bounding_box<ISoma> {};
-template<> struct indexable<ISegment> : public indexable_with_bounding_box<ISegment> {};
+template<> struct indexable<Soma>     : public indexable_with_bounding_box<Soma> {};
+template<> struct indexable<Segment>  : public indexable_with_bounding_box<Segment> {};
 
 template <typename... VariantArgs>
 struct indexable<boost::variant<VariantArgs...>> {

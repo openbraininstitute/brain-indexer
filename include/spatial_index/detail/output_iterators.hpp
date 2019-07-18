@@ -46,7 +46,7 @@ struct iter_ids_getter: public detail::iter_append_only<iter_ids_getter> {
     }
 
     template <typename T>
-    inline iter_ids_getter& operator=(const IShape<T>& result_entry) {
+    inline iter_ids_getter& operator=(const IndexedShape<T>& result_entry) {
         output_.push_back(result_entry.id);
         return *this;
     }
@@ -58,7 +58,7 @@ struct iter_ids_getter: public detail::iter_append_only<iter_ids_getter> {
             return result_entry.gid();
         }
         template <typename T>
-        inline identifier_t operator()(const IShape<T>& result_entry) {
+        inline identifier_t operator()(const IndexedShape<T>& result_entry) {
             return result_entry.id;
         }
     };
