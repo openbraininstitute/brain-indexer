@@ -6,7 +6,7 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 
-#include "result_iterators.hpp"
+#include "output_iterators.hpp"
 
 
 namespace spatial_index {

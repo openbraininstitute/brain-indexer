@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <spatial_index/index.hpp>
+#include <spatial_index/util.hpp>
 
 // We need unit tests for each kind of tree
 
@@ -28,27 +29,6 @@ const Point3D tcenter3{ 0., 6., 0.};  // intersecting cylinder only
 
 constexpr int N_ITEMS = sizeof(radius) / sizeof(CoordType);
 
-
-template <typename T, typename... Args>
-void fill_vec(std::vector<T>& vec, int count, Args... args) {
-    vec.reserve(count);
-    for (int i = 0; i < count; i++) {
-        vec.emplace_back(T{args[i]...});
-    }
-}
-
-template <unsigned X>
-struct all {
-    inline unsigned operator[](int) const {
-        return X;
-    }
-};
-
-struct identity {
-    inline unsigned operator[](int x) const {
-        return unsigned(x);
-    }
-};
 
 template <typename T, typename S>
 bool test_intesecting_ids(IndexTree<T> const& tree,
@@ -100,8 +80,7 @@ bool test_intesecting_ids(IndexTree<boost::variant<T...>> const& tree,
 
 
 BOOST_AUTO_TEST_CASE(BasicSphereTree) {
-    std::vector<Sphere> spheres;
-    fill_vec(spheres, N_ITEMS, centers, radius);
+    auto spheres = util::make_vec<Sphere>(N_ITEMS, centers, radius);
 
     IndexTree<Sphere> rtree(spheres);
 
@@ -110,8 +89,7 @@ BOOST_AUTO_TEST_CASE(BasicSphereTree) {
 
 
 BOOST_AUTO_TEST_CASE(BasicCylinderTree) {
-    std::vector<Cylinder> cyls;
-    fill_vec(cyls, N_ITEMS, centers, centers2, radius);
+    auto cyls = util::make_vec<Cylinder>(N_ITEMS, centers, centers2, radius);
 
     IndexTree<Cylinder> rtree(cyls);
 
@@ -120,8 +98,7 @@ BOOST_AUTO_TEST_CASE(BasicCylinderTree) {
 
 
 BOOST_AUTO_TEST_CASE(SomaTree) {
-    std::vector<ISoma> somas;
-    fill_vec(somas, N_ITEMS, identity(), centers, radius);
+    auto somas = util::make_vec<ISoma>(N_ITEMS, util::identity(), centers, radius);
 
     IndexTree<ISoma> rtree(somas);
 
@@ -132,8 +109,8 @@ BOOST_AUTO_TEST_CASE(SomaTree) {
 
 
 BOOST_AUTO_TEST_CASE(SegmentTree) {
-    std::vector<ISegment> segs;
-    fill_vec(segs, N_ITEMS, identity(), all<0>(), centers, centers2, radius);
+    auto segs = util::make_vec<ISegment>(N_ITEMS, util::identity(), util::constant<0>(),
+                                         centers, centers2, radius);
 
     IndexTree<ISegment> rtree(segs);
 
@@ -144,8 +121,7 @@ BOOST_AUTO_TEST_CASE(SegmentTree) {
 
 
 BOOST_AUTO_TEST_CASE(VariantGeometries) {
-    std::vector<Sphere> spheres;
-    fill_vec(spheres, N_ITEMS, centers, radius);
+    auto spheres = util::make_vec<Sphere>(N_ITEMS, centers, radius);
 
     IndexTree<GeometryEntry> rtree(spheres);
     rtree.insert(Cylinder{centers[0], centers2[0], radius[0]});
@@ -155,8 +131,7 @@ BOOST_AUTO_TEST_CASE(VariantGeometries) {
 
 
 BOOST_AUTO_TEST_CASE(VariantNeuronPieces) {
-    std::vector<ISoma> somas;
-    fill_vec(somas, N_ITEMS, identity(), centers, radius);
+    auto somas = util::make_vec<ISoma>(N_ITEMS, util::identity(), centers, radius);
 
     IndexTree<MorphoEntry> rtree(somas);
     rtree.insert(ISegment{10ul, 0, centers[0], centers2[0], radius[0]});
@@ -181,8 +156,7 @@ BOOST_AUTO_TEST_CASE(VariantNeuronPieces) {
 //////////////////////////////////////////////////////////////////
 
 BOOST_AUTO_TEST_CASE(NonOverlapPlacement) {
-    std::vector<Sphere> spheres;
-    fill_vec(spheres, N_ITEMS, centers, radius);
+    auto spheres = util::make_vec<Sphere>(N_ITEMS, centers, radius);
 
     IndexTree<Sphere> rtree(spheres);
     Sphere toplace{{0., 0., 0.}, 2.};

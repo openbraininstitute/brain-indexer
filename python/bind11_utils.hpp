@@ -39,7 +39,7 @@ inline py::array_t<typename Sequence::value_type> as_pyarray(Sequence&& seq) {
  * \brief Converts and STL Sequence to numpy array by copying i
  */
 template <typename Sequence>
-inline py::array_t<typename Sequence::value_type> to_pyarray(Sequence& sequence) {
+inline py::array_t<typename Sequence::value_type> to_pyarray(const Sequence& sequence) {
     return py::array(sequence.size(), sequence.data());
 }
 

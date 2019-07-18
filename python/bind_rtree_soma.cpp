@@ -30,12 +30,13 @@ void bind_rtree_soma(py::module& m) {
             // https://github.com/pybind/pybind11/issues/1400#issue-324406655
             auto c = centroids.template unchecked<2>();
             auto r = radii.template unchecked<1>();
+            auto points = reinterpret_cast<const point_t*>(c.data(0, 0));
 
             std::vector<si::ISoma> indexed_entries;
             indexed_entries.reserve(c.shape(0));
 
             for (size_t i = 0; i < r.shape(0); ++i) {
-                indexed_entries.emplace_back(i, point_t{c(i, 0), c(i, 1), c(i, 2)}, r(i));
+                indexed_entries.emplace_back(i, points[i], r(i));
             }
 
             return std::unique_ptr<Class>{new Class(indexed_entries)};

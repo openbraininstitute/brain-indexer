@@ -2,13 +2,18 @@
 add_definitions("-Wfatal-errors")
 
 
-set(test_src "unit_tests")
-add_executable(${test_src} cpp/${test_src}.cpp)
-target_link_libraries(${test_src} SpatialIndex Boost::unit_test_framework)
-add_test(NAME ${test_src} COMMAND ${test_src})
-if(NOT Boost_USE_STATIC_LIBS)
-    target_compile_definitions(${test_src} PUBLIC "-DBOOST_TEST_DYN_LINK=TRUE")
-endif()
+function(SI_UNIT_TEST test_src)
+    add_executable(${test_src} cpp/${test_src}.cpp)
+    target_link_libraries(${test_src} SpatialIndex Boost::unit_test_framework)
+    add_test(NAME ${test_src} COMMAND ${test_src})
+    if(NOT Boost_USE_STATIC_LIBS)
+        target_compile_definitions(${test_src} PUBLIC "-DBOOST_TEST_DYN_LINK=TRUE")
+    endif()
+endfunction()
+
+
+si_unit_test("test_input_iters")
+si_unit_test("unit_tests")
 
 
 # Base example uses serialization
@@ -19,12 +24,16 @@ add_test(NAME ${BUILD_BASENAME} COMMAND ${BUILD_BASENAME})
 
 
 # Python tests
-if(SI_PYTHON_BINDINGS)
-    add_test(NAME PyBindings
-             COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/test_rtree_soma.py)
-    set_tests_properties(PyBindings PROPERTIES ENVIRONMENT
-                         PYTHONPATH=${CMAKE_BINARY_DIR}/python:$ENV{PYTHONPATH})
+if(NOT SI_PYTHON_BINDINGS)
+    return()
 endif()
 
+add_test(NAME Python_SomasIndex
+         COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/test_rtree_soma.py)
+set_tests_properties(Python_SomasIndex PROPERTIES ENVIRONMENT
+                     PYTHONPATH=${CMAKE_BINARY_DIR}/python:$ENV{PYTHONPATH})
 
-
+add_test(NAME Python_MorphIndex
+         COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/test_rtree_morph.py)
+set_tests_properties(Python_MorphIndex PROPERTIES ENVIRONMENT
+                     PYTHONPATH=${CMAKE_BINARY_DIR}/python:$ENV{PYTHONPATH})

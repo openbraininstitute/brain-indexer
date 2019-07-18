@@ -1,6 +1,7 @@
 
 set(PYBIND11_SOURCES
     bind_rtree_soma.cpp
+    bind_rtree.cpp
     bindings.cpp
 )
 

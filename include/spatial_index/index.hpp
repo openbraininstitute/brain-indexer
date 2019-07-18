@@ -146,8 +146,11 @@ typedef boost::variant<ISoma, ISegment> MorphoEntry;
 
 
 /**
- * \brief IndexTree is a Boost::rtree spatial index tree
- * It adds methods for finding intersections and serialization.
+ * \brief IndexTree is a Boost::rtree spatial index tree with helper methods
+ *    for finding intersections and serialization.
+ *
+ * \note: For large arrays of raw data (vec[floats]...) consider using make_soa_reader to
+ *       avoid duplicating all the data in memory. Init using IndexTree(soa.begin(), soa.end())
  */
 template <typename T, typename A = bgi::linear<16, 2>>
 struct IndexTree: public bgi::rtree<T, A> {
