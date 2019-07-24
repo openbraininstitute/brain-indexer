@@ -30,6 +30,8 @@ void bind_rtree(py::module& m) {
     using array_ids = py::array_t<id_t, py::array::c_style | py::array::forcecast>;
     using array_offsets = py::array_t<size_t, py::array::c_style | py::array::forcecast>;
 
+    PYBIND11_NUMPY_DTYPE(si::gid_segm_t, gid, segment_i);  // Pybind11 wow!
+
     std::string class_name("MorphIndex");
 
     py::class_<Class>(m, class_name.c_str())
@@ -39,7 +41,7 @@ void bind_rtree(py::module& m) {
         // Initialize a structure with Somas automatically numbered
         .def(py::init([](array_t centroids, array_t radii) {
             CONVERT_INPUT(centroids, radii);
-            auto enum_ = si::util::identity{size_t(c.shape(0))};
+            auto enum_ = si::util::identity<>{size_t(c.shape(0))};
             auto soa = si::util::make_soa_reader<si::Soma>(enum_, points, r);
             return std::unique_ptr<Class>{new Class(soa.begin(), soa.end())};
         }))
@@ -71,10 +73,42 @@ void bind_rtree(py::module& m) {
             },
             "Inserts a new segment object in the tree.")
 
+        .def("add_somas",
+            [](Class& obj, array_ids py_ids, array_t centroids, array_t radii) {
+                CONVERT_INPUT(centroids, radii);
+                auto ids = py_ids.template unchecked<1>();
+                auto soa = si::util::make_soa_reader<si::Soma>(ids, points, r);
+                for (auto soma : soa) {
+                    obj.insert(std::move(soma));
+                }
+            },
+            "Bulk add more somas to the spatial index")
+
+        .def("add_neuron",
+            [](Class& obj, id_t neuron_id, array_t centroids, array_t radii) {
+                CONVERT_INPUT(centroids, radii);
+                // Add soma
+                obj.insert(si::Soma{neuron_id, points[0], r[0]});
+
+                // Create soa reader for data as segments
+                auto nrn_ids = si::util::constant<>{neuron_id, size_t(r.size() - 1)};
+                auto seg_ids = si::util::identity<unsigned>{};
+                auto second_points = points + 1;   // Next point is current segment end
+
+                auto soa = si::util::make_soa_reader<si::Segment>(
+                    nrn_ids, seg_ids, points, second_points, r);
+
+                // Start at begin() + 1 to skip soma
+                for(auto iter = soa.begin() + 1; iter < soa.end() ; ++iter) {
+                    obj.insert(*iter);
+                }
+            },
+            "Bulk add a neuron (1 soma and many segments) to the spatial index")
+
         .def("find_intersecting",
             [](Class& obj, coord_t cx, coord_t cy, coord_t cz, coord_t r) {
-                std::vector<si::identifier_t> vec;
-                obj.find_intersecting(si::Sphere{{cx, cy, cz}, r}, si::iter_ids_getter(vec));
+                std::vector<si::gid_segm_t> vec;
+                obj.find_intersecting(si::Sphere{{cx, cy, cz}, r}, si::iter_gid_segm_getter(vec));
                 return pyutil::to_pyarray(vec);
             },
             "Searches objects intersecting the given sphere, and returns their ids.")
@@ -86,13 +120,13 @@ void bind_rtree(py::module& m) {
             "Checks whether the given sphere intersects any object in the tree.")
 
         .def("find_nearest",
-            [](Class& obj, coord_t cx, coord_t cy, coord_t cz, int k_neighbors) {
-                std::vector<si::identifier_t> vec;
-                obj.query(bgi::nearest(point_t{cx, cy, cz}, k_neighbors),
-                          si::iter_ids_getter(vec));
-               return pyutil::as_pyarray(std::move(vec));
-            },
-            "Searches and returns the ids of the nearest K objects to the given point.")
+             [](Class& obj, coord_t cx, coord_t cy, coord_t cz, int k_neighbors) {
+                 std::vector<si::gid_segm_t> vec;
+                 obj.query(bgi::nearest(point_t{cx, cy, cz}, k_neighbors),
+                           si::iter_gid_segm_getter(vec));
+                 return pyutil::to_pyarray(vec);
+             },
+             "Searches and returns the ids of the nearest K objects to the given point.")
 
         .def("__len__", &Class::size);
 }

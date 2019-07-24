@@ -8,7 +8,7 @@ using namespace spatial_index;
 
 
 BOOST_AUTO_TEST_CASE(IdentityVector) {
-    util::identity ids(100);
+    util::identity<> ids(100);
 
     BOOST_TEST( ids.size() == 100 );
 
@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_CASE(IdentityVector) {
 
 BOOST_AUTO_TEST_CASE(ConstantVector) {
     constexpr size_t K = 27;
-    util::constant<K> ids(100);
+    util::constant<> ids(K, 100);
 
     BOOST_TEST( ids.size() == 100 );
 

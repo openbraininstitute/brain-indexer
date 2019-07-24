@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(BasicCylinderTree) {
 
 
 BOOST_AUTO_TEST_CASE(SomaTree) {
-    auto somas = util::make_vec<Soma>(N_ITEMS, util::identity(), centers, radius);
+    auto somas = util::make_vec<Soma>(N_ITEMS, util::identity<>(), centers, radius);
 
     IndexTree<Soma> rtree(somas);
 
@@ -110,8 +110,8 @@ BOOST_AUTO_TEST_CASE(SomaTree) {
 
 
 BOOST_AUTO_TEST_CASE(SegmentTree) {
-    auto segs = util::make_vec<Segment>(N_ITEMS, util::identity(), util::constant<0>(),
-                                         centers, centers2, radius);
+    auto segs = util::make_vec<Segment>(N_ITEMS, util::identity<>(), util::constant<unsigned>(0),
+                                        centers, centers2, radius);
 
     IndexTree<Segment> rtree(segs);
 
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(VariantGeometries) {
 
 
 BOOST_AUTO_TEST_CASE(VariantNeuronPieces) {
-    auto somas = util::make_vec<Soma>(N_ITEMS, util::identity(), centers, radius);
+    auto somas = util::make_vec<Soma>(N_ITEMS, util::identity<>(), centers, radius);
 
     IndexTree<MorphoEntry> rtree(somas);
     rtree.insert(Segment{10ul, 0, centers[0], centers2[0], radius[0]});

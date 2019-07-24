@@ -33,11 +33,11 @@ if(NOT SI_PYTHON_BINDINGS)
 endif()
 
 add_test(NAME Python_SomasIndex
-         COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/test_rtree_soma.py)
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test_rtree_soma.py)
 set_tests_properties(Python_SomasIndex PROPERTIES ENVIRONMENT
                      PYTHONPATH=${CMAKE_BINARY_DIR}/python:$ENV{PYTHONPATH})
 
 add_test(NAME Python_MorphIndex
-         COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/test_rtree_morph.py)
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test_rtree_morph.py)
 set_tests_properties(Python_MorphIndex PROPERTIES ENVIRONMENT
                      PYTHONPATH=${CMAKE_BINARY_DIR}/python:$ENV{PYTHONPATH})

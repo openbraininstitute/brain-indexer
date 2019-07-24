@@ -44,6 +44,7 @@ def test_intersection_all():
     radius = np.random.uniform(low=0.5, high=1.0)
 
     idx = t.find_intersecting(centroid[0], centroid[1], centroid[2], radius)
+    if len(idx.dtype) > 1: idx = idx['gid']  # Records
 
     expected_result = np.array([0, 1, 2], dtype=np.uintp)
     assert np.all(idx == expected_result), (idx, expected_result, centroids, radii)
@@ -67,6 +68,7 @@ def test_intersection_random():
     t = IndexClass(centroids, radii)
 
     idx = t.find_intersecting(q_centroid[0], q_centroid[1], q_centroid[2], q_radius)
+    if len(idx.dtype) > 1: idx = idx['gid']  # Records
     assert len(np.setdiff1d(idx, expected_result)) == 0, (idx, expected_result)
 
 
@@ -81,6 +83,7 @@ def test_nearest_all():
     radius = 0.001
 
     idx = t.find_nearest(center[0], center[1], center[2], 10)
+    if len(idx.dtype) > 1: idx = idx['gid']  # Records
     assert np.all(np.sort(idx) == np.sort(np.arange(10, dtype=np.uintp))), idx
 
 
@@ -108,7 +111,7 @@ def test_nearest_random():
     t = IndexClass(centroids, radii)
 
     idx = t.find_nearest(center[0], center[1], center[2], K)
-
+    if len(idx.dtype) > 1: idx = idx['gid']  # Records
     assert np.all(np.sort(idx) == np.sort(expected_result)), (idx, expected_result)
 
 

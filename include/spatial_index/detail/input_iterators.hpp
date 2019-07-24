@@ -17,6 +17,8 @@ struct indexed_iterator_base {
     size_t i_;
     inline CRT& operator+=(size_t i) noexcept { i_ += i; return *static_cast<CRT*>(this); }
     inline CRT& operator-=(size_t i) noexcept { i_ += i; return *static_cast<CRT*>(this); }
+    inline CRT& operator+(size_t i) && noexcept { return (*this)+=i; }
+    inline CRT& operator-(size_t i) && noexcept { return (*this)+=i; }
     inline CRT& operator++() noexcept { return (*this)+=1; }
     inline CRT& operator--() noexcept { return (*this)-=1; }
     inline difference_type operator-(const CRT& rhs) const noexcept { return i_ - rhs.i_; }
@@ -71,14 +73,15 @@ class SoA {
 
     inline SoA(Fields&&... args) = delete;
     inline SoA(Fields&... args)
-        : data_(args...) {}
+        : data_{args...}
+        , last_{*this, size()} {}
 
     inline iterator begin() const noexcept {
         return iterator(*this, 0);
     }
 
-    inline iterator end() const noexcept {
-        return iterator(*this, size());
+    inline const iterator& end() const noexcept {
+        return last_;
     }
 
     inline size_t size() const noexcept {
@@ -105,6 +108,7 @@ class SoA {
     }
 
     std::tuple<const Fields&...> data_;
+    iterator last_;  // Very often accessed, especially in range-loops
 };
 
 

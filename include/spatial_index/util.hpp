@@ -28,30 +28,37 @@ std::vector<T> make_vec(int count, const Args&... args) {
 
 
 /// \brief Virtual array where each position returns the index
+template <typename T=size_t>
 struct identity {
-    inline identity(size_t size = 0)
-        : size_(size){};
+    inline identity(size_t size = 0) noexcept
+        : size_(size) {}
 
-    inline constexpr size_t operator[](size_t x) const noexcept {
-        return x;
+    inline constexpr T operator[](size_t x) const noexcept {
+        return static_cast<T>(x);
     }
 
     inline size_t size() const noexcept {
         return size_;
     }
 
-  private:
+  protected:
     const size_t size_;
 };
 
 
 /// \brief Virtual array where each position always returns the same number
-template <size_t X>
-struct constant: public identity {
-    using identity::identity;
-    inline constexpr size_t operator[](int) const noexcept {
-        return X;
+template <typename T=size_t>
+struct constant: public identity<T> {
+    inline constant(T x, size_t size = 0) noexcept
+        : identity<T>{size}
+        , x_(x) {}
+
+    inline constexpr T operator[](size_t) const noexcept {
+        return x_;
     }
+
+  private:
+    const T x_;
 };
 
 
