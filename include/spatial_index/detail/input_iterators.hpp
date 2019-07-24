@@ -32,7 +32,28 @@ struct indexed_iterator_base {
     inline decltype(auto) operator[](size_t i) const noexcept {
         return static_cast<const CRT*>(this)->get(i_ + i);
     }
+};
 
+
+template <typename SoA_T>
+struct SoA_Iterator : public detail::indexed_iterator_base<SoA_Iterator<SoA_T>,
+                                                           typename SoA_T::value_type> {
+    inline SoA_Iterator(const SoA_T& soa, size_t i) noexcept
+        : super{i}
+        , soa_(soa) {}
+
+    inline decltype(auto) get(size_t i) const {
+        return soa_.get()[i];
+    }
+
+    inline decltype(auto) get_tuple() const {
+        return soa_.get().get_tuple(this->i_);
+    }
+
+  private:
+    using super = detail::indexed_iterator_base<SoA_Iterator<SoA_T>,
+                                                typename SoA_T::value_type>;
+    std::reference_wrapper<const SoA_T> soa_;  // Make the iterator copyable, swapable...
 };
 
 }  // namespace detail
@@ -41,28 +62,12 @@ struct indexed_iterator_base {
 
 namespace util {
 
+
 template <typename T, typename... Fields>
 class SoA {
   public:
-    struct iterator : public detail::indexed_iterator_base<iterator, T> {
-        using super = detail::indexed_iterator_base<iterator, T>;
-
-        inline iterator(const SoA& soa, size_t i) noexcept
-            : super{i}
-            , soa_(soa) {}
-
-        inline decltype(auto) get(size_t i) const {
-            return soa_.get()[i];
-        }
-
-        inline decltype(auto) get_tuple() const {
-            return soa_.get().get_tuple(this->i_);
-        }
-
-    private:
-        std::reference_wrapper<const SoA> soa_;  // Make the iterator copyable, swapable...
-    };
-
+    using value_type = T;
+    using iterator = detail::SoA_Iterator<SoA<T, Fields...>>;
 
     inline SoA(Fields&&... args) = delete;
     inline SoA(Fields&... args)

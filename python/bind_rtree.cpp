@@ -12,6 +12,13 @@ namespace pyutil = pybind_utils;
 using namespace py::literals;
 
 
+#define CONVERT_INPUT(centroids, radii) \
+    auto c = centroids.template unchecked<2>(); \
+    auto r = radii.template unchecked<1>(); \
+    static_assert(sizeof(point_t) == 3*sizeof(coord_t), \
+                  "numpy array not convertible to point3d"); \
+    auto points = reinterpret_cast<const point_t*>(c.data(0, 0));
+
 
 void bind_rtree(py::module& m) {
     using Entry = si::MorphoEntry;
@@ -21,6 +28,7 @@ void bind_rtree(py::module& m) {
     using id_t = si::identifier_t;
     using array_t = py::array_t<coord_t, py::array::c_style | py::array::forcecast>;
     using array_ids = py::array_t<id_t, py::array::c_style | py::array::forcecast>;
+    using array_offsets = py::array_t<size_t, py::array::c_style | py::array::forcecast>;
 
     std::string class_name("MorphIndex");
 
@@ -28,16 +36,19 @@ void bind_rtree(py::module& m) {
 
         .def(py::init<>())
 
+        // Initialize a structure with Somas automatically numbered
         .def(py::init([](array_t centroids, array_t radii) {
-            auto c = centroids.template unchecked<2>();
-            auto r = radii.template unchecked<1>();
-
-            static_assert(sizeof(point_t) == 3*sizeof(coord_t), "numpy array not convertible to point3d");
-            auto points = reinterpret_cast<const point_t*>(c.data(0, 0));
-
+            CONVERT_INPUT(centroids, radii);
             auto enum_ = si::util::identity{size_t(c.shape(0))};
             auto soa = si::util::make_soa_reader<si::Soma>(enum_, points, r);
+            return std::unique_ptr<Class>{new Class(soa.begin(), soa.end())};
+        }))
 
+        // Initialize structure with somas and specific ids
+        .def(py::init([](array_t centroids, array_t radii, array_ids py_ids) {
+            CONVERT_INPUT(centroids, radii);
+            auto ids = py_ids.template unchecked<1>();
+            auto soa = si::util::make_soa_reader<si::Soma>(ids, points, r);
             return std::unique_ptr<Class>{new Class(soa.begin(), soa.end())};
         }))
 
