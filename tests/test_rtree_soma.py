@@ -1,5 +1,5 @@
 import numpy as np
-from _spatial_index import SomaTree as IndexClass
+from _spatial_index import SomaIndex as IndexClass
 
 
 def arange_values():

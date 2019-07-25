@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(VariantUsingSOA) {
     std::vector<float> points(1e7 * 3);
     std::vector<float> radix(1e7);
 
-    std::vector<ISoma> somas;
+    std::vector<Soma> somas;
     auto points_ptr = reinterpret_cast<const Point3D*>(points.data());
 
     {
@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(VariantUsingSOA) {
 
     {
         cpu_timer timer;
-        auto soa=util::make_soa_reader<ISoma>(ids, points_ptr, radix);
+        auto soa=util::make_soa_reader<Soma>(ids, points_ptr, radix);
 
         IndexTree<MorphoEntry> rtree(soa.begin(), soa.end());
         std::cout << "Without Copy (SoA reader):" << timer.format() << std::endl;

@@ -1,8 +1,6 @@
 
 set(PYBIND11_SOURCES
-    bind_rtree_soma.cpp
-    bind_rtree.cpp
-    bindings.cpp
+    spatial_index.cpp
 )
 
 pybind11_add_module(_spatial_index  ${PYBIND11_SOURCES})

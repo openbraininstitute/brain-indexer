@@ -36,6 +36,8 @@ struct iter_callback: public detail::iter_append_only<iter_callback<ArgT>> {
 
 
 struct iter_ids_getter: public detail::iter_append_only<iter_ids_getter> {
+    using value_type = identifier_t;
+
     iter_ids_getter(std::vector<identifier_t>& output)
         : output_(output) {}
 
@@ -83,6 +85,8 @@ struct gid_segm_t {
 
 
 struct iter_gid_segm_getter: public detail::iter_append_only<iter_gid_segm_getter> {
+    using value_type = gid_segm_t;
+
     iter_gid_segm_getter(std::vector<gid_segm_t>& output)
         : output_(output) {}
 
