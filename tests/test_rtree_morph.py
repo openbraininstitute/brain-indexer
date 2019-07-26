@@ -3,7 +3,7 @@ from _spatial_index import MorphIndex
 import importlib
 import os.path
 
-test_rtree_soma = importlib.import_module('test_rtree_soma',
+test_rtree_soma = importlib.import_module('test_rtree_sphere',
                                           os.path.dirname(__file__))
 
 

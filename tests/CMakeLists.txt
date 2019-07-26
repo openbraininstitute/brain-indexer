@@ -32,9 +32,9 @@ if(NOT SI_PYTHON_BINDINGS)
     return()
 endif()
 
-add_test(NAME Python_SomasIndex
-         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test_rtree_soma.py)
-set_tests_properties(Python_SomasIndex PROPERTIES ENVIRONMENT
+add_test(NAME Python_SphereIndex
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test_rtree_sphere.py)
+set_tests_properties(Python_SphereIndex PROPERTIES ENVIRONMENT
                      PYTHONPATH=${CMAKE_BINARY_DIR}/python:$ENV{PYTHONPATH})
 
 add_test(NAME Python_MorphIndex

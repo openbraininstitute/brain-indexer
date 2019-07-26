@@ -14,7 +14,7 @@ using namespace py::literals;
 
 
 // Both indexes share a great deal of API in common
-template <typename Entry>
+template <typename Entry, typename SomaT=Entry>
 struct py_rtree {
     using value_type = Entry;
     using Class = si::IndexTree<Entry>;
@@ -34,7 +34,7 @@ struct py_rtree {
             .def(py::init([](array_t centroids, array_t radii) {
                 auto point_radius = convert_input(centroids, radii);
                 auto enum_ = si::util::identity<>{size_t(radii.shape(0))};
-                auto soa = si::util::make_soa_reader<si::Soma>(enum_, point_radius.first,
+                auto soa = si::util::make_soa_reader<SomaT>(enum_, point_radius.first,
                                                                point_radius.second);
                 return std::unique_ptr<Class>{new Class(soa.begin(), soa.end())};
             }))
@@ -43,7 +43,7 @@ struct py_rtree {
             .def(py::init([](array_t centroids, array_t radii, array_ids py_ids) {
                 auto point_radius = convert_input(centroids, radii);
                 auto ids = py_ids.template unchecked<1>();
-                auto soa = si::util::make_soa_reader<si::Soma>(ids, point_radius.first,
+                auto soa = si::util::make_soa_reader<SomaT>(ids, point_radius.first,
                                                                point_radius.second);
                 return std::unique_ptr<Class>{new Class(soa.begin(), soa.end())};
             }))
@@ -51,7 +51,7 @@ struct py_rtree {
             .def(
                 "insert",
                 [](Class& obj, id_t i, coord_t cx, coord_t cy, coord_t cz, coord_t r) {
-                    obj.insert(si::Soma{i, point_t{cx, cy, cz}, r});
+                    obj.insert(SomaT{i, point_t{cx, cy, cz}, r});
                 },
                 "Inserts a new soma object in the tree.")
 
@@ -60,7 +60,7 @@ struct py_rtree {
                 [](Class& obj, array_ids py_ids, array_t centroids, array_t radii) {
                     auto point_radius = convert_input(centroids, radii);
                     auto ids = py_ids.template unchecked<1>();
-                    auto soa = si::util::make_soa_reader<si::Soma>(ids, point_radius.first,
+                    auto soa = si::util::make_soa_reader<SomaT>(ids, point_radius.first,
                                                                    point_radius.second);
                     for (auto soma: soa) {
                         obj.insert(std::move(soma));

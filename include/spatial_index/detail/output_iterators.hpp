@@ -16,7 +16,20 @@ struct iter_append_only {
     inline RT& operator--(int) { return *static_cast<RT*>(this); }
 };
 
+
+inline identifier_t get_id_from(IndexedSphere const& obj) { return obj.id; }
+
+template <typename S>
+inline identifier_t get_id_from(NeuronPiece<S> const& obj) { return obj.gid(); }
+
+template <typename... S>
+inline identifier_t get_id_from(boost::variant<S...> const& obj) {
+    return boost::apply_visitor([](const auto& t) { return t.gid(); }, obj);
+}
+
+
 }  // namespace detail
+
 
 
 template <typename ArgT>
@@ -42,33 +55,8 @@ struct iter_ids_getter: public detail::iter_append_only<iter_ids_getter> {
         : output_(output) {}
 
     template <typename T>
-    inline iter_ids_getter& operator=(const NeuronPiece<T>& result_entry) {
-        output_.emplace_back(result_entry.gid());
-        return *this;
-    }
-
-    template <typename T>
-    inline iter_ids_getter& operator=(const IndexedShape<T>& result_entry) {
-        output_.push_back(result_entry.id);
-        return *this;
-    }
-
-    // Specialization for variants
-    struct ids_visitor: public boost::static_visitor<identifier_t> {
-        template <typename T>
-        inline identifier_t operator()(const NeuronPiece<T>& result_entry) {
-            return result_entry.gid();
-        }
-        template <typename T>
-        inline identifier_t operator()(const IndexedShape<T>& result_entry) {
-            return result_entry.id;
-        }
-    };
-
-    template <typename... ManyT>
-    inline iter_ids_getter& operator=(const boost::variant<ManyT...>& v) {
-        static ids_visitor ids_getter;
-        output_.push_back(boost::apply_visitor(ids_getter, v));
+    inline iter_ids_getter& operator=(const T& result_entry) {
+        output_.push_back(detail::get_id_from(result_entry));
         return *this;
     }
 

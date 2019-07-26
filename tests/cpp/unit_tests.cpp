@@ -9,8 +9,9 @@
 
 // 1. Bare Spheres / Cylinders
 // 2. Somas / Segments
-// 3. variant<Spheres, Cylinders>
-// 4. variant<Somas / Segments>
+// 3. Indexed Sphere
+// 4. variant<Spheres, Cylinders>
+// 5. variant<Somas / Segments>
 
 using namespace spatial_index;
 
@@ -35,30 +36,12 @@ bool test_intesecting_ids(IndexTree<T> const& tree,
                           S const& shape,
                           std::vector<identifier_t> expected) {
     size_t cur_i = 0;
-    for (const T& item: tree.find_intersecting(shape)) {
+    for (const T& item : tree.find_intersecting(shape)) {
         if (cur_i >= expected.size())
             return false;
-        if (item.gid() != expected[cur_i]) {
-            std::cout << "Error: " << item.gid() << " != " << expected[cur_i] << std::endl;
-            return false;
-        }
-        cur_i++;
-    }
-    return true;
-}
-
-template <typename S, typename... T>
-bool test_intesecting_ids(IndexTree<boost::variant<T...>> const& tree,
-                          S const& shape,
-                          std::vector<identifier_t> expected) {
-    using item_t = boost::variant<T...>;
-    size_t cur_i = 0;
-    for (const item_t& item: tree.find_intersecting(shape)) {
-        if (cur_i >= expected.size())
-            return false;
-        identifier_t gid = boost::apply_visitor([](const auto& t) { return t.gid(); }, item);
-        if (gid != expected[cur_i]) {
-            std::cout << "Error: " << gid << " != " << expected[cur_i] << std::endl;
+        identifier_t id = detail::get_id_from(item);
+        if (id != expected[cur_i]) {
+            std::cout << "Error: " << id << " != " << expected[cur_i] << std::endl;
             return false;
         }
         cur_i++;
@@ -82,7 +65,6 @@ bool test_intesecting_ids(IndexTree<boost::variant<T...>> const& tree,
 
 BOOST_AUTO_TEST_CASE(BasicSphereTree) {
     auto spheres = util::make_vec<Sphere>(N_ITEMS, centers, radius);
-
     IndexTree<Sphere> rtree(spheres);
 
     TESTS_INTERSECTING_CHECKS(true, false, true, false);
@@ -91,20 +73,27 @@ BOOST_AUTO_TEST_CASE(BasicSphereTree) {
 
 BOOST_AUTO_TEST_CASE(BasicCylinderTree) {
     auto cyls = util::make_vec<Cylinder>(N_ITEMS, centers, centers2, radius);
-
     IndexTree<Cylinder> rtree(cyls);
 
     TESTS_INTERSECTING_CHECKS(true, false, false, true);
 }
 
 
-BOOST_AUTO_TEST_CASE(SomaTree) {
-    auto somas = util::make_vec<Soma>(N_ITEMS, util::identity<>(), centers, radius);
+BOOST_AUTO_TEST_CASE(IndexedSphereTree) {
+    auto spheres = util::make_vec<IndexedSphere>(N_ITEMS, util::identity<>(), centers, radius);
+    IndexTree<IndexedSphere> rtree(spheres);
 
+    TESTS_INTERSECTING_CHECKS(true, false, true, false);
+    TEST_INTERSECTING_IDS({2}, {}, {0}, {});
+}
+
+
+BOOST_AUTO_TEST_CASE(SomaTree) {
+    // Similar to the one above, but *is* a NeuronPiece
+    auto somas = util::make_vec<Soma>(N_ITEMS, util::identity<>(), centers, radius);
     IndexTree<Soma> rtree(somas);
 
     TESTS_INTERSECTING_CHECKS(true, false, true, false);
-
     TEST_INTERSECTING_IDS({2}, {}, {0}, {});
 }
 
@@ -112,18 +101,15 @@ BOOST_AUTO_TEST_CASE(SomaTree) {
 BOOST_AUTO_TEST_CASE(SegmentTree) {
     auto segs = util::make_vec<Segment>(N_ITEMS, util::identity<>(), util::constant<unsigned>(0),
                                         centers, centers2, radius);
-
     IndexTree<Segment> rtree(segs);
 
     TESTS_INTERSECTING_CHECKS(true, false, false, true);
-
     TEST_INTERSECTING_IDS({2}, {}, {}, {0});
 }
 
 
 BOOST_AUTO_TEST_CASE(VariantGeometries) {
     auto spheres = util::make_vec<Sphere>(N_ITEMS, centers, radius);
-
     IndexTree<GeometryEntry> rtree(spheres);
     rtree.insert(Cylinder{centers[0], centers2[0], radius[0]});
 
@@ -138,7 +124,6 @@ BOOST_AUTO_TEST_CASE(VariantNeuronPieces) {
     rtree.insert(Segment{10ul, 0, centers[0], centers2[0], radius[0]});
 
     TESTS_INTERSECTING_CHECKS(true, false, true, true);
-
     TEST_INTERSECTING_IDS({2}, {}, {0}, {10});
 
     // Extra test... add a segment that spans across all test geometries

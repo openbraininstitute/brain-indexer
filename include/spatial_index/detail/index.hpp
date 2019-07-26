@@ -152,17 +152,18 @@ struct indexable_with_bounding_box {
     typedef T V;
     typedef Box3D const result_type;
 
-    inline result_type operator()(T const& s) const {
+    inline result_type operator()(T const& s) const noexcept {
         return s.bounding_box();
     }
 };
 
 // Specializations of boost indexable
 
-template<> struct indexable<Sphere>   : public indexable_with_bounding_box<Sphere> {};
+template<> struct indexable<Sphere> : public indexable_with_bounding_box<Sphere> {};
 template<> struct indexable<Cylinder> : public indexable_with_bounding_box<Cylinder> {};
-template<> struct indexable<Soma>     : public indexable_with_bounding_box<Soma> {};
-template<> struct indexable<Segment>  : public indexable_with_bounding_box<Segment> {};
+template<> struct indexable<IndexedSphere> : public indexable_with_bounding_box<IndexedSphere> {};
+template<> struct indexable<Soma> : public indexable_with_bounding_box<Soma> {};
+template<> struct indexable<Segment> : public indexable_with_bounding_box<Segment> {};
 
 template <typename... VariantArgs>
 struct indexable<boost::variant<VariantArgs...>> {

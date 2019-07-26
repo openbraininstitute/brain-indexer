@@ -148,9 +148,9 @@ struct Segment: public NeuronPiece<Cylinder> {
 // User can use Rtree directly with Any of the single Geometries or
 // use combined variant<geometries...> or variant<morphologies...>
 // the latters include gid() and segment_id() methods.
-//
-// To simplify typing, GeometryEntry and MorphoEntry are predefined
 
+// To simplify typing, GeometryEntry and MorphoEntry are predefined
+typedef IndexedShape<Sphere> IndexedSphere;
 typedef boost::variant<Sphere, Cylinder> GeometryEntry;
 typedef boost::variant<Soma, Segment> MorphoEntry;
 

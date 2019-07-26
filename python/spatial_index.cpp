@@ -1,8 +1,8 @@
-#include "spatial_index_common.hpp"
+#include "spatial_index.hpp"
 
 
-struct py_soma_rtree: public py_rtree<si::Soma> {
-    using rtree_type = py_rtree<si::Soma>;
+struct py_sphere_rtree : public py_rtree<si::IndexedSphere>{
+    using rtree_type = py_rtree<si::IndexedSphere>;
 
     inline void make_bindings(py::module& m) {
         init_class_bindings(m, "SomaIndex")
@@ -28,8 +28,8 @@ struct py_soma_rtree: public py_rtree<si::Soma> {
 };
 
 
-struct py_morph_rtree: public py_rtree<si::MorphoEntry> {
-    using rtree_type = py_rtree<si::MorphoEntry>;
+struct py_morph_rtree: public py_rtree<si::MorphoEntry, si::Soma> {
+    using rtree_type = py_rtree<si::MorphoEntry, si::Soma>;
 
     inline void make_bindings(py::module& m) {
         init_class_bindings(m, "MorphIndex")
@@ -37,7 +37,8 @@ struct py_morph_rtree: public py_rtree<si::MorphoEntry> {
                 "insert",
                 [](Class& obj, id_t i, unsigned part_id, coord_t p1_cx, coord_t p1_cy,
                    coord_t p1_cz, coord_t p2_cx, coord_t p2_cy, coord_t p2_cz, coord_t r) {
-                    obj.insert(si::Segment{i, part_id, point_t{p1_cx, p1_cy, p1_cz},
+                    obj.insert(si::Segment{i, part_id,
+                                           point_t{p1_cx, p1_cy, p1_cz},
                                            point_t{p2_cx, p2_cy, p2_cz}, r});
                 },
                 "Inserts a new segment object in the tree.")
@@ -93,6 +94,6 @@ struct py_morph_rtree: public py_rtree<si::MorphoEntry> {
 PYBIND11_MODULE(_spatial_index, m) {
     PYBIND11_NUMPY_DTYPE(si::gid_segm_t, gid, segment_i);  // Pybind11 wow!
 
-    py_soma_rtree{}.make_bindings(m);
+    py_sphere_rtree{}.make_bindings(m);
     py_morph_rtree{}.make_bindings(m);
 }
