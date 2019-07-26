@@ -5,7 +5,7 @@ struct py_sphere_rtree : public py_rtree<si::IndexedSphere>{
     using rtree_type = py_rtree<si::IndexedSphere>;
 
     inline void make_bindings(py::module& m) {
-        init_class_bindings(m, "SomaIndex")
+        init_class_bindings(m, "SphereIndex")
             .def(
                 "find_intersecting",
                 [](Class& obj, coord_t cx, coord_t cy, coord_t cz, coord_t r) {

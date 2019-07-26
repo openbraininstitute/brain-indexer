@@ -1,10 +1,18 @@
-import numpy as np
-from _spatial_index import MorphIndex
-import importlib
-import os.path
+"""
+Python tests to the morphology spatial index.
 
-test_rtree_soma = importlib.import_module('test_rtree_sphere',
-                                          os.path.dirname(__file__))
+It reuses tests from test_rthree_sphere
+"""
+import numpy as np
+from spatial_index import MorphIndex
+import os.path
+import sys
+
+# Add this dir to path so we can import the other tests
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+import test_rtree_sphere  # NOQA
+test_rtree_sphere.IndexClass = MorphIndex
+from test_rtree_sphere import *  # NOQA
 
 
 def test_bulk_somas_add():
@@ -43,10 +51,8 @@ def test_bulk_neuron_add():
     assert sorted(idx['segment_i']) == [3, 4, 5, 6]
 
 
-
 if __name__ == "__main__":
-    test_rtree_soma.IndexClass = MorphIndex
-    test_rtree_soma.run_tests()
+    test_rtree_sphere.run_tests()
 
     test_bulk_somas_add()
     print("[PASSED] test_bulk_somas_add")

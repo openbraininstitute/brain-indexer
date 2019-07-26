@@ -1,8 +1,6 @@
 """ spatial_index classes """
-# pylint: disable = no-name-in-module
-
 import pkg_resources
-from _spatial_index import *
+from ._spatial_index import *  # NOQA
 
 __copyright__ = "2019 Blue Brain Project, EPFL"
 

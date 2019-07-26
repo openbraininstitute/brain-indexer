@@ -5,12 +5,13 @@ noop:
 install:
 	pip install -e .
 
-clean: clean-build clean-general clean-cpp clean-pyc
+clean: clean-build clean-general clean-cpp clean-pyc clean-tests
 
 clean-pyc:
 	find . -name '*.pyc' -exec rm -f {} +
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~'    -exec rm -f {} +
+	rm -rf __pycache__
 
 clean-cpp:
 	find . -name '*.c'   -exec rm -f {} +
@@ -26,4 +27,5 @@ clean-build:
 	rm -f -r dist/
 	rm -f -r *.egg-info
 
-
+clean-tests:
+	rm -rf .tox .eggs

@@ -1,11 +1,16 @@
 import os
 import re
 import sys
-import platform
+import shutil
 import subprocess
 from distutils.version import LooseVersion
+from setuptools import Command
 from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext
+
+
+# Main source of the version. Dont rename, used by Cmake
+__version__ = '0.0.1'
 
 
 class CMakeExtension(Extension):
@@ -35,24 +40,16 @@ class CMakeBuild(build_ext):
             self.build_extension(ext, cmake)
 
     def build_extension(self, ext, cmake):
-        extdir = os.path.abspath(
-            os.path.dirname(self.get_ext_fullpath(ext.name)))
-        cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
-                      '-DPYTHON_EXECUTABLE=' + sys.executable]
+        self.outdir = os.path.abspath(os.path.dirname(
+            self.get_ext_fullpath(ext.name)))
+        print("Building lib to:", self.outdir)
+        cmake_args = ['-DEXTENSION_OUTPUT_DIRECTORY=' + self.outdir,
+                      '-DPYTHON_EXECUTABLE=' + sys.executable,
+                      '-DSI_UNIT_TESTS=OFF']
 
         cfg = 'Debug' if self.debug else 'Release'
-        build_args = ['--config', cfg]
-
-        if platform.system() == "Windows":
-            cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(
-                cfg.upper(),
-                extdir)]
-            if sys.maxsize > 2**32:
-                cmake_args += ['-A', 'x64']
-            build_args += ['--', '/m']
-        else:
-            cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
-            build_args += ['--', '-j']
+        cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
+        build_args = ['--config', cfg, '--', '-j']
 
         env = os.environ.copy()
         env['CXXFLAGS'] = "{} -static-libstdc++ -DVERSION_INFO='{}'".format(
@@ -71,19 +68,69 @@ class CMakeBuild(build_ext):
             print("Status : FAIL", exc.returncode, exc.output)
             raise
 
+class Docs(Command):
+    description = "Generate & optionally upload documentation to docs server"
+    user_options = [("upload", None, "Upload to BBP internal docs server")]
+    finalize_options = lambda self: None
 
-# Main source of the version. Dont rename, used by Cmake
-__version__ = '0.0.1'
+    def initialize_options(self):
+        self.upload = False
+
+    def run(self):
+        self._create_metadata_file()
+        self.reinitialize_command('build_ext', inplace=1)
+        self.run_command('build_ext')
+        self.run_command('build_sphinx')  # requires metadata file
+        if self.upload:
+            self._upload()
+
+    def _create_metadata_file(self):
+        import textwrap
+        import time
+        md = self.distribution.metadata
+        with open("docs/metadata.md", "w") as mdf:
+            mdf.write(textwrap.dedent(
+                f"""---
+                name: {md.name}
+                version: {md.version}
+                description: {md.description}
+                homepage: {md.url}
+                license: {md.license}
+                maintainers: {md.author}
+                repository: {md.project_urls.get("Source", '')}
+                issuesurl: {md.project_urls.get("Tracker", '')}
+                contributors: {md.maintainer}
+                updated: {time.strftime("%d/%m/%Y")}
+                ---
+                """))
+
+    def _upload(self):
+        from docs_internal_upload import docs_internal_upload
+        print("Uploading....")
+        docs_internal_upload("docs/_build/html", metadata_path="docs/metadata.md")
 
 
-setup(
-    name='spatial-index',
-    version=__version__,
-    author='Blue Brain Project',
-    description='Spatial Index',
-    packages=['spatial_index'],
-    install_requires=['numpy>=1.13.1'],
-    ext_modules=[CMakeExtension('spatial_index')],
-    cmdclass=dict(build_ext=CMakeBuild),
-    include_package_data=True
-)
+def setup_package():
+    # limestone depends on a specific sphinx version. Let it choose
+    docs_require = ["sphinx-limestone-theme", "docs_internal_upload"]
+    maybe_docs = docs_require if "docs" in sys.argv else []
+    maybe_test_runner = ['pytest-runner'] if "test" in sys.argv else []
+
+    setup(
+        name='spatial-index',
+        version=__version__,
+        packages=["spatial_index"],
+        ext_modules=[CMakeExtension('spatial_index._spatial_index')],
+        cmdclass=dict(build_ext=CMakeBuild, docs=Docs),
+        include_package_data=True,
+        install_requires=['numpy>=1.13.1'],
+        tests_require=["flake8", "pytest"],
+        setup_requires=maybe_docs + maybe_test_runner,
+        dependency_links=[
+            "https://bbpteam.epfl.ch/repository/devpi/simple/sphinx-limestone-theme/",
+            "https://bbpteam.epfl.ch/repository/devpi/simple/docs_internal_upload"]
+    )
+
+
+if __name__ == "__main__":
+    setup_package()
