@@ -33,22 +33,25 @@ def test_bulk_somas_add():
 def test_bulk_neuron_add():
     """
     Adding a neuron alike:
-    ( S ).=.=.=.=.=.=.=.=.
+    ( S ).=.=.=+=.=.=.=.=.
+               +=.=.=.=.=.
       0  1 2 3 4 5 6 7 8 9  <- x coord
       0   1 2 3 4 5 6 7 8   <- segment_i
+                9 0 1 2 3   <-    "
     """
-    N = 10
+    N = 10 + 6
     nrn_id = 1
     points = np.zeros([N, 3], dtype=np.float32)
-    points[:, 0] = np.arange(N)
+    points[:, 0] = np.concatenate((np.arange(10), np.arange(4, 10)))
+    points[10:, 1] = 1
     radius = np.ones(N, dtype=np.float32)
 
     rtree = MorphIndex()
-    rtree.add_neuron(nrn_id, points, radius)
+    rtree.add_neuron(nrn_id, points, radius, [1, 10])
 
     idx = rtree.find_nearest(5, 0, 0, 4)
     assert sorted(idx['gid']) == [1, 1, 1, 1]
-    assert sorted(idx['segment_i']) == [3, 4, 5, 6]
+    assert sorted(idx['segment_i']) == [4, 5, 9, 10]
 
 
 if __name__ == "__main__":

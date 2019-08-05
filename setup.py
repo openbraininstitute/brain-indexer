@@ -19,23 +19,9 @@ class CMakeExtension(Extension):
         self.sourcedir = os.path.abspath(sourcedir)
 
 
-def find_cmake():
-    for candidate in ['cmake', 'cmake3']:
-        try:
-            out = subprocess.check_output([candidate, '--version'])
-            cmake_version = LooseVersion(
-                re.search(r'version\s*([\d.]+)', out.decode()).group(1))
-            if cmake_version >= '3.5.0':
-                return candidate
-        except OSError:
-            pass
-
-    raise RuntimeError("CMake >=3.5.0 must be installed to build SpatialIndex")
-
-
 class CMakeBuild(build_ext):
     def run(self):
-        cmake = find_cmake()
+        cmake = self._find_cmake()
         for ext in self.extensions:
             self.build_extension(ext, cmake)
 
@@ -68,6 +54,21 @@ class CMakeBuild(build_ext):
             print("Status : FAIL", exc.returncode, exc.output)
             raise
 
+    @staticmethod
+    def _find_cmake():
+        for candidate in ['cmake', 'cmake3']:
+            try:
+                out = subprocess.check_output([candidate, '--version'])
+                cmake_version = LooseVersion(
+                    re.search(r'version\s*([\d.]+)', out.decode()).group(1))
+                if cmake_version >= '3.5.0':
+                    return candidate
+            except OSError:
+                pass
+
+        raise RuntimeError("Project requires CMake >=3.5.0")
+
+
 class Docs(Command):
     description = "Generate & optionally upload documentation to docs server"
     user_options = [("upload", None, "Upload to BBP internal docs server")]
@@ -89,8 +90,8 @@ class Docs(Command):
         import time
         md = self.distribution.metadata
         with open("docs/metadata.md", "w") as mdf:
-            mdf.write(textwrap.dedent(
-                f"""---
+            mdf.write(textwrap.dedent(f"""\
+                ---
                 name: {md.name}
                 version: {md.version}
                 description: {md.description}

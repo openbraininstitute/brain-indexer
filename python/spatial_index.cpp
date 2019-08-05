@@ -31,6 +31,15 @@ struct py_sphere_rtree : public py_rtree<si::IndexedSphere>{
 struct py_morph_rtree: public py_rtree<si::MorphoEntry, si::Soma> {
     using rtree_type = py_rtree<si::MorphoEntry, si::Soma>;
 
+    inline static void add_branch(Class& obj,
+                                  id_t neuron_id, unsigned segment_i, unsigned n_segments,
+                                  const point_t *points, const coord_t *radii) {
+        for(int i=0; i < n_segments; i++, segment_i++) {
+            obj.insert(si::Segment{
+                neuron_id, segment_i, points[i], points[i+1], radii[i]});
+        }
+    }
+
     inline void make_bindings(py::module& m) {
         init_class_bindings(m, "MorphIndex")
             .def(
@@ -44,29 +53,50 @@ struct py_morph_rtree: public py_rtree<si::MorphoEntry, si::Soma> {
                 "Inserts a new segment object in the tree.")
 
             .def(
+                "add_branch",
+                [](Class& obj, id_t neuron_id, unsigned segment_i,
+                               array_t centroids_np, array_t radii_np) {
+                    auto point_radii = convert_input(centroids_np, radii_np);
+                    add_branch(
+                        obj, neuron_id, segment_i, radii_np.size() - 1,
+                        point_radii.first, point_radii.second.data(0)
+                    );
+                },
+                "Adds a branch, i.e., a line of cylinders")
+
+            .def(
                 "add_neuron",
-                [](Class& obj, id_t neuron_id, array_t centroids, array_t radii) {
-                    auto point_radius = convert_input(centroids, radii);
-                    const auto& points = point_radius.first;
+                [](Class& obj, id_t neuron_id,
+                               array_t centroids_np, array_t radii_np,
+                               array_offsets branches_offset_np) {
+                    auto point_radii = convert_input(centroids_np, radii_np);
+                    // Get raw pointers to data
+                    const auto points = point_radii.first;
+                    const auto radii = point_radii.second.data(0);
+                    auto n_branches = branches_offset_np.size();
+                    const auto offsets = branches_offset_np.template unchecked<1>().data(0);
 
                     // Add soma
-                    obj.insert(si::Soma{neuron_id, points[0], point_radius.second[0]});
+                    obj.insert(si::Soma{neuron_id, points[0], radii[0]});
 
-                    // Create soa reader for data as segments
-                    auto nrn_ids = si::util::constant<>{neuron_id, size_t(radii.size() - 1)};
-                    auto seg_ids = si::util::identity<unsigned>{};
-                    auto second_points = points + 1;  // Next point is current segment end
-
-                    auto soa = si::util::make_soa_reader<si::Segment>(nrn_ids, seg_ids, points,
-                                                                      second_points,
-                                                                      point_radius.second);
-
-                    // Start at begin() + 1 to skip soma
-                    for (auto iter = soa.begin() + 1; iter < soa.end(); ++iter) {
-                        obj.insert(*iter);
+                    // Add segments
+                    int cur_segment_i = 1;
+                    for (unsigned branch_i=0; branch_i < n_branches - 1; branch_i++) {
+                        unsigned p_start = offsets[branch_i];
+                        unsigned n_segments = offsets[branch_i + 1] - p_start - 1;
+                        add_branch(obj, neuron_id, cur_segment_i, n_segments,
+                                        points + p_start,
+                                        radii + p_start);
+                        cur_segment_i += n_segments;
                     }
+                    // Last
+                    unsigned p_start = offsets[n_branches - 1];
+                    unsigned n_segments = radii_np.size() - p_start - 1;
+                    add_branch(obj, neuron_id, cur_segment_i, n_segments,
+                                    points + p_start,
+                                    radii + p_start);
                 },
-                "Bulk add a neuron (1 soma and many segments) to the spatial index")
+                "Bulk add a neuron (1 soma and lines of segments) to the spatial index")
 
             .def(
                 "find_intersecting",
@@ -88,6 +118,7 @@ struct py_morph_rtree: public py_rtree<si::MorphoEntry, si::Soma> {
                 },
                 "Searches and returns the ids of the nearest K objects to the given point.");
     }
+
 };
 
 
