@@ -122,6 +122,8 @@ struct Soma: public NeuronPiece<Sphere> {
 struct Segment: public NeuronPiece<Cylinder> {
     using NeuronPiece<Cylinder>::NeuronPiece;
 
+    inline Segment() = default;
+
     template <typename U>
     inline Segment(identifier_t gid, unsigned segment_i,
                    U&& center1, U&& center2,
@@ -167,6 +169,8 @@ struct IndexTree: public bgi::rtree<T, A> {
     using bgi::rtree<T, A>::rtree;
 
     using cref_t = std::reference_wrapper<const T>;
+
+    inline IndexTree() = default;
 
     /**
      * \brief Find elements in tree intersecting the given shape.
