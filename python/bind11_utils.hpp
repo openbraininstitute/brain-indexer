@@ -43,4 +43,5 @@ inline py::array_t<typename Sequence::value_type> to_pyarray(const Sequence& seq
     return py::array(sequence.size(), sequence.data());
 }
 
+
 }  // namespace pybind_utils

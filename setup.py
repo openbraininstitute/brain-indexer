@@ -1,7 +1,6 @@
 import os
 import re
 import sys
-import shutil
 import subprocess
 from distutils.version import LooseVersion
 from setuptools import Command
@@ -10,7 +9,7 @@ from setuptools.command.build_ext import build_ext
 
 
 # Main source of the version. Dont rename, used by Cmake
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 
 class CMakeExtension(Extension):

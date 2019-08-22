@@ -28,6 +28,22 @@ inline identifier_t get_id_from(boost::variant<S...> const& obj) {
 }
 
 
+// To automatically extract id / {id, segm_id} we map types to the id getter class
+// Since we don't want to inherit from b::variant to just set id_getter_t
+// we define a helper class which defines `type` if it's possible to get an id_getter
+
+template <typename S>
+struct id_getter_for {
+    using type = typename S::id_getter_t;
+};
+
+template <typename S1, typename... S>
+struct id_getter_for<boost::variant<S1, S...>> {
+    using type = typename id_getter_for<S1>::type;
+};
+
+
+
 }  // namespace detail
 
 
@@ -63,12 +79,6 @@ struct iter_ids_getter: public detail::iter_append_only<iter_ids_getter> {
   private:
     // Keep a ref to modify the original vec
     std::vector<identifier_t>& output_;
-};
-
-
-struct gid_segm_t {
-    identifier_t gid;
-    unsigned segment_i;
 };
 
 

@@ -4,7 +4,6 @@
 
 #include "bind11_utils.hpp"
 
-
 namespace bgi = boost::geometry::index;
 namespace si = spatial_index;
 namespace py = pybind11;
@@ -26,38 +25,106 @@ struct py_rtree {
     using array_offsets = py::array_t<size_t, py::array::c_style | py::array::forcecast>;
 
   protected:
+
     inline py::class_<Class> init_class_bindings(py::module& m, const char* class_name) {
         return py::class_<Class>(m, class_name)
-            .def(py::init<>())
+            .def(py::init<>(), "Constructor of an empty SpatialIndex.")
 
-            // Initialize a structure with Somas automatically numbered
+            /// Load tree dump
+            .def(py::init([](const std::string& filename) {
+                return std::make_unique<Class>(filename);
+            }),
+                "Loads a Spatial Index from a dump()'ed file on disk.\n\n"
+                "Args:\n"
+                "    filename(str): The file path to read the spatial index from.\n"
+            )
+
             .def(py::init([](array_t centroids, array_t radii) {
                 auto point_radius = convert_input(centroids, radii);
                 auto enum_ = si::util::identity<>{size_t(radii.shape(0))};
                 auto soa = si::util::make_soa_reader<SomaT>(enum_, point_radius.first,
                                                                point_radius.second);
-                return std::unique_ptr<Class>{new Class(soa.begin(), soa.end())};
-            }))
+                return std::make_unique<Class>(soa.begin(), soa.end());
+            }),
+                "Creates a SpatialIndex prefilled with Spheres given their radius and radii, "
+                "automatically numbered.\n\n"
+                "Args:\n"
+                "     centroids(np.array): A Nx3 array[float32] of the segments' end points\n"
+                "     radii(np.array): An array[float32] with the segments' radii\n"
+            )
 
-            // Initialize structure with somas and specific ids
             .def(py::init([](array_t centroids, array_t radii, array_ids py_ids) {
                 auto point_radius = convert_input(centroids, radii);
                 auto ids = py_ids.template unchecked<1>();
                 auto soa = si::util::make_soa_reader<SomaT>(ids, point_radius.first,
                                                                point_radius.second);
-                return std::unique_ptr<Class>{new Class(soa.begin(), soa.end())};
-            }))
+                return std::make_unique<Class>(soa.begin(), soa.end());
+            }),
+                "Creates a SpatialIndex prefilled with spheres with explicit ids.\n\n"
+                "Args:\n"
+                "    centroids(np.array): A Nx3 array[float32] of the segments' end points\n"
+                "    radii(np.array): An array[float32] with the segments' radii\n"
+                "    py_ids(np.array): An array[int64] with the ids of the spheres\n"
+            )
+
+            .def(
+                "dump",
+                [](Class& obj, const std::string& filename) {
+                    obj.dump(filename);
+                },
+                R"(
+                    Save the spatial index tree to a file on disk.
+
+                    Args:
+                        filename(str): The file path to write the spatial index to.
+                )")
 
             .def(
                 "insert",
-                [](Class& obj, id_t i, coord_t cx, coord_t cy, coord_t cz, coord_t r) {
-                    obj.insert(SomaT{i, point_t{cx, cy, cz}, r});
+                [](Class& obj, id_t gid, array_t point, coord_t radius) {
+                    obj.insert(SomaT{gid, mk_point(point), radius});
                 },
-                "Inserts a new soma object in the tree.")
+                R"(
+                    Inserts a new sphere object in the tree.
+
+                    Args:
+                        gid(int): The id of the sphere
+                        point(array): A len-3 list or np.array[float32] with the center point
+                        radius(float): The radius of the sphere
+                )")
 
             .def(
-                "add_somas",
-                [](Class& obj, array_ids py_ids, array_t centroids, array_t radii) {
+                "place",
+                [](Class& obj, array_t region_corners,
+                               id_t gid, array_t center, coord_t rad) {
+                    if (region_corners.ndim() != 2 || region_corners.size() != 6) {
+                        throw std::invalid_argument("Please provide a 2x3[float32] array");
+                    }
+                    const coord_t *c0 = region_corners.data(0, 0);
+                    const coord_t *c1 = region_corners.data(1, 0);
+                    return obj.place(
+                        si::Box3D{point_t(c0[0], c0[1], c0[2]), point_t(c1[0], c1[1], c1[2])},
+                        SomaT{gid, mk_point(center), rad}
+                    );
+                },
+                R"(
+                    Attempts at inserting a sphere without overlapping any existing shape.
+
+                    place() will search the given volume region for a free spot for the
+                    given sphere. Whenever possible will insert it and return True,
+                    otherwise returns False.
+
+                    Args:
+                        region_corners(array): A 2x3 list/np.array of the region corners
+                            E.g. region_corners[0] is the 3D min_corner point.
+                        gid(int): The id of the sphere
+                        center(array): A len-3 list or np.array[float32] with the center point
+                        radius(float): The radius of the sphere
+                )")
+
+            .def(
+                "add_spheres",
+                [](Class& obj, array_t centroids, array_t radii, array_ids py_ids) {
                     auto point_radius = convert_input(centroids, radii);
                     auto ids = py_ids.template unchecked<1>();
                     auto soa = si::util::make_soa_reader<SomaT>(ids, point_radius.first,
@@ -66,14 +133,56 @@ struct py_rtree {
                         obj.insert(std::move(soma));
                     }
                 },
-                "Bulk add more somas to the spatial index")
+                R"(
+                    Bulk add more spheres to the spatial index.
+
+                    Args:
+                        centroids(np.array): A Nx3 array[float32] of the segments' end points
+                        radii(np.array): An array[float32] with the segments' radii
+                        py_ids(np.array): An array[int64] with the ids of the spheres
+                )")
 
             .def(
                 "is_intersecting",
-                [](Class& obj, coord_t cx, coord_t cy, coord_t cz, coord_t r) {
-                    return obj.is_intersecting(si::Sphere{{cx, cy, cz}, r});
+                [](Class& obj, array_t point, coord_t radius) {
+                    return obj.is_intersecting(si::Sphere{mk_point(point), radius});
                 },
-                "Checks whether the given sphere intersects any object in the tree.")
+                R"(
+                    Checks whether the given sphere intersects any object in the tree.
+
+                    Args:
+                        point(array): A len-3 list or np.array[float32] with the center point
+                        radius(float): The radius of the sphere
+                )")
+
+            .def(
+                "find_intersecting",
+                [](Class& obj, array_t point, coord_t r) {
+                    auto vec = obj.find_intersecting(si::Sphere{mk_point(point), r});
+                    return pyutil::to_pyarray(vec);
+                },
+                R"(
+                    Searches objects intersecting the given sphere, and returns their ids.
+
+                    Args:
+                        point(array): A len-3 list or np.array[float32] with the center point
+                        radius(float): The radius of the sphere
+                )")
+
+            .def(
+                "find_nearest",
+                [](Class& obj, array_t point, int k_neighbors) {
+                    auto vec = obj.find_nearest(mk_point(point), k_neighbors);
+                    return pyutil::to_pyarray(vec);
+                },
+                R"(
+                    Searches and returns the ids of the nearest K objects to the given point.
+
+                    Args:
+                        point(array): A len-3 list or np.array[float32] with the point
+                            to search around
+                        k_neighbors(int): The number of neighbour shapes to return
+                )")
 
             .def("__len__", &Class::size);
     }
@@ -86,4 +195,14 @@ struct py_rtree {
         auto r = radii.template unchecked<1>();
         return std::make_pair(points_ptr, r);
     }
+
+
+    static inline auto mk_point(array_t const& point) {
+        if (point.ndim() != 1 || point.size() != 3) {
+            throw std::invalid_argument("Numpy array not convertible to point3d");
+        }
+        auto p = point.template unchecked<1>();
+        return point_t(p[0], p[1], p[2]);
+    }
+
 };

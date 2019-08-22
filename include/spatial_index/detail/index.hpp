@@ -38,15 +38,26 @@ template <typename ShapeT, typename OutputIt>
 inline void IndexTree<T, A>::find_intersecting(const ShapeT& shape, const OutputIt& iter) const {
     // Using a callback makes the query slightly faster than using qbegin()...qend()
     auto real_intersection = [&shape](const T& v){ return geometry_intersects(shape, v); };
-    this->query(bgi::intersects(bgi::indexable<ShapeT>{}(shape)) && bgi::satisfies(real_intersection),
+    this->query(bgi::intersects(bgi::indexable<ShapeT>{}(shape))
+                    && bgi::satisfies(real_intersection),
                 iter);
 }
 
 
 template <typename T, typename A>
 template <typename ShapeT>
-inline std::vector<typename IndexTree<T, A>::cref_t> IndexTree<T, A>
-::find_intersecting(const ShapeT& shape) const {
+inline decltype(auto) IndexTree<T, A>::find_intersecting(const ShapeT& shape) const {
+    using ids_getter = typename detail::id_getter_for<T>::type;
+    std::vector<typename ids_getter::value_type> ids;
+    find_intersecting(shape, ids_getter(ids));
+    return ids;
+}
+
+
+template <typename T, typename A>
+template <typename ShapeT>
+inline std::vector<typename IndexTree<T, A>::cref_t>
+IndexTree<T, A>::find_get_intersecting(const ShapeT& shape) const {
     std::vector<cref_t> results;
     find_intersecting(shape, std::back_inserter(results));
     return results;
@@ -56,13 +67,25 @@ inline std::vector<typename IndexTree<T, A>::cref_t> IndexTree<T, A>
 template <typename T, typename A>
 template <typename ShapeT>
 inline bool IndexTree<T, A>::is_intersecting(const ShapeT& shape) const {
-    const bgi::indexable<ShapeT> box_from;
-    for (auto it = this->qbegin(bgi::intersects(box_from(shape))); it != this->qend(); ++it) {
+    for (auto it = this->qbegin(bgi::intersects(bgi::indexable<ShapeT>{}(shape)));
+            it != this->qend();
+            ++it) {
         if (geometry_intersects(shape, *it)) {
             return true;
         }
     }
     return false;
+}
+
+
+template <typename T, typename A>
+template <typename ShapeT>
+inline decltype(auto)
+IndexTree<T, A>::find_nearest(const ShapeT& shape, unsigned k_neighbors) const {
+    using ids_getter = typename detail::id_getter_for<T>::type;
+    std::vector<typename ids_getter::value_type> ids;
+    this->query(bgi::nearest(shape, k_neighbors), ids_getter(ids));
+    return ids;
 }
 
 
@@ -82,8 +105,8 @@ inline bool IndexTree<T, A>::place(const Box3D& region, ShapeT& shape) {
     // Calc iteration step. We are doing at most 8 steps in each direction
     // Worst case is user provides a cubic region and shape fits in the very end -> 512 iters
     const Point3Dx diffs = Point3Dx(region_bbox.max_corner()) - region_bbox.min_corner();
-    const CoordType base_step = std::max(std::max(diffs.get<0>(), diffs.get<1>()), diffs.get<2>()) /
-                                8;
+    const CoordType base_step = std::max(std::max(diffs.get<0>(), diffs.get<1>()), diffs.get<2>())
+                                / 8;
     const int nsteps[] = {int(diffs.get<0>() / base_step),
                           int(diffs.get<1>() / base_step),
                           int(diffs.get<2>() / base_step)};

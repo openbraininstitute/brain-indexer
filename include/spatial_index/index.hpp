@@ -24,12 +24,36 @@ namespace spatial_index {
 using identifier_t = unsigned long;
 
 
+///
+/// Result processing iterators
+///
+
+/// \brief structure holding composite ids (gid and segment id)
+struct gid_segm_t {
+    identifier_t gid;
+    unsigned segment_i;
+};
+
+
+/// \brief result iterator to run a given callback
+template <typename ArgT>
+struct iter_callback;
+
+/// \brief result iterator to collect gids
+struct iter_ids_getter;
+
+/// \brief result iterator to collect gids and segment ids
+struct iter_gid_segm_getter;
+
+
+
 /**
  * \brief IndexedShape adds an 'id' field to the underlying struct
  */
 template <typename ShapeT>
 struct IndexedShape: public ShapeT {
-    typedef IndexedShape<ShapeT> type;
+    using type = IndexedShape<ShapeT>;
+    using id_getter_t = iter_ids_getter;
 
     identifier_t id;
 
@@ -66,7 +90,8 @@ struct IndexedShape: public ShapeT {
  */
 template <typename ShapeT>
 struct NeuronPiece: public IndexedShape<ShapeT> {
-    typedef NeuronPiece<ShapeT> type;
+    using type = NeuronPiece<ShapeT>;
+    using id_getter_t = iter_gid_segm_getter;
 
     inline NeuronPiece() = default;
 
@@ -87,7 +112,7 @@ struct NeuronPiece: public IndexedShape<ShapeT> {
     }
 
   private:
-    typedef IndexedShape<ShapeT> super;
+    using super = IndexedShape<ShapeT>;
 };
 
 
@@ -182,14 +207,33 @@ struct IndexTree: public bgi::rtree<T, A> {
     template <typename ShapeT, typename OutputIt>
     inline void find_intersecting(const ShapeT& shape, const OutputIt& iter) const;
 
+    /**
+     * \brief Gets the ids of the intersecting objects
+     * \returns The object ids, identifier_t or gid_segm_t, depending on the default id getter
+     */
     template <typename ShapeT>
-    inline std::vector<cref_t> find_intersecting(const ShapeT& shape) const;
+    inline decltype(auto) find_intersecting(const ShapeT& shape) const;
+
+    /**
+     * \brief Finds & return objects which intersect. To be used mainly with id-less objects
+     * \returns A vector of references to tree objects
+     */
+    template <typename ShapeT>
+    inline std::vector<cref_t> find_get_intersecting(const ShapeT& shape) const;
+
+    /**
+     * \brief Gets the ids of the the nearest K objects
+     * \returns The object ids, identifier_t or gid_segm_t, depending on the default id getter
+     */
+    template <typename ShapeT>
+    inline decltype(auto) find_nearest(const ShapeT& shape, unsigned k_neighbors) const;
 
     /// Checks whether a given shape intersects any object in the tree
     template <typename ShapeT>
     inline bool is_intersecting(const ShapeT& shape) const;
 
     /// Constructor to rebuild from binary data file
+    // Note: One must override char* and string since there is a template<T> constructor
     inline explicit IndexTree(const std::string& filename);
     inline explicit IndexTree(const char* dump_file)
         : IndexTree(std::string(dump_file)) {}
@@ -201,24 +245,15 @@ struct IndexTree: public bgi::rtree<T, A> {
     template <typename ShapeT>
     inline bool place(const Box3D& region, ShapeT& shape);
 
+    template <typename ShapeT>
+    inline bool place(const Box3D& region, ShapeT&& shape) {
+        // Allow user to provide a temporary if they dont care about the new position
+        return place(region, shape);
+    }
+
   private:
     typedef bgi::rtree<T, A> super;
 };
-
-
-///
-/// Result processing iterators
-///
-
-/// \brief result iterator to run a given callback
-template <typename ArgT>
-struct iter_callback;
-
-/// \brief result iterator to collect gids
-struct iter_ids_getter;
-
-/// \brief result iterator to collect gids and segment ids
-struct iter_gid_segm_getter;
 
 
 }  // namespace spatial_index

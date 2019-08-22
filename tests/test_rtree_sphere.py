@@ -2,49 +2,104 @@ import numpy as np
 from spatial_index import SphereIndex as IndexClass
 
 
-def arange_values():
-    radii = np.arange(10).astype(np.float32)
-    centroids = np.column_stack((radii, radii, radii)).astype(np.float32)
-    return centroids, radii
+def arange_centroids(N=10):
+    centroids = np.zeros([N, 3], dtype=np.float32)
+    centroids[:, 0] = np.arange(N, dtype=np.float32)
+    return centroids
 
 
-def test_insert():
-    print("Inserting with " + str(IndexClass.__name__))
-    centroids, radii = arange_values()
+def test_insert_save_restore():
+    print("Running tests with class " + IndexClass.__name__)
+    centroids = arange_centroids(10)
+    radii = np.full(10, 0.5, dtype=np.float32)
+
     t = IndexClass()
     for i in range(len(centroids)):
-        t.insert(i, centroids[i, 0], centroids[i, 1], centroids[i, 2], radii[i])
+        t.insert(i, centroids[i], radii[i])
+
+    for i, c in enumerate(centroids):
+        idx = t.find_nearest(c, 1)[0]
+        if len(idx.dtype) > 1:
+            idx = idx['gid']  # Records
+        assert idx == i, "{} != {}".format(idx, i)
+
+    t.dump("mytree.save")
+    t2 = IndexClass("mytree.save")
+    for i, c in enumerate(centroids):
+        idx = t2.find_nearest(c, 1)[0]
+        if len(idx.dtype) > 1:
+            idx = idx['gid']  # Records
+        assert idx == i, "{} != {}".format(idx, i)
+
+
+def test_bulk_spheres_add():
+    N = 10
+    ids = np.arange(5, 15, dtype=np.intp)
+    centroids = np.zeros([N, 3], dtype=np.float32)
+    centroids[:, 0] = np.arange(N)
+    radius = np.ones(N, dtype=np.float32)
+
+    rtree = IndexClass()
+    rtree.add_spheres(centroids, radius, ids)
+
+    idx = rtree.find_nearest([5, 0, 0], 3)
+    if len(idx.dtype) > 1:
+        idx = idx['gid']  # Records
+    assert sorted(idx) == [9, 10, 11]
+
+
+def test_non_overlap_place():
+    N = 3
+    rtree = IndexClass()
+    region = np.array([[0, 0, 0], [4, 1, 1]], dtype=np.float32)
+
+    for i in range(N):
+        assert rtree.place(region, i, [.0, .0, .0], 0.8) == True
+
+    idx = rtree.find_nearest([5, 0, 0], N)
+    if len(idx.dtype) > 1:
+        idx = idx['gid']  # Records
+    assert sorted(idx) == list(range(N))
+
+
+def test_is_intersecting():
+    centroids = arange_centroids(3)
+    radii = np.full(3, 0.2, dtype=np.float32)
+    t = IndexClass(centroids, radii)
+    for xpos in [-1, 0.5, 1.5, 2.5]:
+        assert t.is_intersecting([xpos, 0, 0], 0.1) is False
+    for xpos in [-0.2, -0.1, .0, 0.1, 1.2, 2.2]:
+        assert t.is_intersecting([xpos, 0, 0], 0.1)
 
 
 def test_intersection_none():
-    print("Running tests with class {}".format(IndexClass.__name__))
     centroids = np.array([[.0, 1., 0.],
-                         [-0.5 * np.sqrt(2), - 0.5 * np.sqrt(2), 0.],
-                         [0.5 * np.sqrt(2), - 0.5 * np.sqrt(2), 0.]]).astype(np.float32)
+                          [-0.5 * np.sqrt(2), - 0.5 * np.sqrt(2), 0.],
+                          [0.5 * np.sqrt(2), - 0.5 * np.sqrt(2), 0.]], dtype=np.float32)
     radii = np.random.uniform(low=0.0, high=0.5, size=len(centroids)).astype(np.float32)
 
     t = IndexClass(centroids, radii)
 
-    centroid = np.array([0., 0., 0.]).astype(np.float32)
+    centroid = np.array([0., 0., 0.], dtype=np.float32)
     radius = np.random.uniform(low=0.0, high=0.49)
 
-    idx = t.find_intersecting(centroid[0], centroid[1], centroid[2], radius)
+    idx = t.find_intersecting(centroid, radius)
     assert len(idx) == 0, "Should be empty, but {} were found instead.".format(idx)
 
 
 def test_intersection_all():
 
     centroids = np.array([[.0, 1., 0.],
-                         [-0.5 * np.sqrt(2), -0.5 * np.sqrt(2), 0.],
-                         [0.5 * np.sqrt(2), -0.5 * np.sqrt(2), 0.]]).astype(np.float32)
+                          [-0.5 * np.sqrt(2), -0.5 * np.sqrt(2), 0.],
+                          [0.5 * np.sqrt(2), -0.5 * np.sqrt(2), 0.]], dtype=np.float32)
     radii = np.random.uniform(low=0.5, high=1.0, size=len(centroids)).astype(np.float32)
 
     t = IndexClass(centroids, radii)
 
-    centroid = np.array([0., 0., 0.]).astype(np.float32)
+    centroid = np.array([0., 0., 0.], dtype=np.float32)
     radius = np.random.uniform(low=0.5, high=1.0)
 
-    idx = t.find_intersecting(centroid[0], centroid[1], centroid[2], radius)
+    idx = t.find_intersecting(centroid, radius)
     if len(idx.dtype) > 1:
         idx = idx['gid']  # Records
 
@@ -69,21 +124,20 @@ def test_intersection_random():
 
     t = IndexClass(centroids, radii)
 
-    idx = t.find_intersecting(q_centroid[0], q_centroid[1], q_centroid[2], q_radius)
+    idx = t.find_intersecting(q_centroid, q_radius)
     if len(idx.dtype) > 1:
         idx = idx['gid']  # Records
     assert len(np.setdiff1d(idx, expected_result)) == 0, (idx, expected_result)
 
 
 def test_nearest_all():
-    centroids, radii = arange_values()
-    centroids = centroids[::-1]
-    radii = (np.ones(len(centroids)) * 0.01).astype(np.float32)
+    centroids = arange_centroids()
+    radii = np.ones(len(centroids), dtype=np.float32) * 0.01
 
     t = IndexClass(centroids, radii)
 
-    center = np.array([0., 0., 0.]).astype(np.float32)
-    idx = t.find_nearest(center[0], center[1], center[2], 10)
+    center = np.array([0., 0., 0.], dtype=np.float32)
+    idx = t.find_nearest(center, 10)
     if len(idx.dtype) > 1:
         idx = idx['gid']  # Records
     assert np.all(np.sort(idx) == np.sort(np.arange(10, dtype=np.uintp))), idx
@@ -104,7 +158,7 @@ def _nearest_random():
     centroids = np.random.uniform(low=p1, high=p2, size=(N_spheres, 3)).astype(np.float32)
     radii = np.random.uniform(low=0.01, high=0.5, size=N_spheres).astype(np.float32)
 
-    center = np.array([0., 0., 0.]).astype(np.float32)
+    center = np.array([0., 0., 0.], dtype=np.float32)
 
     distances = np.linalg.norm(centroids, axis=1) - radii
     distances[distances < .0] = .0
@@ -112,7 +166,7 @@ def _nearest_random():
 
     t = IndexClass(centroids, radii)
 
-    idx = t.find_nearest(center[0], center[1], center[2], K)
+    idx = t.find_nearest(center, K)
     if len(idx.dtype) > 1:
         idx = idx['gid']  # Records
     assert np.all(np.sort(idx) == np.sort(expected_result)), (idx, expected_result)
@@ -130,6 +184,18 @@ def test_nearest_random():
 
 
 def run_tests():
+    test_insert_save_restore()
+    print("[PASSED] Test test_insert_save_restore()")
+
+    test_bulk_spheres_add()
+    print("[PASSED] Test test_bulk_spheres_add()")
+
+    test_non_overlap_place()
+    print("[PASSED] Test test_non_overlap_place()")
+
+    test_is_intersecting()
+    print("[PASSED] Test test_is_intersecting()")
+
     test_intersection_none()
     print("[PASSED] Test test_intersection_none()")
 

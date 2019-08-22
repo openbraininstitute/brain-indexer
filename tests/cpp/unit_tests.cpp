@@ -32,11 +32,11 @@ constexpr int N_ITEMS = sizeof(radius) / sizeof(CoordType);
 
 
 template <typename T, typename S>
-bool test_intesecting_ids(IndexTree<T> const& tree,
-                          S const& shape,
-                          std::vector<identifier_t> expected) {
+bool test_intersecting_ids(IndexTree<T> const& tree,
+                           S const& shape,
+                           std::vector<identifier_t> expected) {
     size_t cur_i = 0;
-    for (const T& item : tree.find_intersecting(shape)) {
+    for (const T& item : tree.find_get_intersecting(shape)) {
         if (cur_i >= expected.size())
             return false;
         identifier_t id = detail::get_id_from(item);
@@ -57,10 +57,10 @@ bool test_intesecting_ids(IndexTree<T> const& tree,
     BOOST_TEST(rtree.is_intersecting(Sphere{tcenter3, tradius}) == t4_result);
 
 #define TEST_INTERSECTING_IDS(t1_result, t2_result, t3_result, t4_result)          \
-    BOOST_TEST(test_intesecting_ids(rtree, Sphere{tcenter0, tradius}, t1_result)); \
-    BOOST_TEST(test_intesecting_ids(rtree, Sphere{tcenter1, tradius}, t2_result)); \
-    BOOST_TEST(test_intesecting_ids(rtree, Sphere{tcenter2, tradius}, t3_result)); \
-    BOOST_TEST(test_intesecting_ids(rtree, Sphere{tcenter3, tradius}, t4_result));
+    BOOST_TEST(test_intersecting_ids(rtree, Sphere{tcenter0, tradius}, t1_result)); \
+    BOOST_TEST(test_intersecting_ids(rtree, Sphere{tcenter1, tradius}, t2_result)); \
+    BOOST_TEST(test_intersecting_ids(rtree, Sphere{tcenter2, tradius}, t3_result)); \
+    BOOST_TEST(test_intersecting_ids(rtree, Sphere{tcenter3, tradius}, t4_result));
 
 
 BOOST_AUTO_TEST_CASE(BasicSphereTree) {
