@@ -170,6 +170,20 @@ struct py_rtree {
                 )")
 
             .def(
+                "find_intersecting_window",
+                [](Class& obj, array_t min_corner, array_t max_corner) {
+                    si::Box3D bounding_box = si::Box3D{mk_point(min_corner), mk_point(max_corner)};
+                    auto vec = obj.find_intersecting(bounding_box);
+                    return pyutil::to_pyarray(vec);
+                },
+                R"(
+                    Searches objects intersecting the given window, and returns their ids.
+
+                    Args:
+                        min_corner, max_corner(float32) : min/max corners of the query window
+                )")
+
+            .def(
                 "find_nearest",
                 [](Class& obj, array_t point, int k_neighbors) {
                     auto vec = obj.find_nearest(mk_point(point), k_neighbors);

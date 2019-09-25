@@ -208,6 +208,13 @@ struct IndexTree: public bgi::rtree<T, A> {
     inline void find_intersecting(const ShapeT& shape, const OutputIt& iter) const;
 
     /**
+     * \brief Find elements in tree intersecting the given bounding box.
+     * An overload of find_intersecting
+     */
+    template <typename OutputIt>
+    inline void find_intersecting(const Box3D& shape, const OutputIt& iter) const;
+
+    /**
      * \brief Gets the ids of the intersecting objects
      * \returns The object ids, identifier_t or gid_segm_t, depending on the default id getter
      */

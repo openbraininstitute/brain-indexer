@@ -43,6 +43,12 @@ inline void IndexTree<T, A>::find_intersecting(const ShapeT& shape, const Output
                 iter);
 }
 
+template <typename T, typename A>
+template <typename OutputIt>
+inline void IndexTree<T, A>::find_intersecting(const Box3D& shape, const OutputIt& iter) const {
+    this->query(bgi::intersects(shape), iter);
+}
+
 
 template <typename T, typename A>
 template <typename ShapeT>
