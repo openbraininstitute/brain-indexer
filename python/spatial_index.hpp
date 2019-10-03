@@ -53,18 +53,49 @@ struct py_rtree {
                 "     radii(np.array): An array[float32] with the segments' radii\n"
             )
 
-            .def(py::init([](array_t centroids, array_t radii, array_ids py_ids) {
+            .def(py::init([](array_t centroids, array_t radii, array_ids py_ids, bool is_point) {
+            if (is_point) {
+                if (radii.ndim() != 0) {
+                    throw std::invalid_argument("Radii should be None for points");
+                }
+                si::util::constant<coord_t> zero_radius(0);
+                auto points = convert_input(centroids);
+                auto ids = py_ids.template unchecked<1>();
+                auto soa = si::util::make_soa_reader<SomaT>(ids, points, zero_radius);
+                return std::make_unique<Class>(soa.begin(), soa.end());
+            }
+            else {
                 auto point_radius = convert_input(centroids, radii);
                 auto ids = py_ids.template unchecked<1>();
                 auto soa = si::util::make_soa_reader<SomaT>(ids, point_radius.first,
                                                                point_radius.second);
                 return std::make_unique<Class>(soa.begin(), soa.end());
-            }),
-                "Creates a SpatialIndex prefilled with spheres with explicit ids.\n\n"
+            }
+            }),py::arg("centroids"), py::arg("radii").none(true), py::arg("py_ids"), py::arg("is_point") = false,
+                "Creates a SpatialIndex prefilled with spheres with explicit ids (default) "
+                "or points with explicit ids (is_point=True).\n\n"
                 "Args:\n"
                 "    centroids(np.array): A Nx3 array[float32] of the segments' end points\n"
-                "    radii(np.array): An array[float32] with the segments' radii\n"
+                "    radii(np.array): An array[float32] with the segments' radii, allow for None when is_point=True\n"
                 "    py_ids(np.array): An array[int64] with the ids of the spheres\n"
+                "    is_point(boolean): default = False\n"
+            )
+
+            .def(py::init([](array_t centroids, bool is_point) {
+                if (!is_point) {
+                    throw std::invalid_argument("Only point is permitted with only centroid input, "
+                    "please set flag is_point = True or use the right constructor.");
+                }
+                si::util::constant<coord_t> zero_radius(0);
+                auto points = convert_input(centroids);
+                auto enum_ = si::util::identity<>{size_t(centroids.shape(0))};
+                auto soa = si::util::make_soa_reader<SomaT>(enum_, points, zero_radius);
+                return std::make_unique<Class>(soa.begin(), soa.end());
+            }), py::arg("centroids"), py::arg("is_point") = false,
+                "Creates a SpatialIndex prefilled with points, automatically numbered\n\n"
+                "Args:\n"
+                "    centroids(np.array): A Nx3 array[float32] of the segments' end points\n"
+                "    is_point(boolean): limit this constructor for points only, default = False\n"
             )
 
             .def(
@@ -143,6 +174,25 @@ struct py_rtree {
                 )")
 
             .def(
+                "add_points",
+                [](Class& obj, array_t centroids, array_ids py_ids) {
+                    si::util::constant<coord_t> zero_radius(0);
+                    auto points = convert_input(centroids);
+                    auto ids = py_ids.template unchecked<1>();
+                    auto soa = si::util::make_soa_reader<SomaT>(ids, points, zero_radius);
+                    for (auto soma: soa) {
+                        obj.insert(std::move(soma));
+                    }
+                },
+                R"(
+                    Bulk add more points to the spatial index.
+
+                    Args:
+                        centroids(np.array): A Nx3 array[float32] of the segments' end points
+                        py_ids(np.array): An array[int64] with the ids of the spheres
+                )")
+
+            .def(
                 "is_intersecting",
                 [](Class& obj, array_t point, coord_t radius) {
                     return obj.is_intersecting(si::Sphere{mk_point(point), radius});
@@ -210,6 +260,12 @@ struct py_rtree {
         return std::make_pair(points_ptr, r);
     }
 
+    static inline auto convert_input(array_t const& centroids) {
+        static_assert(sizeof(point_t) == 3 * sizeof(coord_t),
+                      "numpy array not convertible to point3d");
+        auto points_ptr = reinterpret_cast<const point_t*>(centroids.data(0, 0));
+        return points_ptr;
+    }
 
     static inline auto mk_point(array_t const& point) {
         if (point.ndim() != 1 || point.size() != 3) {

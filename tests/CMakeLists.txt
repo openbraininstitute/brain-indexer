@@ -42,3 +42,8 @@ add_test(NAME Python_MorphIndex
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test_rtree_morph.py)
 set_tests_properties(Python_MorphIndex PROPERTIES ENVIRONMENT
                      PYTHONPATH=${PROJECT_SOURCE_DIR}:$ENV{PYTHONPATH})
+
+add_test(NAME Python_PointIndex
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test_rtree_point.py)
+set_tests_properties(Python_PointIndex PROPERTIES ENVIRONMENT
+                     PYTHONPATH=${PROJECT_SOURCE_DIR}:$ENV{PYTHONPATH})

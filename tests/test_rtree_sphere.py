@@ -54,7 +54,7 @@ def test_non_overlap_place():
     region = np.array([[0, 0, 0], [4, 1, 1]], dtype=np.float32)
 
     for i in range(N):
-        assert rtree.place(region, i, [.0, .0, .0], 0.8) == True
+        assert rtree.place(region, i, [.0, .0, .0], 0.8) is True
 
     idx = rtree.find_nearest([5, 0, 0], N)
     if len(idx.dtype) > 1:
@@ -129,20 +129,21 @@ def test_intersection_random():
         idx = idx['gid']  # Records
     assert len(np.setdiff1d(idx, expected_result)) == 0, (idx, expected_result)
 
+
 def test_intersection_window():
 
     centroids = np.array(
         [
             # Some inside / partially inside
-            [ 0.0,  1.0, 0],
+            [0.0,  1.0, 0],
             [-0.5, -0.5, 0],
-            [ 0.5, -0.5, 0],
+            [0.5, -0.5, 0],
             # Some outside
             [-2.1,  0.0, 0],
-            [ 0.0,  2.1, 0],
-            [ 0.0,  0.0, 2.1],
+            [0.0,  2.1, 0],
+            [0.0,  0.0, 2.1],
             # Another partially inside (double check)
-            [ 1.2,  1.2, 1.2]
+            [1.2,  1.2, 1.2]
         ], dtype=np.float32)
     radii = np.random.uniform(low=0.5, high=1.0, size=len(centroids)).astype(np.float32)
     t = IndexClass(centroids, radii)
@@ -154,6 +155,49 @@ def test_intersection_window():
         idx = idx['gid']  # Records
     expected_result = np.array([0, 1, 2, 6], dtype=np.uintp)
     assert np.all(idx == expected_result), (idx, expected_result)
+
+
+def test_bulk_spheres_points_add():
+    rtree = IndexClass()
+    # add Spheres
+    centroids = np.array(
+        [
+            # Some inside / partially inside
+            [0.0,  1.0, 0],
+            [-0.5, -0.5, 0],
+            [0.5, -0.5, 0],
+            # Some outside
+            [-2.1,  0.0, 0],
+            [0.0,  2.1, 0],
+            [0.0,  0.0, 2.1],
+            # Another partially inside (double check)
+            [1.2,  1.2, 1.2]
+        ], dtype=np.float32)
+    radii = np.random.uniform(low=0.5, high=1.0, size=len(centroids)).astype(np.float32)
+    ids = np.arange(len(centroids), dtype=np.intp)
+    rtree.add_spheres(centroids, radii, ids)
+
+    # add Points
+    points = np.array(
+        [
+            [0.5, -0.5,  1],
+            [-1.0,  2.0, -1.1],
+            [1.0,  1.0,  1.0],
+            [0.0,  0.0,  0.0],
+            [-1.0, -0.1,  1.1]
+        ], dtype=np.float32)
+    ids = np.arange(10, 10+len(points), dtype=np.intp)
+    rtree.add_points(points, ids)
+
+    # Query
+    min_corner = [-1, -1, -1]
+    max_corner = [1, 1, 1]
+    idx = rtree.find_intersecting_window(min_corner, max_corner)
+    if len(idx.dtype) > 1:
+        idx = idx['gid']  # Records
+    expected_result = np.array([0, 1, 2, 6, 10, 12, 13], dtype=np.uintp)
+    assert np.all(idx == expected_result), (idx, expected_result)
+
 
 def test_nearest_all():
     centroids = arange_centroids()
@@ -214,6 +258,9 @@ def run_tests():
 
     test_bulk_spheres_add()
     print("[PASSED] Test test_bulk_spheres_add()")
+
+    test_bulk_spheres_points_add()
+    print("[PASSED] Test test_bulk_spheres_points_add()")
 
     test_non_overlap_place()
     print("[PASSED] Test test_non_overlap_place()")
