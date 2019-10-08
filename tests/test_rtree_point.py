@@ -28,15 +28,15 @@ def test_add_points():
 
 
 def test_init_points():
-    p = PointIndex(points, is_point=True)  # or p = PointIndex(points, True)
+    p = PointIndex(points, radii=None)  # or p = PointIndex(points, None)
     idx = p.find_nearest([5, 0, 0], 3)
     expected_result = np.array([0, 2, 6], dtype=np.uintp)
     assert np.all(idx == expected_result), (idx, expected_result)
 
 
 def test_init_points_with_ids():
-    p = PointIndex(points, None, ids, True)
-    # or p = PointIndex(points, None, is_point=True)
+    p = PointIndex(points, radii=None, py_ids=ids)
+    # or p = PointIndex(points, None, ids)
     idx = p.find_nearest([5, 0, 0], 3)
     expected_result = np.array([0, 2, 6], dtype=np.uintp)
     assert np.all(idx == expected_result), (idx, expected_result)

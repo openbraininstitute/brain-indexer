@@ -40,24 +40,31 @@ struct py_rtree {
             )
 
             .def(py::init([](array_t centroids, array_t radii) {
+            if (!radii.ndim()) {
+                si::util::constant<coord_t> zero_radius(0);
+                auto points = convert_input(centroids);
+                auto enum_ = si::util::identity<>{size_t(centroids.shape(0))};
+                auto soa = si::util::make_soa_reader<SomaT>(enum_, points, zero_radius);
+                return std::make_unique<Class>(soa.begin(), soa.end());
+            }
+            else {
                 auto point_radius = convert_input(centroids, radii);
                 auto enum_ = si::util::identity<>{size_t(radii.shape(0))};
                 auto soa = si::util::make_soa_reader<SomaT>(enum_, point_radius.first,
                                                                point_radius.second);
                 return std::make_unique<Class>(soa.begin(), soa.end());
-            }),
-                "Creates a SpatialIndex prefilled with Spheres given their radius and radii, "
-                "automatically numbered.\n\n"
+            }
+            }),py::arg("centroids"), py::arg("radii").none(true),
+                "Creates a SpatialIndex prefilled with Spheres given their centroids and radii, "
+                "automatically numbered, \n"
+                "Or Points given their centroids and radii = None.\n\n"
                 "Args:\n"
                 "     centroids(np.array): A Nx3 array[float32] of the segments' end points\n"
-                "     radii(np.array): An array[float32] with the segments' radii\n"
+                "     radii(np.array): An array[float32] with the segments' radii, allow for None\n"
             )
 
-            .def(py::init([](array_t centroids, array_t radii, array_ids py_ids, bool is_point) {
-            if (is_point) {
-                if (radii.ndim() != 0) {
-                    throw std::invalid_argument("Radii should be None for points");
-                }
+            .def(py::init([](array_t centroids, array_t radii, array_ids py_ids) {
+            if (!radii.ndim()) {
                 si::util::constant<coord_t> zero_radius(0);
                 auto points = convert_input(centroids);
                 auto ids = py_ids.template unchecked<1>();
@@ -71,31 +78,13 @@ struct py_rtree {
                                                                point_radius.second);
                 return std::make_unique<Class>(soa.begin(), soa.end());
             }
-            }),py::arg("centroids"), py::arg("radii").none(true), py::arg("py_ids"), py::arg("is_point") = false,
-                "Creates a SpatialIndex prefilled with spheres with explicit ids (default) "
-                "or points with explicit ids (is_point=True).\n\n"
+            }),py::arg("centroids"), py::arg("radii").none(true), py::arg("py_ids"),
+                "Creates a SpatialIndex prefilled with spheres with explicit ids,\n"
+                "or points with explicit ids and radii = None.\n\n"
                 "Args:\n"
                 "    centroids(np.array): A Nx3 array[float32] of the segments' end points\n"
-                "    radii(np.array): An array[float32] with the segments' radii, allow for None when is_point=True\n"
+                "    radii(np.array): An array[float32] with the segments' radii, allow for None\n"
                 "    py_ids(np.array): An array[int64] with the ids of the spheres\n"
-                "    is_point(boolean): default = False\n"
-            )
-
-            .def(py::init([](array_t centroids, bool is_point) {
-                if (!is_point) {
-                    throw std::invalid_argument("Only point is permitted with only centroid input, "
-                    "please set flag is_point = True or use the right constructor.");
-                }
-                si::util::constant<coord_t> zero_radius(0);
-                auto points = convert_input(centroids);
-                auto enum_ = si::util::identity<>{size_t(centroids.shape(0))};
-                auto soa = si::util::make_soa_reader<SomaT>(enum_, points, zero_radius);
-                return std::make_unique<Class>(soa.begin(), soa.end());
-            }), py::arg("centroids"), py::arg("is_point") = false,
-                "Creates a SpatialIndex prefilled with points, automatically numbered\n\n"
-                "Args:\n"
-                "    centroids(np.array): A Nx3 array[float32] of the segments' end points\n"
-                "    is_point(boolean): limit this constructor for points only, default = False\n"
             )
 
             .def(
