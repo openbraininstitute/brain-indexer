@@ -237,7 +237,25 @@ struct py_rtree {
                         k_neighbors(int): The number of neighbour shapes to return
                 )")
 
+            .def("__str__", [](Class& obj){
+                std::stringstream ss;
+                int n_obj = 0;
+                ss << "IndexTree([" << std::endl;
+                for (const auto& v: obj) {
+                    //display the first 50 objects
+                    if (n_obj == 50) {
+                        ss << "  ..." << std::endl;
+                        break;
+                    }
+                    ss << "  " << v;
+                    n_obj++;
+                }
+                ss << "])" << std::endl;
+                return ss.str();
+            })
+
             .def("__len__", &Class::size);
+
     }
 
 

@@ -54,6 +54,62 @@ def test_bulk_neuron_add():
     assert sorted(idx['segment_i']) == [4, 5, 9, 10]
 
 
+def test_add_neuron_with_soma_and_toString():
+    points = [
+        [1, 3, 5],
+        [2, 4, 6],
+        [2, 4, 6],
+        [10, 10, 10]
+    ]
+    radius = [3, 2, 2, 1]
+    offsets = [0, 2]
+    rtree = MorphIndex()
+    rtree.add_neuron(1, points, radius, offsets)
+    str_expect = (
+        'IndexTree([\n'
+        '  Soma(id=(1, 0), centroid=[1 3 5], radius=3)\n'
+        '  Segment(id=(1, 1), centroids=([1 3 5], [2 4 6]), radius=3)\n'
+        '  Segment(id=(1, 2), centroids=([2 4 6], [10 10 10]), radius=2)\n'
+        '])\n')
+    str_result = str(rtree)
+    assert str_result == str_expect
+
+
+def test_add_neuron_without_soma_and_toString():
+    points = [
+        [1.123, 3, 5],
+        [2, 4, 6],
+        [2, 4, 6],
+        [10, 10, 10]
+    ]
+    radius = [3, 2, 2, 1]
+    offsets = [0, 2]
+    rtree = MorphIndex()
+    # add segments
+    rtree.add_neuron(1, points, radius, offsets, has_Soma=False)
+    str_expect = (
+        'IndexTree([\n'
+        '  Segment(id=(1, 1), centroids=([1.12 3 5], [2 4 6]), radius=3)\n'
+        '  Segment(id=(1, 2), centroids=([2 4 6], [10 10 10]), radius=2)\n'
+        '])\n')
+    str_result = str(rtree)
+    assert str_result == str_expect
+
+    # add soma
+    s_p = [1, 3, 5.135]
+    s_r = 3136
+    s_id = 1
+    rtree.add_soma(s_id, s_p, s_r)
+    str_expect = (
+        'IndexTree([\n'
+        '  Segment(id=(1, 1), centroids=([1.12 3 5], [2 4 6]), radius=3)\n'
+        '  Segment(id=(1, 2), centroids=([2 4 6], [10 10 10]), radius=2)\n'
+        '  Soma(id=(1, 0), centroid=[1 3 5.14], radius=3.14e+03)\n'
+        '])\n')
+    str_result = str(rtree)
+    assert str_result == str_expect
+
+
 if __name__ == "__main__":
     test_rtree_sphere.run_tests()
 
@@ -62,3 +118,9 @@ if __name__ == "__main__":
 
     test_bulk_neuron_add()
     print("[PASSED] MTest test_bulk_neuron_add")
+
+    test_add_neuron_with_soma_and_toString()
+    print("[PASSED] MTest test_add_neuron_with_soma")
+
+    test_add_neuron_without_soma_and_toString()
+    print("[PASSED] MTest test_add_neuron_without_soma")

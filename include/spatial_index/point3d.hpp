@@ -1,5 +1,6 @@
 #pragma once
 
+#include <boost/format.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/geometries/point.hpp>
@@ -140,10 +141,6 @@ struct Point3Dx: public Point3D {
     inline Point3D& unwrap() {
         return *this;
     }
-
-    inline void print() {
-        ::printf("<Point3Dx: %f %f %f>\n", get<0>(), get<1>(), get<2>());
-    }
 };
 
 //
@@ -175,6 +172,11 @@ inline Point3D min(Point3D const& p1, Point3D const& p2) {
     return Point3D{std::min(p1.get<0>(), p2.get<0>()),
                    std::min(p1.get<1>(), p2.get<1>()),
                    std::min(p1.get<2>(), p2.get<2>())};
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Point3D& p) {
+    os << boost::format("%.3g %.3g %.3g") % p.get<0>() % p.get<1>() % p.get<2>();
+    return os;
 }
 
 

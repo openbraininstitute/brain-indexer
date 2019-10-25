@@ -46,7 +46,6 @@ struct iter_ids_getter;
 struct iter_gid_segm_getter;
 
 
-
 /**
  * \brief IndexedShape adds an 'id' field to the underlying struct
  */
@@ -77,7 +76,7 @@ struct IndexedShape: public ShapeT {
     friend class boost::serialization::access;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int/* version*/) {
+    void serialize(Archive& ar, const unsigned int /* version*/) {
         ar& id;
         ar&* static_cast<ShapeT*>(this);
     }
@@ -107,7 +106,7 @@ struct NeuronPiece: public IndexedShape<ShapeT> {
     }
 
   protected:
-    inline static constexpr identifier_t pack_ids(identifier_t gid, unsigned segment_i=0) {
+    inline static constexpr identifier_t pack_ids(identifier_t gid, unsigned segment_i = 0) {
         return (gid << 12) + segment_i;
     }
 
@@ -125,10 +124,10 @@ struct Soma: public NeuronPiece<Sphere> {
         : type{gid, 0u, geom_} {}
 
     /**
-      * \brief Initialize the Soma directly from ids and gemetric properties
-      *  Note: This was changed from a more encapsulated version since initializing
-      *    using super constructors ends up in 3 chained function calls (all way up)
-      */
+     * \brief Initialize the Soma directly from ids and gemetric properties
+     *  Note: This was changed from a more encapsulated version since initializing
+     *    using super constructors ends up in 3 chained function calls (all way up)
+     */
     template <typename U>
     inline Soma(identifier_t gid, U&& center, CoordType const& r) noexcept {
         id = pack_ids(gid);
@@ -143,6 +142,14 @@ struct Soma: public NeuronPiece<Sphere> {
     }
 };
 
+inline std::ostream& operator<<(std::ostream& os, const Soma& s) {
+    os << "Soma(id="
+       << "(" << s.gid() << ", " << s.segment_i() << "), "
+       << "centroid=[" << s.centroid << "], "
+       << "radius=" << boost::format("%.3g") % s.radius << ")" << std::endl;
+    return os;
+}
+
 
 struct Segment: public NeuronPiece<Cylinder> {
     using NeuronPiece<Cylinder>::NeuronPiece;
@@ -150,8 +157,10 @@ struct Segment: public NeuronPiece<Cylinder> {
     inline Segment() = default;
 
     template <typename U>
-    inline Segment(identifier_t gid, unsigned segment_i,
-                   U&& center1, U&& center2,
+    inline Segment(identifier_t gid,
+                   unsigned segment_i,
+                   U&& center1,
+                   U&& center2,
                    CoordType const& r) noexcept {
         id = pack_ids(gid, segment_i);
         p1 = center1;
@@ -165,6 +174,14 @@ struct Segment: public NeuronPiece<Cylinder> {
         static_assert(sizeof...(T) == 4, "Wrong parameter tuple size");
     }
 };
+
+inline std::ostream& operator<<(std::ostream& os, const Segment& s) {
+    os << "Segment(id="
+       << "(" << s.gid() << ", " << s.segment_i() << "), "
+       << "centroids=([" << s.p1 << "], [" << s.p2 << "]), "
+       << "radius=" << boost::format("%.3g") % s.radius << ")" << std::endl;
+    return os;
+}
 
 
 //////////////////////////////////////////////

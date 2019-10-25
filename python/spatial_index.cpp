@@ -94,10 +94,24 @@ struct py_morph_rtree: public py_rtree<si::MorphoEntry, si::Soma> {
                 )")
 
             .def(
+                "add_soma",
+                [](Class& obj, id_t gid, array_t point, coord_t radius) {
+                    obj.insert(si::Soma{gid, mk_point(point), radius});
+                },
+                R"(
+                    Adds a soma to the spatial index.
+
+                    Args:
+                        gid(int): The id of the soma
+                        point(array): A len-3 list or np.array[float32] with the center point
+                        radius(float): The radius of the soma
+                )")
+
+            .def(
                 "add_neuron",
                 [](Class& obj, id_t gid,
                                array_t centroids_np, array_t radii_np,
-                               array_offsets branches_offset_np) {
+                               array_offsets branches_offset_np, bool has_Soma) {
                     auto point_radii = convert_input(centroids_np, radii_np);
                     // Get raw pointers to data
                     const auto points = point_radii.first;
@@ -105,8 +119,10 @@ struct py_morph_rtree: public py_rtree<si::MorphoEntry, si::Soma> {
                     auto n_branches = branches_offset_np.size();
                     const auto offsets = branches_offset_np.template unchecked<1>().data(0);
 
-                    // Add soma
-                    obj.insert(si::Soma{gid, points[0], radii[0]});
+                    if (has_Soma) {
+                        // Add soma
+                        obj.insert(si::Soma{gid, points[0], radii[0]});
+                    }
 
                     // Add segments
                     int cur_segment_i = 1;
@@ -124,14 +140,19 @@ struct py_morph_rtree: public py_rtree<si::MorphoEntry, si::Soma> {
                     add_branch(obj, gid, cur_segment_i, n_segments,
                                     points + p_start,
                                     radii + p_start);
-                },
+                },py::arg("gid"), py::arg("points"), py::arg("radii"), py::arg("branch_offsets"),
+                  py::arg("has_Soma") = true,
                 R"(
+                    Default:
                     Bulk add a neuron (1 soma and lines of segments) to the spatial index.
 
                     It interprets the first point & radius as the soma properties. Subsequent
                     points & radii are interpreted as branch segments (cylinders).
                     The first point (index) of each branch must be specified in branches_offset_np,
                     so that a new branch is started without connecting it to the last segment.
+
+                    has_Soma = false:
+                    Bulk add neuron segments to the spatial index, soma point is not included.
 
                     **Example:** Adding a neuron with two branches.
                       With 1 soma, first branch with 9 segments and second branch with 5::
@@ -159,6 +180,7 @@ struct py_morph_rtree: public py_rtree<si::MorphoEntry, si::Soma> {
                         radii_np(np.array): An array[float32] with the segments' radii
                         branches_offset_np(array): A list/array[int] with the offset to
                             the first point of each branch
+                        has_Soma : include the soma point or not, default = true
                 )");
     }
 
