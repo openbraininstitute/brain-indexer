@@ -1,14 +1,13 @@
 cmake_minimum_required(VERSION 3.5)
 
-file(STRINGS "setup.py" proj_version REGEX "__version__[ ]*=")
-if (proj_version MATCHES  "__version__.*'(.*)'.*")
-	set(proj_version "${CMAKE_MATCH_1}")
-	message(STATUS "Project: SpatialIndex ${proj_version}")
-else()
-	message(FATAL_ERROR "No version could be found in setup.py. Please set __version__ = 'x.y.z'")
+include("CMake/version.cmake")
+if(NOT DEFINED SI_VERSION)
+    get_git_version(SI_VERSION)
 endif()
+sanitize_version(SI_VERSION "${SI_VERSION}")
+message(STATUS "Building Spatial-Index ${SI_VERSION}")
 
-project(SpatialIndex VERSION ${proj_version}
+project(SpatialIndex VERSION ${SI_VERSION}
                      DESCRIPTION "BBP Spatial indexing tools"
                      LANGUAGES CXX)
 

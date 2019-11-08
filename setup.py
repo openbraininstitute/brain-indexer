@@ -9,13 +9,19 @@ from setuptools.command.build_ext import build_ext
 
 
 # Main source of the version. Dont rename, used by Cmake
-__version__ = '0.1.0'
+try:
+    __version__ = subprocess.run(['git', 'describe', '--tags'],
+                                 stdout=subprocess.PIPE).stdout.strip().decode()
+    if '-' in __version__: __version__ = __version__[:-9]
+except Exception as e:
+    raise RuntimeError("Could not get version from Git repo") from e
 
 
 class CMakeExtension(Extension):
-    def __init__(self, name, sourcedir=''):
+    def __init__(self, name, sourcedir='', cmake_opts=None):
         Extension.__init__(self, name, sources=[])
         self.sourcedir = os.path.abspath(sourcedir)
+        self.cmake_opts = cmake_opts or []
 
 
 class CMakeBuild(build_ext):
@@ -28,13 +34,14 @@ class CMakeBuild(build_ext):
         self.outdir = os.path.abspath(os.path.dirname(
             self.get_ext_fullpath(ext.name)))
         print("Building lib to:", self.outdir)
-        cmake_args = ['-DEXTENSION_OUTPUT_DIRECTORY=' + self.outdir,
-                      '-DPYTHON_EXECUTABLE=' + sys.executable,
-                      '-DSI_UNIT_TESTS=OFF']
+        cmake_args = [
+            '-DEXTENSION_OUTPUT_DIRECTORY=' + self.outdir,
+            '-DPYTHON_EXECUTABLE=' + sys.executable
+        ] + ext.cmake_opts
 
         cfg = 'Debug' if self.debug else 'Release'
         cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
-        build_args = ['--config', cfg, '--', '-j']
+        build_args = ['--config', cfg, '--', '-j4']
 
         env = os.environ.copy()
         env['CXXFLAGS'] = "{} -static-libstdc++ -DVERSION_INFO='{}'".format(
@@ -120,7 +127,13 @@ def setup_package():
         name='spatial-index',
         version=__version__,
         packages=["spatial_index"],
-        ext_modules=[CMakeExtension('spatial_index._spatial_index')],
+        ext_modules=[CMakeExtension(
+            'spatial_index._spatial_index',
+            cmake_opts=[
+                '-DSI_UNIT_TESTS=OFF',
+                '-DSI_VERSION=' + __version__
+            ]
+        )],
         cmdclass=dict(build_ext=CMakeBuild, docs=Docs),
         include_package_data=True,
         install_requires=['numpy>=1.13.1'],
