@@ -1,5 +1,7 @@
 #pragma once
 
+#include <boost/serialization/serialization.hpp>
+
 #include "point3d.hpp"
 
 
@@ -31,7 +33,7 @@ struct Sphere {
 
     inline void translate(Point3D const& vec) {
         bg::add_point(centroid, vec);
-    };
+    }
 
   private:
     friend class boost::serialization::access;
@@ -52,7 +54,7 @@ struct Cylinder {
     CoordType radius;
 
     inline CoordType length() const {
-        return bg::distance(p1, p2);
+        return static_cast<CoordType>(bg::distance(p1, p2));
     }
 
     inline Box3D bounding_box() const {
@@ -78,7 +80,7 @@ struct Cylinder {
     inline void translate(Point3D const& vec) {
         bg::add_point(p1, vec);
         bg::add_point(p2, vec);
-    };
+    }
 
   private:
     friend class boost::serialization::access;
