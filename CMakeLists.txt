@@ -27,6 +27,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_definitions(-Wall -Wfatal-errors)
 
+# Header only libs and bindings have tons of inline symbols which dont need to be public
+set(CMAKE_VISIBILITY_INLINES_HIDDEN TRUE)
 
 #
 # Dependencies
