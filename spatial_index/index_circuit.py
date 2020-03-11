@@ -1,6 +1,7 @@
 import itertools
-import quaternion as npq
 import mvdtool
+import warnings; warnings.simplefilter("ignore")
+import quaternion as npq
 from morphio import Morphology
 from os import path as ospath
 from mpi4py import MPI
@@ -12,6 +13,7 @@ rank = comm.Get_rank()
 
 MORPHOLOGIES = "/Users/leite/dev/TestData/circuitBuilding_1000neurons/morphologies/ascii"
 FILENAME = "/Users/leite/dev/TestData/circuitBuilding_1000neurons/circuits/circuit.mvd3"
+mvd = mvdtool.open(FILENAME)  # type: mvdtool.MVD3.File
 
 
 class MorphologyLib:
@@ -39,8 +41,7 @@ class MorphologyLib:
 
 
 class MvdMorphIndexer:
-    def __init__(self, mvd_path, morphology_dir):
-        self._mvd = mvdtool.open(mvd_path)  # type: mvdtool.MVD3.File
+    def __init__(self, morphology_dir):
         self._morph_lib = MorphologyLib(morphology_dir)
         self._spatialindex = MorphIndex()
 
@@ -59,10 +60,9 @@ class MvdMorphIndexer:
     def process_range(self, low, count):
         print("Processing neurons in range", low, "->", low + count)
         gids = itertools.count(low)
-        morph_names = self._mvd.morphologies(low, count)
-        positions = self._mvd.positions(low, count)
-        rotations = (self._mvd.rotations(low, count) if self._mvd.rotated
-                     else itertools.repeat(None))
+        morph_names = mvd.morphologies(low, count)
+        positions = mvd.positions(low, count)
+        rotations = mvd.rotations(low, count) if mvd.rotated else itertools.repeat(None)
         for gid, morph, pos, rot in zip(gids, morph_names, positions, rotations):
             self.process_cell(gid, morph, pos, rot)
 
@@ -79,7 +79,7 @@ def gen_ranges(size, blocklen):
 def main():
     n_cells = len(mvdtool.open(FILENAME))
     for low_i, high_i in gen_ranges(n_cells, 100):
-        indexer = MvdMorphIndexer(FILENAME, MORPHOLOGIES)
+        indexer = MvdMorphIndexer(MORPHOLOGIES)
         indexer.process_range(low_i, high_i - low_i)
 
 

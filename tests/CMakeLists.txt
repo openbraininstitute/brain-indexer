@@ -14,6 +14,8 @@ endfunction()
 
 si_unit_test("test_input_iters")
 si_unit_test("unit_tests")
+si_unit_test("test_grid")
+
 if(SI_BENCHMARKS)
     si_unit_test("benchmarks")
     target_link_libraries(benchmarks Boost::timer)
