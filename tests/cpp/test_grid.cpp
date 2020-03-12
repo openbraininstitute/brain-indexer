@@ -48,3 +48,20 @@ BOOST_AUTO_TEST_CASE(MorphoEntryTest) {
 
     grid.print();
 }
+
+
+BOOST_AUTO_TEST_CASE(OptimizedMorphoGrid) {
+    MorphSpatialGrid<5> grid;
+
+    // 5 points, 2 branches, 3 segments
+    std::vector<CoordType> points{1,1,1, 2,2,2, 3,3,3, 3,2,2, 7,7,7};
+    std::vector<CoordType> radius{1, 1, 1, 1, 1};
+    std::vector<unsigned> offsets{0, 3, 5};
+
+    auto raw_points = reinterpret_cast<const Point3D*>(points.data());
+
+    grid.insert(9, offsets.size() - 1, raw_points, radius.data(), offsets.data());
+
+    grid.print();
+}
+
