@@ -46,10 +46,16 @@ py::class_<GridT> create_SpatialGrid_bindings(py::module& m,
 }
 
 
-void create_MorphSpatialGrid_bindings(py::module& m) {
-    // using grid_type = si::MorphSpatialGrid<5>;
-    using grid_type = si::SpatialGrid<si::Point3D, 5>;
-    create_SpatialGrid_bindings<grid_type>(m, "MorphSpatialGrid");
+void create_SphereGrid_bindings(py::module& m) {
+    using Grid = si::SpatialGrid<si::Point3D, 5>;
+    create_SpatialGrid_bindings<Grid>(m, "SphereGrid");
+    // ... TODO: Not point, spheres!
+}
+
+
+void create_MorphGrid_bindings(py::module& m) {
+    using Grid = si::MorphSpatialGrid<5>;
+    create_SpatialGrid_bindings<Grid>(m, "MorphGrid");
 }
 
 

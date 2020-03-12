@@ -39,7 +39,7 @@ inline auto convert_input(array_t const& centroids) {
     return reinterpret_cast<const point_t*>(centroids.data(0, 0));
 }
 
-inline auto& mk_point(array_t const& point) {
+inline const auto& mk_point(array_t const& point) {
     if (point.ndim() != 1 || point.size() != 3) {
         throw std::invalid_argument("Numpy array not convertible to point3d");
     }
@@ -67,8 +67,10 @@ template <typename T, int N>
 py::class_<si::SpatialGrid<T, N>>
 create_SpatialGrid_bindings(py::module& m, const char* class_name);
 
+void create_SphereGrid_bindings(py::module& m);
+
 /// Additional bindings for MorphSpatialGrid
-void create_MorphSpatialGrid_bindings(py::module& m);
+void create_MorphGrid_bindings(py::module& m);
 
 
 }  // namespace py_bindings

@@ -17,6 +17,8 @@ struct Cylinder;  // FWDecl
  * For compat with indexing Geometries must implement bounding_box() and intersects()
  */
 struct Sphere {
+    using box_type = Box3D;
+
     Point3D centroid;
     CoordType radius;
 
@@ -50,6 +52,8 @@ struct Sphere {
  * \brief A Cylinder represention. Base abstraction for Segments
  */
 struct Cylinder {
+    using box_type = Box3D;
+
     Point3D p1, p2;
     CoordType radius;
 
