@@ -1,8 +1,9 @@
 #pragma once
 
-#include <map>
-#include <iostream>
 #include <cmath>
+#include <iostream>
+#include <map>
+#include <numeric>
 
 #include "index.hpp"
 
@@ -87,9 +88,10 @@ struct GridPlacementHelper<MorphoEntry> : public GridPlacementHelperBase_<Morpho
  * Voxels are the unitary regions, aligned at (0,0,0), each creating an RTree
  */
 template <typename T, int VoxelLength>
-class SpatialGridBase_ {
+class SpatialGrid {
   public:
-    typedef T value_type;
+    using value_type = T;
+    using key_type = std::array<int, 3>;
 
     inline void insert(const value_type & value) {
         helper_.template insert<VoxelLength>(value);
@@ -103,46 +105,61 @@ class SpatialGridBase_ {
         insert(&vec.front(), &vec.back());
     }
 
-    inline int size(){}
+    inline int size() const noexcept {
+        return std::accumulate(grid_.cbegin(), grid_.cend(), 0,
+            [](int previous_size, const auto& pair) {
+                return previous_size + pair.second.size();
+            }
+        );
+    }
 
-    inline bool empty(){}
+    inline auto voxels() const {
+        std::vector<key_type> v;
+        v.reserve(grid_.size());
+        for (const auto& pair : grid_) {
+            v.push_back(pair.first);
+        }
+        return v;
+    }
 
-    inline void clear(){}
+    inline const auto& items() const noexcept {
+        return grid_;
+    }
 
-    inline void print() {
+    inline const std::vector<T>& operator[](const key_type& key) const {
+        return grid_[key];
+    }
+
+    inline void print() const {
         for (const auto& tpl : grid_) {
             std::cout << tpl.first[0] << ", " << tpl.first[1] << ", " << tpl.first[2] <<
             std::endl;
             for (const auto& item : tpl.second) {
-                std::cout << "   : " << item << std::endl;
+                std::cout << "   | " << item << std::endl;
             }
         }
-    };
+    }
 
   protected:
-    std::map<std::array<int, 3>, std::vector<T>> grid_;
+
+    std::map<key_type, std::vector<T>> grid_;
+
     GridPlacementHelper<T> helper_{grid_};
 };
 
 
-// Public Generic implementation
-template <typename T, int N>
-class SpatialGrid : public SpatialGridBase_<T, N> {};
-
 
 // Specific for morphologies
 template <int VoxelLength>
-class SpatialGrid<MorphoEntry, VoxelLength> : public SpatialGridBase_<MorphoEntry, VoxelLength> {
+class MorphSpatialGrid : public SpatialGrid<MorphoEntry, VoxelLength> {
   public:
-    using SpatialGridBase_<MorphoEntry, VoxelLength>::insert;
-
     inline void insert(identifier_t gid,
                        int n_branches,
                        const Point3D *points,
                        const CoordType *radius,
                        const unsigned *offsets) {
         unsigned segment_i = 1;
-        for (int branch_i=0; branch_i < n_branches; branch_i++) {
+        for (int branch_i = 0; branch_i < n_branches; branch_i++) {
             const unsigned branch_end = offsets[branch_i + 1] - 1;
             for (unsigned i = offsets[branch_i]; i < branch_end; i++) {
                 this->helper_.template insert<VoxelLength>(
@@ -153,8 +170,6 @@ class SpatialGrid<MorphoEntry, VoxelLength> : public SpatialGridBase_<MorphoEntr
     }
 };
 
-template <int VoxelLength>
-using MorphSpatialGrid = SpatialGrid<MorphoEntry, VoxelLength>;
-
-
 }  // namespace spatial_index
+
+#include "detail/index_grid.hpp"
