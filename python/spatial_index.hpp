@@ -68,7 +68,6 @@ py::class_<si::SpatialGrid<T, N>>
 create_SpatialGrid_bindings(py::module& m, const char* class_name);
 
 /// Additional bindings for MorphSpatialGrid
-template <typename Entry>
 void create_MorphSpatialGrid_bindings(py::module& m);
 
 

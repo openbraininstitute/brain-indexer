@@ -94,11 +94,11 @@ class SpatialGrid {
     using key_type = std::array<int, 3>;
 
     inline void insert(const value_type & value) {
-        helper_.template insert<VoxelLength>(value);
+        placer_.template insert<VoxelLength>(value);
     }
 
     inline void insert(const value_type* begin, const value_type* end) {
-        while (begin++ < end) insert(*begin);
+        while (begin < end) insert(*begin++);
     }
 
     inline void insert(const std::vector<value_type>& vec) {
@@ -144,7 +144,7 @@ class SpatialGrid {
 
     std::map<key_type, std::vector<T>> grid_;
 
-    GridPlacementHelper<T> helper_{grid_};
+    GridPlacementHelper<T> placer_{grid_};
 };
 
 
@@ -153,16 +153,16 @@ class SpatialGrid {
 template <int VoxelLength>
 class MorphSpatialGrid : public SpatialGrid<MorphoEntry, VoxelLength> {
   public:
-    inline void insert(identifier_t gid,
-                       int n_branches,
-                       const Point3D *points,
-                       const CoordType *radius,
-                       const unsigned *offsets) {
+    inline void add_neuron(identifier_t gid,
+                           int n_branches,
+                           const Point3D *points,
+                           const CoordType *radius,
+                           const unsigned *offsets) {
         unsigned segment_i = 1;
         for (int branch_i = 0; branch_i < n_branches; branch_i++) {
             const unsigned branch_end = offsets[branch_i + 1] - 1;
             for (unsigned i = offsets[branch_i]; i < branch_end; i++) {
-                this->helper_.template insert<VoxelLength>(
+                this->placer_.template insert<VoxelLength>(
                     gid, segment_i++, points[i], points[i + 1], radius[i]);
             }
         }

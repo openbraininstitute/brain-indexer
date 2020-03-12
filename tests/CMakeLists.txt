@@ -34,18 +34,16 @@ if(NOT SI_PYTHON_BINDINGS)
     return()
 endif()
 
-# We dont want to deal with python setup.py here, so our tests have a __main__
-add_test(NAME Python_SphereIndex
-         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test_rtree_sphere.py)
-set_tests_properties(Python_SphereIndex PROPERTIES ENVIRONMENT
-                     PYTHONPATH=${PROJECT_SOURCE_DIR}:$ENV{PYTHONPATH})
+function(SI_PYTHON_TEST test_file)
+    # We dont want to deal with python setup.py here, so our tests have a __main__
+    add_test(NAME "Python_${test_file}"
+             COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/${test_file}")
+    set_tests_properties("Python_${test_file}" PROPERTIES ENVIRONMENT
+                         PYTHONPATH=${PROJECT_SOURCE_DIR}:$ENV{PYTHONPATH})
+endfunction()
 
-add_test(NAME Python_MorphIndex
-         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test_rtree_morph.py)
-set_tests_properties(Python_MorphIndex PROPERTIES ENVIRONMENT
-                     PYTHONPATH=${PROJECT_SOURCE_DIR}:$ENV{PYTHONPATH})
 
-add_test(NAME Python_PointIndex
-         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test_rtree_point.py)
-set_tests_properties(Python_PointIndex PROPERTIES ENVIRONMENT
-                     PYTHONPATH=${PROJECT_SOURCE_DIR}:$ENV{PYTHONPATH})
+si_python_test("test_rtree_sphere.py")
+si_python_test("test_rtree_morph.py")
+si_python_test("test_rtree_point.py")
+si_python_test("test_grid.py")

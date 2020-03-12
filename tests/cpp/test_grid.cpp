@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(OptimizedMorphoGrid) {
 
     auto raw_points = reinterpret_cast<const Point3D*>(points.data());
 
-    grid.insert(9, int(offsets.size()) - 1, raw_points, radius.data(), offsets.data());
+    grid.add_neuron(9, int(offsets.size()) - 1, raw_points, radius.data(), offsets.data());
 
     std::cout << "Grid objects: " << grid.size() << std::endl;
 
