@@ -1,3 +1,4 @@
+#pragma once
 
 namespace spatial_index {
 
