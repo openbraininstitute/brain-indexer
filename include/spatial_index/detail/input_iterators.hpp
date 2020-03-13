@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+#include <functional>
 
 namespace spatial_index {
 
@@ -59,7 +61,6 @@ struct SoA_Iterator : public detail::indexed_iterator_base<SoA_Iterator<SoA_T>,
 };
 
 }  // namespace detail
-
 
 
 namespace util {

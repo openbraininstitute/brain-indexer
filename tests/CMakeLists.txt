@@ -1,5 +1,5 @@
 
-add_definitions("-Wfatal-errors -Wall -Wextra")
+add_definitions("-Wextra")
 
 
 function(SI_UNIT_TEST test_src)

@@ -142,14 +142,6 @@ struct Soma: public NeuronPiece<Sphere> {
     }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const Soma& s) {
-    os << "Soma(id="
-       << "(" << s.gid() << ", " << s.segment_i() << "), "
-       << "centroid=[" << s.centroid << "], "
-       << "radius=" << boost::format("%.3g") % s.radius << ")" << std::endl;
-    return os;
-}
-
 
 struct Segment: public NeuronPiece<Cylinder> {
     using NeuronPiece<Cylinder>::NeuronPiece;
@@ -175,13 +167,6 @@ struct Segment: public NeuronPiece<Cylinder> {
     }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const Segment& s) {
-    os << "Segment(id="
-       << "(" << s.gid() << ", " << s.segment_i() << "), "
-       << "centroids=([" << s.p1 << "], [" << s.p2 << "]), "
-       << "radius=" << boost::format("%.3g") % s.radius << ")" << std::endl;
-    return os;
-}
 
 
 //////////////////////////////////////////////

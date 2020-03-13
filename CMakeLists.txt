@@ -24,10 +24,13 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+add_definitions(-Wall -Wfatal-errors)
+
 
 #
 # Dependencies
 #
+set(Boost_NO_BOOST_CMAKE TRUE)  # Consistency
 set(BOOST_REQ_COMPONENTS serialization)
 if(SI_UNIT_TESTS)
     list(APPEND BOOST_REQ_COMPONENTS unit_test_framework)

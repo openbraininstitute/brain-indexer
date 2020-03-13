@@ -175,7 +175,7 @@ inline Point3D min(Point3D const& p1, Point3D const& p2) {
 }
 
 inline std::ostream& operator<<(std::ostream& os, const Point3D& p) {
-    os << boost::format("%.3g %.3g %.3g") % p.get<0>() % p.get<1>() % p.get<2>();
+    os << boost::format("[%.3g %.3g %.3g]") % p.get<0>() % p.get<1>() % p.get<2>();
     return os;
 }
 

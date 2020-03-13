@@ -43,11 +43,6 @@ struct Sphere {
     }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const Sphere& s) {
-    os << "Sphere(centroid=[" << s.centroid << "], "
-       << "radius=" << boost::format("%.3g") % s.radius << ")" << std::endl;
-    return os;
-}
 
 /**
  * \brief A Cylinder represention. Base abstraction for Segments
@@ -96,11 +91,6 @@ struct Cylinder {
     }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const Cylinder& c) {
-    os << "Cylinder(centroids=([" << c.p1 << "], [" << c.p2 << "]), "
-       << "radius=" << boost::format("%.3g") % c.radius << ")" << std::endl;
-    return os;
-}
 
 // Generic API for getting intersection among geometries
 

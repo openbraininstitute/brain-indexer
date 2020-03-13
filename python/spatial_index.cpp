@@ -15,9 +15,9 @@ struct py_morph_rtree: public py_rtree<si::MorphoEntry, si::Soma> {
     using rtree_type = py_rtree<si::MorphoEntry, si::Soma>;
 
     inline static void add_branch(Class& obj,
-                                  id_t neuron_id, unsigned segment_i, unsigned n_segments,
+                                  id_t neuron_id, unsigned segment_i, ssize_t n_segments,
                                   const point_t *points, const coord_t *radii) {
-        for(int i=0; i < n_segments; i++, segment_i++) {
+        for(ssize_t i=0; i < n_segments; i++, segment_i++) {
             obj.insert(si::Segment{
                 neuron_id, segment_i, points[i], points[i+1], radii[i]});
         }

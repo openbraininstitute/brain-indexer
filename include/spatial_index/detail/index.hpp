@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../index.hpp"
+
 #include <fstream>
 #include <iostream>
 
@@ -8,8 +10,8 @@
 
 #include "output_iterators.hpp"
 
-
 namespace spatial_index {
+
 
 // Specialization of geometry_intersects for variant geometries
 
@@ -158,6 +160,25 @@ inline void IndexTree<T, A>::dump(const std::string& filename) const {
     std::ofstream ofs(filename, std::ios::binary | std::ios::trunc);
     boost::archive::binary_oarchive oa(ofs);
     oa << static_cast<const super&>(*this);
+}
+
+
+// String representation
+
+inline std::ostream& operator<<(std::ostream& os, const Soma& s) {
+    os << "Soma(id="
+       << "(" << s.gid() << ", " << s.segment_i() << "), "
+       << "centroid=" << s.centroid << ", "
+       << "radius=" << boost::format("%.3g") % s.radius << ")" << std::endl;
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Segment& s) {
+    os << "Segment(id="
+       << "(" << s.gid() << ", " << s.segment_i() << "), "
+       << "centroids=(" << s.p1 << ", " << s.p2 << "), "
+       << "radius=" << boost::format("%.3g") % s.radius << ")" << std::endl;
+    return os;
 }
 
 
