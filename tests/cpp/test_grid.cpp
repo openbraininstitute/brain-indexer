@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(BasicTest) {
     grid.insert(6);
     grid.insert(-1);
 
-    grid.print();
+    std::cout << grid << std::endl;
 }
 
 
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(MorphoEntryTest) {
         Segment(2ul, 1, Point3D{-2, -2, 2}, Point3D{0,-2, 2}, 1.f)
     });
 
-    grid.print();
+    std::cout << grid << std::endl;
 }
 
 
@@ -64,6 +64,6 @@ BOOST_AUTO_TEST_CASE(OptimizedMorphoGrid) {
 
     std::cout << "Grid objects: " << grid.size() << std::endl;
 
-    grid.print();
+    std::cout << grid << std::endl;
 }
 

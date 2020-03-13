@@ -49,6 +49,7 @@ struct GridPlacementHelper<MorphoEntry> : public GridPlacementHelperBase_<Morpho
                        const Point3D& p1, const Point3D& p2, CoordType radius);
 };
 
+
 /**
  * A class holding a grid of spatially split objects
  * Voxels are the unitary regions, aligned at (0,0,0), each creating an RTree
@@ -80,8 +81,6 @@ class SpatialGrid {
     inline const auto& operator[](const key_type& key) const {
         return grid_[key];
     }
-
-    inline void print() const;
 
   protected:
 

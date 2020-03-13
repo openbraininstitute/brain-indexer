@@ -1,10 +1,13 @@
 
+#include <sstream>
+
+#include <spatial_index/index_grid.hpp>
+
 #include "bind11_utils.hpp"
 #include "spatial_index.hpp"
 
 namespace spatial_index {
 namespace py_bindings {
-
 
 
 /// Bindings for generic SpatialGrid
@@ -41,8 +44,11 @@ py::class_<GridT> create_SpatialGrid_bindings(py::module& m,
 
         .def("__len__", &Class::size, "The total number of elements")
 
-        .def("print", &Class::print, "Display a representation of the grid state");
-
+        .def("__str__", [](Class& obj) {
+            std::stringstream ss;
+            si::operator<<(ss, obj);
+            return ss.str();
+        });
 }
 
 

@@ -1,11 +1,12 @@
 #pragma once
 
+#include "../index_grid.hpp"
+
 #include <cmath>
 #include <iostream>
 #include <map>
 #include <numeric>
 
-#include "../index_grid.hpp"
 
 namespace spatial_index {
 
@@ -76,15 +77,21 @@ inline auto SpatialGrid<T, VoxelLength>::voxels() const {
 }
 
 
-template <typename T, int VoxelLength>
-inline void SpatialGrid<T, VoxelLength>::print() const {
-    for (const auto& tpl : grid_) {
-        std::cout << tpl.first[0] << ", " << tpl.first[1] << ", " << tpl.first[2] <<
-        std::endl;
+template <typename T, int VL>
+inline std::ostream& operator<<(std::ostream& os, const spatial_index::SpatialGrid<T, VL>& obj) {
+    using spatial_index::operator<<;
+    os << boost::format("<obj: SpatialGrid<%d> [") % VL << std::endl;
+    for (const auto& tpl : obj.items()) {
+        os << boost::format(" Vx[%d, %d, %d]") % tpl.first[0] % tpl.first[1] % tpl.first[2]
+           << std::endl;
         for (const auto& item : tpl.second) {
-            std::cout << "   | " << item << std::endl;
+            os << "   " << item << std::endl;
         }
     }
+    os << "]>";
+    return os;
 }
 
+
 }  // namespace spatial_index
+
