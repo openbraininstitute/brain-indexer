@@ -32,10 +32,20 @@ def test_serialization():
     # assert c1 == c2
 
 
+def test_iadd():
+    c1 = SphereGrid()
+    c1.insert(np.array([[1, 1, 1], [6, 6, 6]], dtype='float'))
+    c2 = SphereGrid()
+    c2.insert(np.array([[2, 2, 2], [11, 11,11]], dtype='float'))
+    c1 += c2
+    print(c1)
+
+
 def run_tests():
     test_insert_check_size()
     test_insert_array()
     test_serialization()
+    test_iadd()
 
 
 if __name__ == "__main__":

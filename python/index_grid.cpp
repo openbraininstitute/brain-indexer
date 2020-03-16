@@ -50,6 +50,8 @@ py::class_<GridT> create_SpatialGrid_bindings(py::module& m,
             return ss.str();
         })
 
+        .def("__iadd__", &Class::operator+=)
+
         .def(py::pickle(
              [](const Class& obj) {  // __getstate__ / serialize
                 pyutil::StringBuffer buf;

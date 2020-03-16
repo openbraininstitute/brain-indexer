@@ -2,8 +2,8 @@
 
 #include <cmath>
 #include <iostream>
-#include <map>
 #include <numeric>
+#include <map>
 
 #include "index.hpp"
 
@@ -81,6 +81,9 @@ class SpatialGrid {
     inline const auto& operator[](const key_type& key) const {
         return grid_[key];
     }
+
+    // inplace add user for combining grids
+    inline SpatialGrid& operator+=(const SpatialGrid& rhs) ;
 
   protected:
 

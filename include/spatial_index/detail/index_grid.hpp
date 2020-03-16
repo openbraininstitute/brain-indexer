@@ -82,12 +82,22 @@ inline auto SpatialGrid<T, VoxelLength>::voxels() const {
 }
 
 
-template <typename T, int VoxelLength>
+template <typename T, int VL>
 template <class Archive>
-inline void SpatialGrid<T, VoxelLength>::serialize(Archive& ar, const unsigned int) {
+inline void SpatialGrid<T, VL>::serialize(Archive& ar, const unsigned int) {
     ar& grid_;
 }
 
+
+template <typename T, int VL>
+inline SpatialGrid<T, VL>& SpatialGrid<T, VL>::operator+=(const SpatialGrid<T, VL>& rhs) {
+    for (const auto& item : rhs.grid_) {
+        auto& v = grid_[item.first];
+        v.reserve(v.size() + item.second.size());
+        v.insert(v.end(), item.second.begin(), item.second.end());
+    }
+    return *this;
+}
 
 
 template <typename T, int VL>
