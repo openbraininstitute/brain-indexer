@@ -2,7 +2,9 @@
 
 #include <memory>
 #include <vector>
+#include <sstream>
 
+#include <Python.h>
 #include <pybind11/iostream.h>
 #include <pybind11/numpy.h>
 #include <pybind11/operators.h>
@@ -22,7 +24,7 @@ namespace pybind_utils {
  *	https://github.com/pybind/pybind11/issues/1042#issuecomment-325941022
  */
 template <typename Sequence>
-inline py::array_t<typename Sequence::value_type> as_pyarray(Sequence&& seq) {
+inline auto as_pyarray(Sequence&& seq) {
     // Move entire object to heap. Memory handled via Python capsule
     Sequence* seq_ptr = new Sequence(std::move(seq));
     // Capsule shall delete sequence object when done
@@ -34,6 +36,19 @@ inline py::array_t<typename Sequence::value_type> as_pyarray(Sequence&& seq) {
                      capsule           // numpy array references this parent
     );
 }
+
+
+class StringBuffer : public std::stringbuf {
+  public:
+    inline std::stringbuf::char_type* data() const noexcept {
+        return pbase();
+    }
+
+    inline std::size_t size() const noexcept {
+        return std::size_t(pptr() - pbase());
+    }
+};
+
 
 
 /**

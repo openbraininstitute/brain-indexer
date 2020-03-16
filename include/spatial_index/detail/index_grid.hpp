@@ -7,6 +7,11 @@
 #include <map>
 #include <numeric>
 
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/array.hpp>
+
+
 
 namespace spatial_index {
 
@@ -77,6 +82,14 @@ inline auto SpatialGrid<T, VoxelLength>::voxels() const {
 }
 
 
+template <typename T, int VoxelLength>
+template <class Archive>
+inline void SpatialGrid<T, VoxelLength>::serialize(Archive& ar, const unsigned int) {
+    ar& grid_;
+}
+
+
+
 template <typename T, int VL>
 inline std::ostream& operator<<(std::ostream& os, const spatial_index::SpatialGrid<T, VL>& obj) {
     using spatial_index::operator<<;
@@ -91,6 +104,9 @@ inline std::ostream& operator<<(std::ostream& os, const spatial_index::SpatialGr
     os << "]>";
     return os;
 }
+
+
+
 
 
 }  // namespace spatial_index
