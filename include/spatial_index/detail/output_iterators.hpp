@@ -5,6 +5,8 @@
 //   (1) execute a callback (callback_iterator)
 // 	 (2) Retieve the index / index &segment from the Tree entry
 
+#include "../index.hpp"
+
 namespace spatial_index {
 
 namespace detail {
@@ -17,10 +19,11 @@ struct iter_append_only {
 };
 
 
-inline identifier_t get_id_from(IndexedSphere const& obj) { return obj.id; }
+template <typename S>
+inline identifier_t get_id_from(IndexedShape<S, ShapeId> const& obj) { return obj.id; }
 
 template <typename S>
-inline identifier_t get_id_from(NeuronPiece<S> const& obj) { return obj.gid(); }
+inline identifier_t get_id_from(IndexedShape<S, MorphPartId> const& obj) { return obj.gid(); }
 
 template <typename... S>
 inline identifier_t get_id_from(boost::variant<S...> const& obj) {
@@ -88,8 +91,8 @@ struct iter_gid_segm_getter: public detail::iter_append_only<iter_gid_segm_gette
     iter_gid_segm_getter(std::vector<gid_segm_t>& output)
         : output_(output) {}
 
-    template <typename T>
-    inline iter_gid_segm_getter& operator=(const NeuronPiece<T>& result_entry) {
+    template <typename S>
+    inline iter_gid_segm_getter& operator=(const IndexedShape<S, MorphPartId>& result_entry) {
         output_.emplace_back(result_entry.gid(), result_entry.segment_i());
         return *this;
     }
