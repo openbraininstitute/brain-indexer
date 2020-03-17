@@ -7,13 +7,22 @@
 #include <map>
 #include <numeric>
 
-#include <boost/serialization/map.hpp>
-#include <boost/serialization/vector.hpp>
+#include <boost/serialization/serialization.hpp>
 #include <boost/serialization/array.hpp>
-
+#include <boost/serialization/unordered_map.hpp>
+#include <boost/serialization/vector.hpp>
 
 
 namespace spatial_index {
+
+
+template <typename T, std::size_t N>
+inline std::size_t hash_array<T, N>::operator()(const std::array<T, N>& arr) const {
+    std::size_t out = 0;
+    for (const auto& item : arr)
+        out = 127 * out + std::hash<T>{}(item);
+    return out;
+}
 
 
 template <int VoxelLength>
@@ -27,8 +36,7 @@ inline std::array<int, 3> point2voxel(const Point3D& value) {
 
 
 template <int VoxelLen>
-inline void GridPlacementHelper<MorphoEntry>::
-insert(const MorphoEntry& value) {
+inline void GridPlacementHelper<MorphoEntry>::insert(const MorphoEntry& value) {
     auto bbox = boost::apply_visitor(
         [](const auto& elem) { return elem.bounding_box(); },
         value
@@ -46,9 +54,9 @@ insert(const MorphoEntry& value) {
 }
 
 template <int VoxelLen>
-inline void GridPlacementHelper<MorphoEntry>::
-insert(identifier_t gid, unsigned segment_i,
-       const Point3D& p1, const Point3D& p2, CoordType radius) {
+inline void GridPlacementHelper<MorphoEntry>::insert(
+        identifier_t gid, unsigned segment_i,
+        const Point3D& p1, const Point3D& p2, CoordType radius) {
     // This attempts at optimizing the common case of init segments from a
     // point array without temps
     const auto& vx1_i = point2voxel<VoxelLen>(p1);
@@ -101,11 +109,13 @@ inline SpatialGrid<T, VL>& SpatialGrid<T, VL>::operator+=(const SpatialGrid<T, V
 
 
 template <typename T, int VL>
-inline std::ostream& operator<<(std::ostream& os, const spatial_index::SpatialGrid<T, VL>& obj) {
+inline std::ostream& operator<<(std::ostream& os,
+                                const spatial_index::SpatialGrid<T, VL>& obj) {
     using spatial_index::operator<<;
     os << boost::format("<obj: SpatialGrid<%d> [") % VL << std::endl;
     for (const auto& tpl : obj.items()) {
-        os << boost::format(" Vx[%d, %d, %d]") % tpl.first[0] % tpl.first[1] % tpl.first[2]
+        os << boost::format(" Vx[%d, %d, %d]"
+                            ) % tpl.first[0] % tpl.first[1] % tpl.first[2]
            << std::endl;
         for (const auto& item : tpl.second) {
             os << "   " << item << std::endl;
@@ -114,9 +124,6 @@ inline std::ostream& operator<<(std::ostream& os, const spatial_index::SpatialGr
     os << "]>";
     return os;
 }
-
-
-
 
 
 }  // namespace spatial_index

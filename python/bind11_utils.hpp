@@ -4,7 +4,6 @@
 #include <vector>
 #include <sstream>
 
-#include <Python.h>
 #include <pybind11/iostream.h>
 #include <pybind11/numpy.h>
 #include <pybind11/operators.h>
@@ -15,6 +14,7 @@
 namespace py = pybind11;
 
 namespace pybind_utils {
+
 
 /**
  * @brief "Casts" a Cpp sequence to a python array (no memory copies)
@@ -38,6 +38,19 @@ inline auto as_pyarray(Sequence&& seq) {
 }
 
 
+/**
+ * \brief Converts and STL Sequence to numpy array by copying i
+ */
+template <typename Sequence>
+inline auto to_pyarray(const Sequence& sequence) {
+    return py::array(sequence.size(), sequence.data());
+}
+
+
+/**
+ * \brief A class to obtain the underlying buffer of a stringbuffer
+ * It matches the containers API for compat with as_pyarray()
+ */
 class StringBuffer : public std::stringbuf {
   public:
     inline std::stringbuf::char_type* data() const noexcept {
@@ -48,16 +61,6 @@ class StringBuffer : public std::stringbuf {
         return std::size_t(pptr() - pbase());
     }
 };
-
-
-
-/**
- * \brief Converts and STL Sequence to numpy array by copying i
- */
-template <typename Sequence>
-inline py::array_t<typename Sequence::value_type> to_pyarray(const Sequence& sequence) {
-    return py::array(sequence.size(), sequence.data());
-}
 
 
 }  // namespace pybind_utils

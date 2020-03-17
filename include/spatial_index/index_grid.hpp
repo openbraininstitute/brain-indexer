@@ -3,11 +3,20 @@
 #include <cmath>
 #include <iostream>
 #include <numeric>
-#include <map>
+#include <unordered_map>
 
 #include "index.hpp"
 
 namespace spatial_index {
+
+
+template <typename T, std::size_t N>
+struct hash_array {
+    std::size_t operator()(const std::array<T, N>& key) const;
+};
+
+template <typename T>
+using grid_type = std::unordered_map<std::array<int, 3>, std::vector<T>, hash_array<int, 3>>;
 
 
 template <int VoxelLength>
@@ -16,13 +25,12 @@ inline std::array<int, 3> point2voxel(const Point3D& value);
 
 template <typename T>
 struct GridPlacementHelperBase_ {
-    using grid_type = std::map<std::array<int, 3>, std::vector<T>>;
 
-    inline GridPlacementHelperBase_(grid_type& grid)
+    inline GridPlacementHelperBase_(grid_type<T>& grid)
         : grid_(grid) {}
 
   protected:
-    grid_type& grid_;
+    grid_type<T>& grid_;
 };
 
 
@@ -48,6 +56,7 @@ struct GridPlacementHelper<MorphoEntry> : public GridPlacementHelperBase_<Morpho
     inline void insert(identifier_t gid, unsigned segment_i,
                        const Point3D& p1, const Point3D& p2, CoordType radius);
 };
+
 
 
 /**
@@ -87,7 +96,7 @@ class SpatialGrid {
 
   protected:
 
-    std::map<key_type, std::vector<T>> grid_;
+    grid_type<T> grid_;
     GridPlacementHelper<T> placer_{grid_};
 
      // Serialization
