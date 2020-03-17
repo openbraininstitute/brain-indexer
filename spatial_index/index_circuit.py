@@ -1,3 +1,5 @@
+#!/bin/env python
+import dask.bag as dbag
 import itertools
 import mvdtool
 import warnings; warnings.simplefilter("ignore")
@@ -13,7 +15,6 @@ rank = comm.Get_rank()
 
 MORPHOLOGIES = "/Users/leite/dev/TestData/circuitBuilding_1000neurons/morphologies/ascii"
 FILENAME = "/Users/leite/dev/TestData/circuitBuilding_1000neurons/circuits/circuit.mvd3"
-mvd = mvdtool.open(FILENAME)  # type: mvdtool.MVD3.File
 
 
 class MorphologyLib:
@@ -44,6 +45,7 @@ class MvdMorphIndexer:
     def __init__(self, morphology_dir):
         self._morph_lib = MorphologyLib(morphology_dir)
         self._spatialindex = MorphIndex()
+        self._mvd = mvdtool.open(FILENAME)  # type: mvdtool.MVD3.File
 
     def process_cell(self, gid, morph, position, rotation):
         # print("Processing gid", gid)
@@ -60,28 +62,35 @@ class MvdMorphIndexer:
     def process_range(self, low, count):
         print("Processing neurons in range", low, "->", low + count)
         gids = itertools.count(low)
-        morph_names = mvd.morphologies(low, count)
-        positions = mvd.positions(low, count)
-        rotations = mvd.rotations(low, count) if mvd.rotated else itertools.repeat(None)
+        morph_names = self._mvd.morphologies(low, count)
+        positions = self._mvd.positions(low, count)
+        rotations = itertools.repeat(None)
+            # (self._mvd.rotations(low, count)
+            #          if self._mvd.rotated
+            #          else itertools.repeat(None))
         for gid, morph, pos, rot in zip(gids, morph_names, positions, rotations):
             self.process_cell(gid, morph, pos, rot)
 
 
-def gen_ranges(size, blocklen):
+def gen_ranges(limit, blocklen):
     low_i = 0
-    for high_i in range(blocklen, size, blocklen):
-        yield low_i, high_i
+    for high_i in range(blocklen, limit, blocklen):
+        yield low_i, high_i - low_i
         low_i = high_i
-    if low_i < size:
-        yield low_i, size
+    if low_i < limit:
+        yield low_i, limit - low_i
+
+
+def transform(_range):
+    indexer = MvdMorphIndexer(MORPHOLOGIES)
+    indexer.process_range(*_range)
 
 
 def main():
     n_cells = len(mvdtool.open(FILENAME))
-    for low_i, high_i in gen_ranges(n_cells, 100):
-        indexer = MvdMorphIndexer(MORPHOLOGIES)
-        indexer.process_range(low_i, high_i - low_i)
-
+    bag = dbag.from_sequence(gen_ranges(n_cells, 100), 1)
+    b2 = bag.map(transform)
+    b2.compute()
 
 if __name__ == "__main__":
     main()

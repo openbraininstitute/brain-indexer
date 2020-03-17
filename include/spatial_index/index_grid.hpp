@@ -69,41 +69,76 @@ class SpatialGrid {
     using value_type = T;
     using key_type = std::array<int, 3>;
 
+    /** \brief Insert a single value in the tree
+     */
     inline void insert(const value_type & value) {
-        placer_.template insert<VoxelLength>(value);
+        GridPlacementHelper<T>{grid_}.template insert<VoxelLength>(value);
     }
 
+    /** \brief Insert a range of elements defined by begin-end pointers
+     */
     inline void insert(const value_type* begin, const value_type* end) {
-        while (begin < end) insert(*begin++);
+        GridPlacementHelper<T> placer{grid_};
+        while (begin < end)
+            placer. template insert<VoxelLength>(*begin++);
     }
 
+    /** \brief Insert a range of elements defined by begin-end pointers
+     */
     inline void insert(const std::vector<value_type>& vec) {
         insert(&vec.front(), &vec.back());
     }
 
+    /** \brief Retrieves the total number of elements in the grid
+     */
     inline int size() const noexcept;
 
+    /** \brief Retrieves the ids of the voxels (keys)
+     */
     inline auto voxels() const;
 
+    /** \brief Retrieves the map (const-ref) of voxels
+     */
     inline const auto& items() const noexcept { return grid_; }
 
+    /** \brief Retieves the elements of a voxel (vector const-ref)
+     */
     inline const auto& operator[](const key_type& key) const {
         return grid_[key];
     }
 
-    // inplace add user for combining grids
-    inline SpatialGrid& operator+=(const SpatialGrid& rhs) ;
+    /** \brief inplace add user for combining grids
+     */
+    inline SpatialGrid& operator+=(const SpatialGrid& rhs);
 
   protected:
 
     grid_type<T> grid_;
-    GridPlacementHelper<T> placer_{grid_};
 
      // Serialization
     friend class boost::serialization::access;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int /*version*/) ;
+
+};
+
+
+template <typename T, int VL>
+class MultiIndex {
+  public:
+    using key_type = std::array<int, 3>;
+    using value_type = IndexTree<T, bgi::linear<16, 2>>;
+
+    inline MultiIndex(SpatialGrid<T, VL>&& grid) {
+        for (const auto& voxel : grid.voxels()) {
+            indexes_[voxel.first] = value_type(voxel.second);
+        }
+    }
+
+  private:
+
+    std::unordered_map<key_type, value_type> indexes_;
 };
 
 
@@ -111,20 +146,25 @@ class SpatialGrid {
 template <int VoxelLength>
 class MorphSpatialGrid : public SpatialGrid<MorphoEntry, VoxelLength> {
   public:
-    inline void add_neuron(identifier_t gid,
-                           int n_branches,
-                           const Point3D *points,
-                           const CoordType *radius,
-                           const unsigned *offsets) {
+
+    inline void add_soma(identifier_t gid, const Point3D& pt, CoordType r) {
+        this->placer_. template insert<VoxelLength>(Soma{gid, pt, r});
+    }
+
+    inline void add_branches(identifier_t gid,
+                             int n_branches,
+                             const Point3D *points,
+                             const CoordType *radius,
+                             const unsigned *offsets) {
+        auto placer = GridPlacementHelper<MorphoEntry>{this->grid_};
         unsigned segment_i = 1;
         for (int branch_i = 0; branch_i < n_branches; branch_i++) {
             const unsigned branch_end = offsets[branch_i + 1] - 1;
             for (unsigned i = offsets[branch_i]; i < branch_end; i++) {
-                this->placer_.template insert<VoxelLength>(
+                placer. template insert<VoxelLength>(
                     gid, segment_i++, points[i], points[i + 1], radius[i]);
             }
         }
-
     }
 };
 

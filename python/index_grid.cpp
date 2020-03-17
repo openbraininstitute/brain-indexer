@@ -1,6 +1,4 @@
 
-#include <sstream>
-
 #include <spatial_index/index_grid.hpp>
 
 #include "bind11_utils.hpp"
