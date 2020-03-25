@@ -47,38 +47,15 @@ struct iter_gid_segm_getter;
 
 
 /**
- * \brief IndexedShape adds an 'id' field to the underlying struct
+ * \brief ShapeId adds an 'id' field to the underlying struct
  */
-template <typename ShapeT>
-struct IndexedShape: public ShapeT {
-    using type = IndexedShape<ShapeT>;
-    using id_getter_t = iter_ids_getter;
-
+struct ShapeId {
     identifier_t id;
 
-    inline IndexedShape() = default;
+    using id_getter_t = iter_ids_getter;
 
-    // Deduct / Convert matching types
-    inline IndexedShape(identifier_t id_, ShapeT const& geom_) noexcept
-        : ShapeT{geom_}
-        , id{id_} {}
-
-    template <typename... U>
-    inline IndexedShape(identifier_t id_, U&&... geom_) noexcept
-        : ShapeT{std::forward<U>(geom_)...}
-        , id{id_} {}
-
-    inline bool operator==(type const& o) const noexcept {
-        return id == o.id;
-    }
-
-  private:
-    friend class boost::serialization::access;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int /* version*/) {
-        ar& id;
-        ar&* static_cast<ShapeT*>(this);
+    inline bool operator==(const ShapeId& rhs) const noexcept {
+        return id == rhs.id;
     }
 };
 
@@ -87,84 +64,81 @@ struct IndexedShape: public ShapeT {
  * \brief A neuron piece extends IndexedShape in concept, adding gid() and segment_i()
  *        accessors where both infos are encoded in the id
  */
-template <typename ShapeT>
-struct NeuronPiece: public IndexedShape<ShapeT> {
-    using type = NeuronPiece<ShapeT>;
+struct MorphPartId : public ShapeId {
     using id_getter_t = iter_gid_segm_getter;
 
-    inline NeuronPiece() = default;
+    inline MorphPartId() = default;
 
-    inline NeuronPiece(identifier_t gid, unsigned segment_i, ShapeT const& geom_) noexcept
-        : super{pack_ids(gid, segment_i), geom_} {}
+    inline MorphPartId(identifier_t gid, unsigned segment_i = 0)
+        : ShapeId{(gid << 12) + segment_i} {}
+
+    inline MorphPartId(const std::tuple<identifier_t, unsigned>& ids)
+        : MorphPartId(std::get<0>(ids), std::get<1>(ids)) {}
 
     inline identifier_t gid() const noexcept {
-        return this->id >> 12;
+        return id >> 12;
     }
 
     inline unsigned segment_i() const noexcept {
-        return static_cast<unsigned>(this->id & 0x0fff);
+        return static_cast<unsigned>(id & 0x0fff);
     }
+};
+
+
+
+template <typename ShapeT, typename IndexT=ShapeId>
+struct IndexedShape : public IndexT, public ShapeT {
+    inline IndexedShape() = default;
+
+    template <typename IdTup>
+    inline IndexedShape(IdTup ids, const ShapeT& shape)
+        : IndexT{ids}
+        , ShapeT{shape} {}
+
+    /** \brief Generic constructor
+     * Note: it relies on second argument to be a point so that it doesnt clash with
+     * Specific constructors
+     */
+    template <typename IdTup, typename... T>
+    inline IndexedShape(IdTup ids, const Point3D& p1, T&&... shape_data)
+        : IndexT{ids}
+        , ShapeT{p1, std::forward<T>(shape_data)...} {}
 
   protected:
-    inline static constexpr identifier_t pack_ids(identifier_t gid, unsigned segment_i = 0) {
-        return (gid << 12) + segment_i;
-    }
+    friend class boost::serialization::access;
 
-  private:
-    using super = IndexedShape<ShapeT>;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int /* version*/) {
+        ar& this->id;
+        ar& boost::serialization::base_object<ShapeT>(*this);
+    }
 };
 
 
-struct Soma: public NeuronPiece<Sphere> {
-    using NeuronPiece<Sphere>::NeuronPiece;
 
-    inline Soma() = default;
+class Soma: public IndexedShape<Sphere, MorphPartId> {
+    using super = IndexedShape<Sphere, MorphPartId>;
+  public:
+    // bring contructors
+    using super::IndexedShape;
+};
 
-    inline Soma(identifier_t gid, Sphere const& geom_) noexcept
-        : type{gid, 0u, geom_} {}
+
+
+class Segment: public IndexedShape<Cylinder, MorphPartId> {
+    using super = IndexedShape<Cylinder, MorphPartId>;
+  public:
+    // bring contructors
+    using super::IndexedShape;
 
     /**
-     * \brief Initialize the Soma directly from ids and gemetric properties
-     *  Note: This was changed from a more encapsulated version since initializing
-     *    using super constructors ends up in 3 chained function calls (all way up)
-     */
-    template <typename U>
-    inline Soma(identifier_t gid, U&& center, CoordType const& r) noexcept {
-        id = pack_ids(gid);
-        centroid = center;
-        radius = r;
-    }
-
-    template <typename... T>
-    inline Soma(std::tuple<T...> const& param) noexcept
-        : Soma(std::get<0>(param), std::get<1>(param), std::get<2>(param)) {
-        static_assert(sizeof...(T) == 3, "Wrong parameter tuple size");
-    }
-};
-
-
-struct Segment: public NeuronPiece<Cylinder> {
-    using NeuronPiece<Cylinder>::NeuronPiece;
-
-    inline Segment() = default;
-
-    template <typename U>
-    inline Segment(identifier_t gid,
-                   unsigned segment_i,
-                   U&& center1,
-                   U&& center2,
-                   CoordType const& r) noexcept {
-        id = pack_ids(gid, segment_i);
-        p1 = center1;
-        p2 = center2;
-        radius = r;
-    }
-
-    template <typename... T>
-    inline Segment(std::tuple<T...> const& param) noexcept
-        : Segment(std::get<0>(param), std::get<1>(param), std::get<2>(param), std::get<3>(param)) {
-        static_assert(sizeof...(T) == 4, "Wrong parameter tuple size");
-    }
+     * \brief Initialize the Segment directly from ids and gemetric properties
+     **/
+    inline Segment(identifier_t gid, unsigned segment_i,
+                   Point3D const& center1, Point3D const& center2, CoordType const& r)
+        noexcept
+        : super(std::make_tuple(gid, segment_i), center1, center2, r)
+    {}
 };
 
 
