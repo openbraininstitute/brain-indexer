@@ -228,20 +228,9 @@ py::class_<si::IndexTree<T>> create_IndexTree_bindings(py::module& m,
     )
 
     .def("__str__", [](Class& obj) {
-        std::stringstream ss;
-        int n_obj = 0;
-        ss << "IndexTree([" << std::endl;
-        for (const auto& v: obj) {
-            // display the first 50 objects
-            if (n_obj == 50) {
-                ss << "  ..." << std::endl;
-                break;
-            }
-            ss << "  " << v;
-            n_obj++;
-        }
-        ss << "])" << std::endl;
-        return ss.str();
+        std::stringstream strs;
+        strs << obj;
+        return strs.str();
     })
 
     .def("__len__", &Class::size);

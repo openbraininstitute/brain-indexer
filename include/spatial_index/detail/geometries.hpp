@@ -111,17 +111,14 @@ inline bool Cylinder::intersects(Cylinder const& c) const {
 // String representation
 
 inline std::ostream& operator<<(std::ostream& os, const Sphere& s) {
-    os << "Sphere(centroid=" << s.centroid << ", "
-       << "radius=" << boost::format("%.3g") % s.radius << ")" << std::endl;
-    return os;
+    return os << "Sphere(centroid=" << s.centroid << ", "
+                 "radius=" << boost::format("%.3g") % s.radius << ')';
 }
 
 inline std::ostream& operator<<(std::ostream& os, const Cylinder& c) {
-    os << "Cylinder(centroids=(" << c.p1 << ", " << c.p2 << "), "
-       << "radius=" << boost::format("%.3g") % c.radius << ")" << std::endl;
-    return os;
+    return os << "Cylinder(centroids=(" << c.p1 << ", " << c.p2 << "), "
+                 "radius=" << boost::format("%.3g") % c.radius << ')';
 }
 
 
 }  // namespace spatial_index
-

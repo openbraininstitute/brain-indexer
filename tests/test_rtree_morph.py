@@ -70,7 +70,7 @@ def test_add_neuron_with_soma_and_toString():
         '  Soma(id=(1, 0), centroid=[1 3 5], radius=3)\n'
         '  Segment(id=(1, 1), centroids=([1 3 5], [2 4 6]), radius=3)\n'
         '  Segment(id=(1, 2), centroids=([2 4 6], [10 10 10]), radius=2)\n'
-        '])\n')
+        '])')
     str_result = str(rtree)
     assert str_result == str_expect
 
@@ -91,7 +91,7 @@ def test_add_neuron_without_soma_and_toString():
         'IndexTree([\n'
         '  Segment(id=(1, 1), centroids=([1.12 3 5], [2 4 6]), radius=3)\n'
         '  Segment(id=(1, 2), centroids=([2 4 6], [10 10 10]), radius=2)\n'
-        '])\n')
+        '])')
     str_result = str(rtree)
     assert str_result == str_expect
 
@@ -105,7 +105,7 @@ def test_add_neuron_without_soma_and_toString():
         '  Segment(id=(1, 1), centroids=([1.12 3 5], [2 4 6]), radius=3)\n'
         '  Segment(id=(1, 2), centroids=([2 4 6], [10 10 10]), radius=2)\n'
         '  Soma(id=(1, 0), centroid=[1 3 5.14], radius=3.14e+03)\n'
-        '])\n')
+        '])')
     str_result = str(rtree)
     assert str_result == str_expect
 

@@ -166,19 +166,29 @@ inline void IndexTree<T, A>::dump(const std::string& filename) const {
 // String representation
 
 inline std::ostream& operator<<(std::ostream& os, const Soma& s) {
-    os << "Soma(id="
-       << "(" << s.gid() << ", " << s.segment_i() << "), "
-       << "centroid=" << s.centroid << ", "
-       << "radius=" << boost::format("%.3g") % s.radius << ")" << std::endl;
-    return os;
+    return os << "Soma(id=(" << s.gid() << ", " << s.segment_i() << "), "
+                 "centroid=" << s.centroid << ", "
+                 "radius=" << boost::format("%.3g") % s.radius << ')';
 }
 
 inline std::ostream& operator<<(std::ostream& os, const Segment& s) {
-    os << "Segment(id="
-       << "(" << s.gid() << ", " << s.segment_i() << "), "
-       << "centroids=(" << s.p1 << ", " << s.p2 << "), "
-       << "radius=" << boost::format("%.3g") % s.radius << ")" << std::endl;
-    return os;
+    return os << "Segment(id=(" << s.gid() << ", " << s.segment_i() << "), "
+                 "centroids=(" << s.p1 << ", " << s.p2 << "), "
+                 "radius=" << boost::format("%.3g") % s.radius << ')';
+}
+
+template <typename T, typename A>
+inline std::ostream& operator<<(std::ostream& os, const IndexTree<T, A>& index) {
+    int n_obj = 50;   // display the first 50 objects
+    os << "IndexTree([\n";
+    for (const auto& item: index) {
+        if (n_obj-- == 0) {
+            os << "  ...\n";
+            break;
+        }
+        os << "  " << item << '\n';
+    }
+    return os << "])";
 }
 
 
