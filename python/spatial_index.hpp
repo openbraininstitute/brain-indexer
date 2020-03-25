@@ -62,11 +62,13 @@ void create_SphereIndex_bindings(py::module& m);
 /// MorphoEntry IndexTree theres a whole new set of python functions
 void create_MorphIndex_bindings(py::module& m);
 
-/// Bindings for generic SpatialGrid
+
+/// Generic Bindings for SpatialGrid
 template <typename T, int N>
 py::class_<si::SpatialGrid<T, N>>
 create_SpatialGrid_bindings(py::module& m, const char* class_name);
 
+/// A specialization of SpatialGrid for IndexedSphere
 void create_SphereGrid_bindings(py::module& m);
 
 /// Additional bindings for MorphSpatialGrid

@@ -9,7 +9,8 @@ PYBIND11_MODULE(_spatial_index, m) {
 
     si_python::create_SphereIndex_bindings(m);
     si_python::create_MorphIndex_bindings(m);
+
     si_python::create_SphereGrid_bindings(m);
     si_python::create_MorphGrid_bindings(m);
-
 }
+

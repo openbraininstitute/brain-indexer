@@ -72,7 +72,7 @@ struct MorphPartId : public ShapeId {
     inline MorphPartId(identifier_t gid, unsigned segment_i = 0)
         : ShapeId{(gid << 12) + segment_i} {}
 
-    inline MorphPartId(const std::tuple<identifier_t, unsigned>& ids)
+    inline MorphPartId(const std::tuple<const identifier_t&, const unsigned&>& ids)
         : MorphPartId(std::get<0>(ids), std::get<1>(ids)) {}
 
     inline identifier_t gid() const noexcept {
@@ -137,7 +137,7 @@ class Segment: public IndexedShape<Cylinder, MorphPartId> {
     inline Segment(identifier_t gid, unsigned segment_i,
                    Point3D const& center1, Point3D const& center2, CoordType const& r)
         noexcept
-        : super(std::make_tuple(gid, segment_i), center1, center2, r)
+        : super(std::tie(gid, segment_i), center1, center2, r)
     {}
 };
 

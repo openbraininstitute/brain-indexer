@@ -3,13 +3,11 @@
 #include <spatial_index/index_grid.hpp>
 
 
-using namespace spatial_index;
-
 namespace spatial_index {
 
 template <>
-struct GridPlacementHelper<int> : public GridPlacementHelperBase_<int>{
-    using GridPlacementHelperBase_<int>::GridPlacementHelperBase_;
+struct GridPlacementHelper<int> : public GridPlacementHelperBase<int>{
+    using GridPlacementHelperBase<int>::GridPlacementHelperBase;
 
     template <int VoxelLen>
     inline void insert(int value) {
@@ -19,6 +17,9 @@ struct GridPlacementHelper<int> : public GridPlacementHelperBase_<int>{
 };
 
 }  // namespace spatial_index;
+
+
+using namespace spatial_index;
 
 
 BOOST_AUTO_TEST_CASE(BasicTest) {
@@ -43,7 +44,7 @@ BOOST_AUTO_TEST_CASE(MorphoEntryTest) {
 
     grid.insert({
         Soma(1ul, Point3D{-2, 2, 2}, 1.f),
-        Segment(2ul, 1, Point3D{-2, -2, 2}, Point3D{0,-2, 2}, 1.f)
+        Segment(2ul, 1u, Point3D{-2, -2, 2}, Point3D{0,-2, 2}, 1.f)
     });
 
     std::cout << grid << std::endl;

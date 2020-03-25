@@ -9,34 +9,47 @@
 
 namespace spatial_index {
 
+namespace detail {
 
+/// \brief A hash array function for std::array
 template <typename T, std::size_t N>
 struct hash_array {
     std::size_t operator()(const std::array<T, N>& key) const;
 };
 
+/// \brief The fundamental type of the grid
 template <typename T>
-using grid_type = std::unordered_map<std::array<int, 3>, std::vector<T>, hash_array<int, 3>>;
+using grid_type = std::unordered_map<std::array<int, 3>,
+                                     std::vector<T>,
+                                     hash_array<int, 3>>;
+
+}  // namespace detail
 
 
-template <int VoxelLength>
+/// \brief A Generic translator from 3d points to voxel
+template <int VoxelLen>
 inline std::array<int, 3> point2voxel(const Point3D& value);
 
 
+/// \brief A base class for the several specializations of GridPlacementHelper's
 template <typename T>
-struct GridPlacementHelperBase_ {
+struct GridPlacementHelperBase {
+    GridPlacementHelperBase() = delete;
 
-    inline GridPlacementHelperBase_(grid_type<T>& grid)
+    inline GridPlacementHelperBase(detail::grid_type<T>& grid)
         : grid_(grid) {}
 
+    template <int VoxelLen>
+    inline void insert(const T& value);  // implementation in subclasses
+
   protected:
-    grid_type<T>& grid_;
+    detail::grid_type<T>& grid_;
 };
 
 
 template <typename T>
-struct GridPlacementHelper : public GridPlacementHelperBase_<T> {
-    using GridPlacementHelperBase_<T>::GridPlacementHelperBase_;
+struct GridPlacementHelper : public GridPlacementHelperBase<T> {
+    using GridPlacementHelperBase<T>::GridPlacementHelperBase;
 
     template <int VoxelLen>
     inline void insert(const T& value) {
@@ -46,8 +59,8 @@ struct GridPlacementHelper : public GridPlacementHelperBase_<T> {
 
 
 template <>
-struct GridPlacementHelper<MorphoEntry> : public GridPlacementHelperBase_<MorphoEntry>{
-    using GridPlacementHelperBase_<MorphoEntry>::GridPlacementHelperBase_;
+struct GridPlacementHelper<MorphoEntry> : public GridPlacementHelperBase<MorphoEntry>{
+    using GridPlacementHelperBase<MorphoEntry>::GridPlacementHelperBase;
 
     template <int VoxelLen>
     void insert(const MorphoEntry& value);
@@ -113,32 +126,13 @@ class SpatialGrid {
 
   protected:
 
-    grid_type<T> grid_;
+    detail::grid_type<T> grid_;
 
      // Serialization
     friend class boost::serialization::access;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int /*version*/) ;
-
-};
-
-
-template <typename T, int VL>
-class MultiIndex {
-  public:
-    using key_type = std::array<int, 3>;
-    using value_type = IndexTree<T, bgi::linear<16, 2>>;
-
-    inline MultiIndex(SpatialGrid<T, VL>&& grid) {
-        for (const auto& voxel : grid.voxels()) {
-            indexes_[voxel.first] = value_type(voxel.second);
-        }
-    }
-
-  private:
-
-    std::unordered_map<key_type, value_type> indexes_;
 };
 
 

@@ -24,11 +24,10 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN TRUE)  # inline symbols which dont need to be public
 
 add_definitions(-Wall -Wfatal-errors)
 
-# Header only libs and bindings have tons of inline symbols which dont need to be public
-set(CMAKE_VISIBILITY_INLINES_HIDDEN TRUE)
 
 #
 # Dependencies

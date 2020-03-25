@@ -1,20 +1,24 @@
 #!/bin/env python
-import dask.bag as dbag
-import itertools
-import mvdtool
+
+import multiprocessing
 import warnings; warnings.simplefilter("ignore")
-import quaternion as npq
-from morphio import Morphology
+from collections import namedtuple
 from os import path as ospath
+
+import itertools
+import morphio
+import mvdtool
+import quaternion as npq
 from mpi4py import MPI
 from spatial_index import MorphIndex
-from collections import namedtuple
 
+morphio.set_ignored_warning(morphio.Warning.only_child)
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 
 MORPHOLOGIES = "/Users/leite/dev/TestData/circuitBuilding_1000neurons/morphologies/ascii"
 FILENAME = "/Users/leite/dev/TestData/circuitBuilding_1000neurons/circuits/circuit.mvd3"
+N_CELLS_RANGE = 100
 
 
 class MorphologyLib:
@@ -25,8 +29,7 @@ class MorphologyLib:
         self._morphologies = {}
 
     def _load(self, morph_name):
-        print("Loading morphology")
-        morph = Morphology(ospath.join(self._pth, morph_name) + ".asc")
+        morph = morphio.Morphology(ospath.join(self._pth, morph_name) + ".asc")
         soma = morph.soma
         morph_infos = self.MorphInfo(
             (soma.center, soma.max_distance),
@@ -48,7 +51,6 @@ class MvdMorphIndexer:
         self._mvd = mvdtool.open(FILENAME)  # type: mvdtool.MVD3.File
 
     def process_cell(self, gid, morph, position, rotation):
-        # print("Processing gid", gid)
         morph = self._morph_lib.get(morph)
         points = (npq.rotate_vectors(npq.quaternion(*rotation).normalized(), morph.points)
                   if rotation is not None
@@ -60,14 +62,12 @@ class MvdMorphIndexer:
         )
 
     def process_range(self, low, count):
-        print("Processing neurons in range", low, "->", low + count)
         gids = itertools.count(low)
-        morph_names = self._mvd.morphologies(low, count)
-        positions = self._mvd.positions(low, count)
-        rotations = itertools.repeat(None)
-            # (self._mvd.rotations(low, count)
-            #          if self._mvd.rotated
-            #          else itertools.repeat(None))
+        mvd = self._mvd
+        morph_names = mvd.morphologies(low, count)
+        positions = mvd.positions(low, count)
+        rotations = mvd.rotations(low, count) if mvd.rotated else itertools.repeat(None)
+
         for gid, morph, pos, rot in zip(gids, morph_names, positions, rotations):
             self.process_cell(gid, morph, pos, rot)
 
@@ -81,16 +81,20 @@ def gen_ranges(limit, blocklen):
         yield low_i, limit - low_i
 
 
-def transform(_range):
+def build_index(_range):
     indexer = MvdMorphIndexer(MORPHOLOGIES)
     indexer.process_range(*_range)
 
 
 def main():
+    pool = multiprocessing.Pool()
     n_cells = len(mvdtool.open(FILENAME))
-    bag = dbag.from_sequence(gen_ranges(n_cells, 100), 1)
-    b2 = bag.map(transform)
-    b2.compute()
+    nranges = int(n_cells / N_CELLS_RANGE)
+    cur_i = 0
+    for _ in pool.imap_unordered(build_index, gen_ranges(n_cells, N_CELLS_RANGE)):
+        cur_i += 1
+        print("Processed range {} / {}".format(cur_i, nranges))
+
 
 if __name__ == "__main__":
     main()

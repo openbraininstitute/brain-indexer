@@ -15,6 +15,7 @@
 
 namespace spatial_index {
 
+namespace detail {
 
 template <typename T, std::size_t N>
 inline std::size_t hash_array<T, N>::operator()(const std::array<T, N>& arr) const {
@@ -24,16 +25,17 @@ inline std::size_t hash_array<T, N>::operator()(const std::array<T, N>& arr) con
     return out;
 }
 
+}  // namespace detail
 
-template <int VoxelLength>
+
+template <int VoxelLen>
 inline std::array<int, 3> point2voxel(const Point3D& value) {
     return {
-        int(std::floor(value.get<0>() / VoxelLength)),
-        int(std::floor(value.get<1>() / VoxelLength)),
-        int(std::floor(value.get<2>() / VoxelLength))
+        int(std::floor(value.get<0>() / VoxelLen)),
+        int(std::floor(value.get<1>() / VoxelLen)),
+        int(std::floor(value.get<2>() / VoxelLen))
     };
 }
-
 
 template <int VoxelLen>
 inline void GridPlacementHelper<MorphoEntry>::insert(const MorphoEntry& value) {
@@ -112,19 +114,17 @@ template <typename T, int VL>
 inline std::ostream& operator<<(std::ostream& os,
                                 const spatial_index::SpatialGrid<T, VL>& obj) {
     using spatial_index::operator<<;
-    os << boost::format("<obj: SpatialGrid<%d> [") % VL << std::endl;
-    for (const auto& tpl : obj.items()) {
-        os << boost::format(" Vx[%d, %d, %d]"
-                            ) % tpl.first[0] % tpl.first[1] % tpl.first[2]
-           << std::endl;
-        for (const auto& item : tpl.second) {
-            os << "   " << item << std::endl;
+    os << boost::format("SpatialGrid<%d>({\n") % VL;
+    for (const auto& item : obj.items()) {
+        const auto& idx = item.first;
+        os << boost::format(" (%d %d %d): [\n") % idx[0] % idx[1] % idx[2];
+        for (const auto& entry : item.second) {
+            os << "    " << entry << '\n';
         }
+        os << " ],\n";
     }
-    os << "]>";
-    return os;
+    return os << "})";
 }
 
 
 }  // namespace spatial_index
-
