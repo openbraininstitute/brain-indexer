@@ -118,8 +118,8 @@ class Docs(Command):
 
 
 def setup_package():
-    # limestone depends on a specific sphinx version. Let it choose
-    docs_require = ["sphinx-limestone-theme", "docs_internal_upload"]
+    # sphinx-bluebrain-theme depends on a specific sphinx version. Let it choose
+    docs_require = ["sphinx-bluebrain-theme", "docs_internal_upload"]
     maybe_docs = docs_require if "docs" in sys.argv else []
     maybe_test_runner = ['pytest-runner'] if "test" in sys.argv else []
 
@@ -140,7 +140,6 @@ def setup_package():
         tests_require=["flake8", "pytest"],
         setup_requires=maybe_docs + maybe_test_runner,
         dependency_links=[
-            "https://bbpteam.epfl.ch/repository/devpi/simple/sphinx-limestone-theme/",
             "https://bbpteam.epfl.ch/repository/devpi/simple/docs_internal_upload"]
     )
 
