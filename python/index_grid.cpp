@@ -30,8 +30,11 @@ py::class_<GridT> create_SpatialGrid_bindings(py::module& m,
                 obj.insert(data);
             } else if (items.ndim() == 2) {
                 const auto* first = reinterpret_cast<const value_type*>(items.data(0, 0));
-                const auto* last = first + items.shape(0);
-                obj.insert(first, last);
+                const auto* end = first + items.shape(0);
+                obj.insert(first, end);
+            } else {
+                throw std::invalid_argument("Unknown arg format. Generic insert() "
+                                            "only supports vector or matrix of points.");
             }
 
         },
@@ -50,6 +53,8 @@ py::class_<GridT> create_SpatialGrid_bindings(py::module& m,
     })
 
     .def("__iadd__", &Class::operator+=)
+
+    .def("__eq__", &Class::operator==)
 
     .def(py::pickle(
          [](const Class& obj) {  // __getstate__ / serialize

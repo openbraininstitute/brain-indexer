@@ -24,12 +24,12 @@ def test_insert_array():
 
 
 def test_serialization():
-    import pickle
+    import pickle  # only py3
     c1 = test_insert_array()
     buf = pickle.dumps(c1)
     c2 = pickle.loads(buf)
     assert len(c2) == 3, "{} != {}".format(len(c2), 3)
-    # assert c1 == c2
+    assert c1 == c2
 
 
 def test_iadd():

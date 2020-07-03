@@ -1,8 +1,12 @@
 #define BOOST_TEST_MODULE SpatialIndex_Benchmarks
+
+#include <algorithm>
+
 #include <boost/test/unit_test.hpp>
 #include <spatial_index/index_grid.hpp>
 
 
+// To test in an independent & easy way, specialize the Grid for plain int's
 namespace spatial_index {
 
 template <>
@@ -11,7 +15,8 @@ struct GridPlacementHelper<int> : public GridPlacementHelperBase<int>{
 
     template <int VoxelLen>
     inline void insert(int value) {
-        this->grid_[point2voxel<VoxelLen>(Point3D{value, 0, 0})].push_back(value);
+        this->grid_[point2voxel<VoxelLen>(Point3D{float(value), 0, 0})]
+            .push_back(value);
     }
 
 };
@@ -31,23 +36,52 @@ BOOST_AUTO_TEST_CASE(BasicTest) {
     grid.insert(-1);
 
     std::cout << grid << std::endl;
+
+    const auto& v0 = grid[{0,0,0}];
+    const auto& v1 = grid[{1,0,0}];
+    const auto& v2 = grid[{-1,0,0}];
+    BOOST_CHECK_EQUAL(v0.size(), 2);
+    BOOST_CHECK_EQUAL(v1.size(), 1);
+    BOOST_CHECK_EQUAL(v2.size(), 1);
+    BOOST_CHECK(v0[0] == 1);
+    BOOST_CHECK(v1[0] == 6);
+    BOOST_CHECK(v2[0] == -1);
 }
 
 
 BOOST_AUTO_TEST_CASE(MorphoEntryTest) {
     SpatialGrid<MorphoEntry, 5> grid;
 
-    grid.insert(Soma(0ul, Point3D{2, 2, 2}, 1.f));
+    grid.insert(Soma(0ul, Point3D{2, 2, 2}, 1.f));  // goes to voxel 0
 
-    // gets in the middle of two voxels
-    grid.insert(Soma(1ul, Point3D{1, 2, 3}, 2.f));
+    // gets in the middle of two voxels -1/0
+    grid.insert(Soma(1ul, Point3D{1, 2, 2}, 2.f));
 
+    // Bulk insert
     grid.insert({
-        Soma(1ul, Point3D{-2, 2, 2}, 1.f),
-        Segment(2ul, 1u, Point3D{-2, -2, 2}, Point3D{0,-2, 2}, 1.f)
+        Soma(2ul, Point3D{-2, 2, 2}, 1.f),  // to voxel -1
+        Segment(3ul, 1u, Point3D{-2, -2, 2}, Point3D{1, -2, 2}, 1.f)  // split in voxels [-1/0, -1, 0]
     });
 
     std::cout << grid << std::endl;
+
+    const auto& v0 = grid[{0,0,0}];
+    const auto& v1 = grid[{-1,0,0}];
+    const auto& v2 = grid[{-1,-1,0}];
+    const auto& v3 = grid[{0,-1,0}];
+
+    BOOST_CHECK_EQUAL(v0.size(), 2);
+    BOOST_CHECK(detail::get_id_from(v0[0]) == 0);
+    BOOST_CHECK(detail::get_id_from(v0[1]) == 1);
+
+    BOOST_CHECK_EQUAL(v1.size(), 2);
+    BOOST_CHECK(detail::get_id_from(v1[0]) == 1);
+    BOOST_CHECK(detail::get_id_from(v1[1]) == 2);
+
+    BOOST_CHECK_EQUAL(v2.size(), 1);
+    BOOST_CHECK(detail::get_id_from(v2[0]) == 3);
+    BOOST_CHECK_EQUAL(v3.size(), 1);
+    BOOST_CHECK(detail::get_id_from(v3[0]) == 3);
 }
 
 
@@ -63,8 +97,25 @@ BOOST_AUTO_TEST_CASE(OptimizedMorphoGrid) {
 
     grid.add_branches(9, int(offsets.size()) - 1, raw_points, radius.data(), offsets.data());
 
-    std::cout << "Grid objects: " << grid.size() << std::endl;
-
     std::cout << grid << std::endl;
-}
 
+    const auto& v0 = grid[{0,0,0}];
+    const auto& v1 = grid[{1,1,1}];
+    BOOST_CHECK_EQUAL(v0.size(), 3);
+    BOOST_CHECK_EQUAL(v1.size(), 1);
+
+    auto check_ids = [](auto v, std::vector<unsigned> ids_expected) {
+        std::vector<gid_segm_t> ids;
+        std::copy(v.cbegin(), v.cend(), iter_gid_segm_getter{ids});
+        unsigned i = 0;
+        for (const auto& id : ids) {
+            if (id.segment_i != ids_expected[i++])
+                return false;
+        }
+        return true;
+    };
+
+    BOOST_CHECK(check_ids(v0, {1, 2, 3}));
+    BOOST_CHECK(check_ids(v1, {3}));
+
+}

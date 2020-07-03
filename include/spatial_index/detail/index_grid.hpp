@@ -2,6 +2,7 @@
 
 #include "../index_grid.hpp"
 
+
 #include <cmath>
 #include <iostream>
 #include <map>
@@ -28,47 +29,6 @@ inline std::size_t hash_array<T, N>::operator()(const std::array<T, N>& arr) con
 }  // namespace detail
 
 
-template <int VoxelLen>
-inline std::array<int, 3> point2voxel(const Point3D& value) {
-    return {
-        int(std::floor(value.get<0>() / VoxelLen)),
-        int(std::floor(value.get<1>() / VoxelLen)),
-        int(std::floor(value.get<2>() / VoxelLen))
-    };
-}
-
-template <int VoxelLen>
-inline void GridPlacementHelper<MorphoEntry>::insert(const MorphoEntry& value) {
-    auto bbox = boost::apply_visitor(
-        [](const auto& elem) { return elem.bounding_box(); },
-        value
-    );
-    auto vx1_i = point2voxel<VoxelLen>(bbox.min_corner());
-    auto vx2_i = point2voxel<VoxelLen>(bbox.max_corner());
-    // If the corners of the bbox fall in different voxels then we add the item to
-    // both. This is a simplification of the very precise thing (since it may cross
-    // up to 8 voxels!) but given that cylinders length is larger than width it
-    // sounds as a reasonable approximation
-    this->grid_[vx1_i].push_back(value);
-    if (vx1_i != vx2_i) {
-        this->grid_[vx2_i].push_back(value);
-    }
-}
-
-template <int VoxelLen>
-inline void GridPlacementHelper<MorphoEntry>::insert(
-        identifier_t gid, unsigned segment_i,
-        const Point3D& p1, const Point3D& p2, CoordType radius) {
-    // This attempts at optimizing the common case of init segments from a
-    // point array without temps
-    const auto& vx1_i = point2voxel<VoxelLen>(p1);
-    const auto& vx2_i = point2voxel<VoxelLen>(p2);
-    auto& vec = this->grid_[vx1_i];
-    vec.push_back(Segment{gid, segment_i, p1, p2, radius});
-    if (vx1_i != vx2_i) {
-        this->grid_[vx2_i].push_back(vec.back());
-    }
-}
 
 
 template <typename T, int VoxelLength>
@@ -107,6 +67,24 @@ inline SpatialGrid<T, VL>& SpatialGrid<T, VL>::operator+=(const SpatialGrid<T, V
         v.insert(v.end(), item.second.begin(), item.second.end());
     }
     return *this;
+}
+
+
+template <typename T, int VL>
+inline bool SpatialGrid<T, VL>::operator==(const SpatialGrid<T, VL>& rhs) {
+    if (grid_.size() != rhs.grid_.size()) {
+        return false;
+    }
+    for (const auto& rhs_item : rhs.grid_) {
+        const auto& lhs_item = grid_.find(rhs_item.first);
+        if (lhs_item == grid_.end()) {
+            return false;
+        }
+        // We delegate comparison to the std::vector implementation
+        // Elements must implement operator==
+        return lhs_item->second == rhs_item.second;
+    }
+    return true;
 }
 
 
