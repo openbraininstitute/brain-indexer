@@ -1,24 +1,24 @@
 #!/bin/env python
-
-import multiprocessing
+# ------------------------------------------------------
+# copyright Blue Brain Project 2020. All rights reserved
+# ------------------------------------------------------
+"""
+Implementation of MvdMorphIndexer which, builds a MorphologyIndex
+and indexes all cells contained in an MVD/SONATA file
+"""
+import functools
+import itertools
+import logging
+import morphio
+import mvdtool
 import warnings; warnings.simplefilter("ignore")
 from collections import namedtuple
 from os import path as ospath
 
-import itertools
-import morphio
-import mvdtool
 import quaternion as npq
-from mpi4py import MPI
 from spatial_index import MorphIndex
 
 morphio.set_ignored_warning(morphio.Warning.only_child)
-comm = MPI.COMM_WORLD
-rank = comm.Get_rank()
-
-MORPHOLOGIES = "/Users/leite/dev/TestData/circuitBuilding_1000neurons/morphologies/ascii"
-FILENAME = "/Users/leite/dev/TestData/circuitBuilding_1000neurons/circuits/circuit.mvd3"
-N_CELLS_RANGE = 100
 
 
 class MorphologyLib:
@@ -46,27 +46,31 @@ class MorphologyLib:
 
 class MvdMorphIndexer:
     def __init__(self, morphology_dir):
-        self._morph_lib = MorphologyLib(morphology_dir)
-        self._spatialindex = MorphIndex()
-        self._mvd = mvdtool.open(FILENAME)  # type: mvdtool.MVD3.File
+        self.morph_lib = MorphologyLib(morphology_dir)
+        self.spatialindex = MorphIndex()
+        self.mvd = mvdtool.open(FILENAME)  # type: mvdtool.MVD3.File
 
     def process_cell(self, gid, morph, position, rotation):
-        morph = self._morph_lib.get(morph)
+        morph = self.morph_lib.get(morph)
         points = (npq.rotate_vectors(npq.quaternion(*rotation).normalized(), morph.points)
                   if rotation is not None
                   else morph.points)
         points += position
-        self._spatialindex.add_soma(gid, *morph.soma)
-        self._spatialindex.add_neuron(
+        self.spatialindex.add_soma(gid, *morph.soma)
+        self.spatialindex.add_neuron(
             gid, points, morph.radius, morph.branch_offsets[:-1], False
         )
 
-    def process_range(self, low, count):
-        gids = itertools.count(low)
+    def process_range(self, range_):
+        """Process a range of cells.
+
+        :param: range_ (offset, count), or () [all]
+        """
+        gids = itertools.count(range_[0] if range_ else 0)
         mvd = self._mvd
-        morph_names = mvd.morphologies(low, count)
-        positions = mvd.positions(low, count)
-        rotations = mvd.rotations(low, count) if mvd.rotated else itertools.repeat(None)
+        morph_names = mvd.morphologies(*range_)
+        positions = mvd.positions(*range_)
+        rotations = mvd.rotations(*range_) if mvd.rotated else itertools.repeat(None)
 
         for gid, morph, pos, rot in zip(gids, morph_names, positions, rotations):
             self.process_cell(gid, morph, pos, rot)
@@ -81,20 +85,27 @@ def gen_ranges(limit, blocklen):
         yield low_i, limit - low_i
 
 
-def build_index(_range):
-    indexer = MvdMorphIndexer(MORPHOLOGIES)
-    indexer.process_range(*_range)
+# The unitary processing unit to run independently in each process
+def build_index(morphology_dir, range_=()):
+    indexer = MvdMorphIndexer(morphology_dir)
+    indexer.process_range(range_)
+    return indexer
 
 
-def main():
+def main_serial(morphology_dir):
+    return build_index(morphology_dir)
+
+
+def main_parallel(morphology_dir):
+    import multiprocessing
     pool = multiprocessing.Pool()
+    N_CELLS_RANGE = 100
+
     n_cells = len(mvdtool.open(FILENAME))
     nranges = int(n_cells / N_CELLS_RANGE)
     cur_i = 0
+    build_index = functools.partial(build_index, morphology_dir)
+
     for _ in pool.imap_unordered(build_index, gen_ranges(n_cells, N_CELLS_RANGE)):
         cur_i += 1
-        print("Processed range {} / {}".format(cur_i, nranges))
-
-
-if __name__ == "__main__":
-    main()
+        logging.info("Processed range %d / %d", cur_i, nranges)
