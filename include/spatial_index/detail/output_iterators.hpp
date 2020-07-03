@@ -13,6 +13,10 @@ namespace detail {
 
 template <typename RT>
 struct iter_append_only {
+    typedef std::output_iterator_tag iterator_category;
+    typedef void difference_type;
+    typedef void pointer;
+    typedef void reference;
     inline RT& operator*()     { return *static_cast<RT*>(this); }
     inline RT& operator++()    { return *static_cast<RT*>(this); }
     inline RT& operator--(int) { return *static_cast<RT*>(this); }

@@ -134,12 +134,22 @@ struct Point3Dx: public Point3D {
         return p.dot(p);
     }
 
+    inline CoordType norm_sq() const {
+        return get<0>() * get<0>() + get<1>() * get<1>() + get<2>() * get<2>();
+    }
+
     inline CoordType norm() const {
-        return std::sqrt(get<0>() * get<0>() + get<1>() * get<1>() + get<2>() * get<2>());
+        return std::sqrt(norm_sq());
     }
 
     inline Point3D& unwrap() {
         return *this;
+    }
+
+    inline bool operator==(Point3D const& rhs) const {
+        auto dist2 = dist_sq(rhs);
+        if (dist2 == 0.f) return true;
+        return dist2 < norm_sq() * 1e-8f;  // relative tolerance
     }
 };
 
@@ -174,10 +184,23 @@ inline Point3D min(Point3D const& p1, Point3D const& p2) {
                    std::min(p1.get<2>(), p2.get<2>())};
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Point3D& p) {
+inline std::ostream& operator<<(std::ostream& os, Point3D const& p) {
     os << boost::format("[%.3g %.3g %.3g]") % p.get<0>() % p.get<1>() % p.get<2>();
     return os;
 }
 
 
 }  // namespace spatial_index
+
+
+// operator== directly on boost Point3D
+namespace boost {
+namespace geometry {
+namespace model {
+
+inline bool operator==(spatial_index::Point3D const& p1,
+                       spatial_index::Point3D const& p2) {
+    return spatial_index::Point3Dx(p1) == p2;
+}
+
+}}}  // namespace boost::geometry::model

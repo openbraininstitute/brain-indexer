@@ -1,5 +1,7 @@
 #pragma once
 
+#include <boost/serialization/serialization.hpp>
+
 #include "point3d.hpp"
 
 
@@ -15,6 +17,8 @@ struct Cylinder;  // FWDecl
  * For compat with indexing Geometries must implement bounding_box() and intersects()
  */
 struct Sphere {
+    using box_type = Box3D;
+
     Point3D centroid;
     CoordType radius;
 
@@ -31,7 +35,7 @@ struct Sphere {
 
     inline void translate(Point3D const& vec) {
         bg::add_point(centroid, vec);
-    };
+    }
 
   private:
     friend class boost::serialization::access;
@@ -48,11 +52,13 @@ struct Sphere {
  * \brief A Cylinder represention. Base abstraction for Segments
  */
 struct Cylinder {
+    using box_type = Box3D;
+
     Point3D p1, p2;
     CoordType radius;
 
     inline CoordType length() const {
-        return bg::distance(p1, p2);
+        return static_cast<CoordType>(bg::distance(p1, p2));
     }
 
     inline Box3D bounding_box() const {
@@ -78,7 +84,7 @@ struct Cylinder {
     inline void translate(Point3D const& vec) {
         bg::add_point(p1, vec);
         bg::add_point(p2, vec);
-    };
+    }
 
   private:
     friend class boost::serialization::access;

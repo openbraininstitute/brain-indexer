@@ -1,6 +1,8 @@
 #pragma once
+
 #include <memory>
 #include <vector>
+#include <sstream>
 
 #include <pybind11/iostream.h>
 #include <pybind11/numpy.h>
@@ -13,6 +15,7 @@ namespace py = pybind11;
 
 namespace pybind_utils {
 
+
 /**
  * @brief "Casts" a Cpp sequence to a python array (no memory copies)
  *  Python capsule handles void pointers to objects and makes sure
@@ -21,7 +24,7 @@ namespace pybind_utils {
  *	https://github.com/pybind/pybind11/issues/1042#issuecomment-325941022
  */
 template <typename Sequence>
-inline py::array_t<typename Sequence::value_type> as_pyarray(Sequence&& seq) {
+inline auto as_pyarray(Sequence&& seq) {
     // Move entire object to heap. Memory handled via Python capsule
     Sequence* seq_ptr = new Sequence(std::move(seq));
     // Capsule shall delete sequence object when done
@@ -39,9 +42,25 @@ inline py::array_t<typename Sequence::value_type> as_pyarray(Sequence&& seq) {
  * \brief Converts and STL Sequence to numpy array by copying i
  */
 template <typename Sequence>
-inline py::array_t<typename Sequence::value_type> to_pyarray(const Sequence& sequence) {
+inline auto to_pyarray(const Sequence& sequence) {
     return py::array(sequence.size(), sequence.data());
 }
+
+
+/**
+ * \brief A class to obtain the underlying buffer of a stringbuffer
+ * It matches the containers API for compat with as_pyarray()
+ */
+class StringBuffer : public std::stringbuf {
+  public:
+    inline std::stringbuf::char_type* data() const noexcept {
+        return pbase();
+    }
+
+    inline std::size_t size() const noexcept {
+        return std::size_t(pptr() - pbase());
+    }
+};
 
 
 }  // namespace pybind_utils

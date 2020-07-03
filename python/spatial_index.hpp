@@ -1,6 +1,7 @@
 #pragma once
 
 #include <spatial_index/index.hpp>
+#include <spatial_index/index_grid.hpp>
 #include <spatial_index/util.hpp>
 
 #include "bind11_utils.hpp"
@@ -38,7 +39,7 @@ inline auto convert_input(array_t const& centroids) {
     return reinterpret_cast<const point_t*>(centroids.data(0, 0));
 }
 
-inline auto& mk_point(array_t const& point) {
+inline const auto& mk_point(array_t const& point) {
     if (point.ndim() != 1 || point.size() != 3) {
         throw std::invalid_argument("Numpy array not convertible to point3d");
     }
@@ -61,6 +62,17 @@ void create_SphereIndex_bindings(py::module& m);
 /// MorphoEntry IndexTree theres a whole new set of python functions
 void create_MorphIndex_bindings(py::module& m);
 
+
+/// Generic Bindings for SpatialGrid
+template <typename T, int N>
+py::class_<si::SpatialGrid<T, N>>
+create_SpatialGrid_bindings(py::module& m, const char* class_name);
+
+/// A specialization of SpatialGrid for IndexedSphere
+void create_SphereGrid_bindings(py::module& m);
+
+/// Additional bindings for MorphSpatialGrid
+void create_MorphGrid_bindings(py::module& m);
 
 
 }  // namespace py_bindings

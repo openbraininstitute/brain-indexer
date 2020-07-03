@@ -1,5 +1,6 @@
 
 set(PYBIND11_SOURCES rtree_index.cpp
+                     index_grid.cpp
                      spatial_index.cpp)
 
 pybind11_add_module(_spatial_index  ${PYBIND11_SOURCES})
