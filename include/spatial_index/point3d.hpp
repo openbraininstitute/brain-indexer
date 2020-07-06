@@ -71,7 +71,7 @@ struct Point3Dx: public Point3D {
         return copy;
     }
 
-    inline CoordType dot(Point3D const& o2) const {
+    inline CoordType dot(Point3D const& o2) const noexcept {
         return get<0>() * o2.get<0>() + get<1>() * o2.get<1>() + get<2>() * o2.get<2>();
     }
 
@@ -129,12 +129,7 @@ struct Point3Dx: public Point3D {
         return {std::sqrt(get<0>()), std::sqrt(get<1>()), std::sqrt(get<2>())};
     }
 
-    inline CoordType dist_sq(Point3D const& b) const {
-        Point3Dx p = (*this) - b;
-        return p.dot(p);
-    }
-
-    inline CoordType norm_sq() const {
+    inline CoordType norm_sq() const noexcept {
         return get<0>() * get<0>() + get<1>() * get<1>() + get<2>() * get<2>();
     }
 
@@ -142,8 +137,25 @@ struct Point3Dx: public Point3D {
         return std::sqrt(norm_sq());
     }
 
-    inline Point3D& unwrap() {
+    template <int coord_i>
+    inline Point3Dx& setx(CoordType val) {
+        set<coord_i>(val);
         return *this;
+    }
+
+    inline Point3D& unwrap() noexcept {
+        return *this;
+    }
+
+    /// Relation with other points
+
+    inline CoordType dist_sq(Point3D const& p2) const {
+        Point3Dx p = (*this) - p2;
+        return p.norm_sq();
+    }
+
+    inline CoordType distance(Point3D const& p2) const {
+        return std::sqrt(dist_sq(p2));
     }
 
     inline bool operator==(Point3D const& rhs) const {

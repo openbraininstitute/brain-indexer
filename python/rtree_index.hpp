@@ -167,7 +167,7 @@ py::class_<si::IndexTree<T>> create_IndexTree_bindings(py::module& m,
 
         Args:
             centroids(np.array): A Nx3 array[float32] of the segments' end points
-            py_ids(np.array): An array[int64] with the ids of the spheres
+            py_ids(np.array): An array[int64] with the ids of the points
         )"
     )
 

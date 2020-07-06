@@ -77,9 +77,8 @@ py::class_<GridT> create_SpatialGrid_bindings(py::module& m,
 
 
 void create_SphereGrid_bindings(py::module& m) {
-    using Grid = si::SpatialGrid<si::Point3D, 5>;
+    using Grid = si::SpatialGrid<si::IndexedSphere, 5>;
     create_SpatialGrid_bindings<Grid>(m, "SphereGrid");
-    // ... TODO: Not point, spheres!
 }
 
 

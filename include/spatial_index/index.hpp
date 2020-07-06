@@ -88,6 +88,9 @@ struct MorphPartId : public ShapeId {
 
 template <typename ShapeT, typename IndexT=ShapeId>
 struct IndexedShape : public IndexT, public ShapeT {
+    typedef ShapeT geometry_type;
+    typedef IndexT id_type;
+
     inline IndexedShape() = default;
 
     template <typename IdTup>

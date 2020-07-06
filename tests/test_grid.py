@@ -10,14 +10,16 @@ import sys
 
 def test_insert_check_size():
     c1 = SphereGrid()
-    c1.insert(np.array([1, 1, 1], dtype='float'))
-    # print(c1)
+    c1.insert(np.array([1, 0, 1, 1, 1, 0.5], dtype='float'))
+    print(c1)
     assert len(c1) == 1, "{} != {}".format(len(c1), 1)
 
 
 def test_insert_array():
     c1 = SphereGrid()
-    c1.insert(np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]], dtype='float'))
+    c1.insert(np.array([[1, 0, 1, 1, 1, 0.5],
+                        [2, 0, 2, 2, 2, 0.5],
+                        [3, 0, 3, 3, 3, 0.5]], dtype='float'))
     # print(c1)
     assert len(c1) == 3, "{} != {}".format(len(c1), 3)
     return c1
@@ -34,9 +36,11 @@ def test_serialization():
 
 def test_iadd():
     c1 = SphereGrid()
-    c1.insert(np.array([[1, 1, 1], [6, 6, 6]], dtype='float'))
+    c1.insert(np.array([[1, 0, 1, 1, 1, 0.5],
+                        [2, 0, 6, 6, 6, 0.5]], dtype='float'))
     c2 = SphereGrid()
-    c2.insert(np.array([[2, 2, 2], [11, 11,11]], dtype='float'))
+    c2.insert(np.array([[3,0, 2, 2, 2, 0.5],
+                        [4, 0, 11, 11, 11, 0.5]], dtype='float'))
     c1 += c2
     print(c1)
 

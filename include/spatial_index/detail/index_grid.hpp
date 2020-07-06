@@ -16,19 +16,6 @@
 
 namespace spatial_index {
 
-namespace detail {
-
-template <typename T, std::size_t N>
-inline std::size_t hash_array<T, N>::operator()(const std::array<T, N>& arr) const {
-    std::size_t out = 0;
-    for (const auto& item : arr)
-        out = 127 * out + std::hash<T>{}(item);
-    return out;
-}
-
-}  // namespace detail
-
-
 
 
 template <typename T, int VoxelLength>

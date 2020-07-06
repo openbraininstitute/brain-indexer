@@ -33,6 +33,8 @@ struct Sphere {
 
     inline bool intersects(Cylinder const& c) const;
 
+    inline bool contains(Point3D const& p) const;
+
     inline void translate(Point3D const& vec) {
         bg::add_point(centroid, vec);
     }
@@ -80,6 +82,8 @@ struct Cylinder {
     inline bool intersects(Sphere const& s) const {
         return s.intersects(*this);  // delegate to sphere
     }
+
+    inline bool contains(Point3D const& p) const;
 
     inline void translate(Point3D const& vec) {
         bg::add_point(p1, vec);
