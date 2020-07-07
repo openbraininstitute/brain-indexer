@@ -4,45 +4,21 @@
 #include "bind11_utils.hpp"
 #include "spatial_index.hpp"
 
+#define SPATIAL_GRID_VOXEL_LENGTH 10
+
 namespace spatial_index {
 namespace py_bindings {
 
 
 /// Bindings for generic SpatialGrid
 template <typename GridT>
-py::class_<GridT> create_SpatialGrid_bindings(py::module& m,
-                                              const char* class_name) {
+inline py::class_<GridT> create_SpatialGrid_bindings(py::module& m,
+                                                     const char* class_name) {
     using Class = GridT;
-    using value_type = typename GridT::value_type;
 
     return py::class_<Class>(m, class_name)
 
     .def(py::init<>(), "Constructor of an empty SpatialGrid.")
-
-    .def("insert",
-        [](Class& obj, const array_t& items) {
-            // With generic types the best we can do is to reinterpret memory.
-            //  Up to the user to create numpy arrays that match
-            // Input is probably either 1D array of coords (for a single point in space)
-            // or 2D for an array of points.
-            if (items.ndim() == 1) {
-                const auto &data = *reinterpret_cast<const value_type*>(items.data(0));
-                obj.insert(data);
-            } else if (items.ndim() == 2) {
-                const auto* first = reinterpret_cast<const value_type*>(items.data(0, 0));
-                const auto* end = first + items.shape(0);
-                obj.insert(first, end);
-            } else {
-                throw std::invalid_argument("Unknown arg format. Generic insert() "
-                                            "only supports vector or matrix of points.");
-            }
-
-        },
-        R"(
-        Inserts elements in the tree.
-        Please note that no data conversions are performed.
-        )"
-    )
 
     .def("__len__", &Class::size, "The total number of elements")
 
@@ -76,15 +52,81 @@ py::class_<GridT> create_SpatialGrid_bindings(py::module& m,
 }
 
 
+///
+/// Index of Bare Geometries (without ids) implement `insert(data)`
+///
+template <typename GridT>
+inline void create_BareShapeGrid_bindings(py::module& m, const char* cls_name) {
+    using value_type = typename GridT::value_type;
+
+    create_SpatialGrid_bindings<GridT>(m, cls_name)
+    .def("insert",
+        [](GridT& obj, const array_t& items) {
+            // With generic types the best we can do is to reinterpret memory.
+            //  Up to the user to create numpy arrays that match
+            // Input is probably either 1D array of coords (for a single point in space)
+            // or 2D for an array of points.
+            if (items.ndim() == 1) {
+                const auto &data = *reinterpret_cast<const value_type*>(items.data(0));
+                obj.insert(data);
+            } else if (items.ndim() == 2) {
+                const auto* first = reinterpret_cast<const value_type*>(items.data(0, 0));
+                const auto* end = first + items.shape(0);
+                obj.insert(first, end);
+            } else {
+                throw std::invalid_argument("Unknown arg format. Generic insert() "
+                                            "only supports vector or matrix of points.");
+            }
+        },
+        R"(
+        Inserts elements in the tree.
+        Please note that no data conversions are performed.
+        )"
+    );
+
+}
+
+///
+/// IndexedShape implementing generic `insert(data, ids)`
+///
+template <typename GridT>
+inline void create_IndexedShapeGrid_bindings(py::module& m, const char* cls_name) {
+    using value_type = typename GridT::value_type;
+
+    create_SpatialGrid_bindings<GridT>(m, cls_name)
+    .def("insert",
+        [](GridT& obj, const array_t& items, const array_ids& py_ids) {
+            // Quick check dimensions match
+            if (items.ndim() == 2 && items.shape(0) != py_ids.shape(0)) {
+                throw std::invalid_argument(
+                    "Mismatch among the number of elements (rows) and ids");
+            }
+            const auto* g_data = reinterpret_cast<const typename value_type::geometry_type*>(items.data(0));
+            const auto ids = py_ids.template unchecked<1>();
+            auto soa = si::util::make_soa_reader<value_type>(ids, g_data);
+            for (auto o: soa) {
+                obj.insert(std::move(o));
+            }
+        },
+        R"(
+        Inserts elements in the tree with given ids
+        Note that no conversions are performed. Ensure matrix width contains enough data
+        for each element.
+        )"
+    );
+
+}
+
+
 void create_SphereGrid_bindings(py::module& m) {
-    using Grid = si::SpatialGrid<si::IndexedSphere, 5>;
-    create_SpatialGrid_bindings<Grid>(m, "SphereGrid");
+    using GridT = si::SpatialGrid<si::IndexedSphere, SPATIAL_GRID_VOXEL_LENGTH>;
+    create_IndexedShapeGrid_bindings<GridT>(m, "SphereGrid");
 }
 
 
 void create_MorphGrid_bindings(py::module& m) {
-    using Grid = si::MorphSpatialGrid<5>;
-    create_SpatialGrid_bindings<Grid>(m, "MorphGrid");
+    using GridT = si::MorphSpatialGrid<SPATIAL_GRID_VOXEL_LENGTH>;
+    create_SpatialGrid_bindings<GridT>(m, "MorphGrid");
 }
 
 

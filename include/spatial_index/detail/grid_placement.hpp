@@ -13,7 +13,7 @@ namespace detail {
 template <typename T, std::size_t N>
 struct hash_array {
     std::size_t operator()(const std::array<T, N>& key) const {
-        std::size_t out = 0;
+        std::size_t out{};
         for (const auto& item : key)
             out = 127 * out + std::hash<T>{}(item);
         return out;
@@ -52,7 +52,7 @@ inline Point3Dx point_offset(const Point3Dx& p, CoordType offset) {
 
 template <int VoxelLen>
 inline static bool voxels_add(const Point3D& point, VoxelSet& voxels) {
-    auto v = point2voxel<VoxelLen>(point);
+    const auto& v = point2voxel<VoxelLen>(point);
     for (const auto& cur_v : voxels) {
         if (cur_v == v) {
             return false;
@@ -70,7 +70,7 @@ template <typename T>
 struct GridPlacementHelperBase {
     GridPlacementHelperBase() = delete;
 
-    inline GridPlacementHelperBase(detail::grid_type<T>& grid)
+    inline explicit GridPlacementHelperBase(detail::grid_type<T>& grid)
         : grid_(grid) {}
 
   protected:
@@ -78,7 +78,7 @@ struct GridPlacementHelperBase {
     detail::grid_type<T>& grid_;
 
     /**
-     * Find the voxels intersected by a sphere
+     * \brief Find the voxels intersected by a sphere
      */
     template <int VoxelLen>
     inline detail::VoxelSet intersected_voxels(const Sphere& sphere) {
@@ -98,16 +98,16 @@ struct GridPlacementHelperBase {
     }
 
     /**
-     * Find the voxels intersected by a cylinder
+     * \brief Find the voxels intersected by a cylinder
      *
-     * NOTE; this is a simplified version since in principle radius << VoxelLen
+     * NOTE: this is a simplified version since in principle radius << VoxelLen
      * and therefore we only check for different voxels along the cylinder
      */
     template <int VoxelLen>
     inline detail::VoxelSet intersected_voxels(const Cylinder& cyl) {
         using namespace detail;
         VoxelSet voxels;
-        const auto mid_p = (Point3Dx(cyl.p2) + cyl.p1) / 2.0;
+        const auto& mid_p = (Point3Dx(cyl.p2) + cyl.p1) / 2.0;
 
         voxels_add<VoxelLen>(cyl.p1, voxels);
         voxels_add<VoxelLen>(cyl.p2, voxels);
@@ -137,7 +137,7 @@ struct GridPlacementHelper : public GridPlacementHelperBase<T> {
     /// Attempt using the low-level add() routines via overloading
     template <int VoxelLen>
     inline void insert(const T& obj) {
-        this->template add<VoxelLen>(obj);
+        this-> template add<VoxelLen>(obj);
     }
 };
 

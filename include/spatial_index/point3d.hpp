@@ -14,8 +14,10 @@ namespace bgi = boost::geometry::index;
 
 #ifdef BBPSPATIAL_DOUBLE_PRECISION
 using CoordType = double;
+#define SI_EQUALITY_TOLERANCE 1e-8
 #else
 using CoordType = float;
+#define SI_EQUALITY_TOLERANCE 1e-8f
 #endif
 
 using Point3D = bg::model::point<CoordType, 3, bg::cs::cartesian>;
@@ -150,7 +152,7 @@ struct Point3Dx: public Point3D {
     /// Relation with other points
 
     inline CoordType dist_sq(Point3D const& p2) const {
-        Point3Dx p = (*this) - p2;
+        const Point3Dx& p = (*this) - p2;
         return p.norm_sq();
     }
 
@@ -159,9 +161,10 @@ struct Point3Dx: public Point3D {
     }
 
     inline bool operator==(Point3D const& rhs) const {
-        auto dist2 = dist_sq(rhs);
-        if (dist2 == 0.f) return true;
-        return dist2 < norm_sq() * 1e-8f;  // relative tolerance
+        const auto dist2 = dist_sq(rhs);
+        if (dist2 == 0.f)
+            return true;
+        return dist2 < norm_sq() * SI_EQUALITY_TOLERANCE;
     }
 };
 

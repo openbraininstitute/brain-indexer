@@ -165,23 +165,42 @@ inline void IndexTree<T, A>::dump(const std::string& filename) const {
 
 // String representation
 
-inline std::ostream& operator<<(std::ostream& os, const Soma& s) {
-    return os << "Soma(id=(" << s.gid() << ", " << s.segment_i() << "), "
-                 "centroid=" << s.centroid << ", "
-                 "radius=" << boost::format("%.3g") % s.radius << ')';
+inline std::ostream& operator<<(std::ostream& os, const ShapeId& obj) {
+    return os << obj.id;
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Segment& s) {
-    return os << "Segment(id=(" << s.gid() << ", " << s.segment_i() << "), "
-                 "centroids=(" << s.p1 << ", " << s.p2 << "), "
-                 "radius=" << boost::format("%.3g") % s.radius << ')';
+inline std::ostream& operator<<(std::ostream& os, const MorphPartId& obj) {
+    return os << '(' << obj.gid() << ", " << obj.segment_i() << ')';
+}
+
+template <typename ShapeT, typename IndexT>
+inline std::ostream& IndexedShape<ShapeT, IndexT>::repr(
+        std::ostream& os, const std::string& cls_name) const {
+    return os << cls_name << "("
+              "id=" << static_cast<const IndexT&>(*this) << ", "
+              << static_cast<const ShapeT&>(*this) << ')';
+}
+
+
+template <typename ShapeT, typename IndexT>
+inline std::ostream& operator<<(std::ostream& os,
+                                const IndexedShape<ShapeT, IndexT>& obj) {
+    return obj.repr(os);
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Soma& obj) {
+    return obj.repr(os, "Soma");
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Segment& obj) {
+    return obj.repr(os, "Segment");
 }
 
 template <typename T, typename A>
 inline std::ostream& operator<<(std::ostream& os, const IndexTree<T, A>& index) {
     int n_obj = 50;   // display the first 50 objects
     os << "IndexTree([\n";
-    for (const auto& item: index) {
+    for (const auto& item : index) {
         if (n_obj-- == 0) {
             os << "  ...\n";
             break;
@@ -231,7 +250,9 @@ struct indexable<boost::variant<VariantArgs...>> {
     typedef Box3D const result_type;
 
     inline result_type operator()(V const& v) const {
-        return boost::apply_visitor([](const auto& t) { return t.bounding_box(); }, v);
+        return boost::apply_visitor(
+            [](const auto& t) { return t.bounding_box(); },
+            v);
     }
 };
 
