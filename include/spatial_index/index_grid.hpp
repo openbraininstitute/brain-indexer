@@ -21,7 +21,7 @@ class SpatialGrid {
   public:
     using value_type = T;
     using grid_type = detail::grid_type<T>;
-    using key_type = std::array<int, 3>;
+    using key_type = detail::voxel_type;
 
     /** \brief Insert a single value in the tree
      */

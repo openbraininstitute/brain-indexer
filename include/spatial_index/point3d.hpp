@@ -14,8 +14,10 @@ namespace bgi = boost::geometry::index;
 
 #ifdef BBPSPATIAL_DOUBLE_PRECISION
 using CoordType = double;
+#define SI_EQUALITY_TOLERANCE 1e-8
 #else
 using CoordType = float;
+#define SI_EQUALITY_TOLERANCE 1e-8f
 #endif
 
 using Point3D = bg::model::point<CoordType, 3, bg::cs::cartesian>;
@@ -71,7 +73,7 @@ struct Point3Dx: public Point3D {
         return copy;
     }
 
-    inline CoordType dot(Point3D const& o2) const {
+    inline CoordType dot(Point3D const& o2) const noexcept {
         return get<0>() * o2.get<0>() + get<1>() * o2.get<1>() + get<2>() * o2.get<2>();
     }
 
@@ -129,12 +131,7 @@ struct Point3Dx: public Point3D {
         return {std::sqrt(get<0>()), std::sqrt(get<1>()), std::sqrt(get<2>())};
     }
 
-    inline CoordType dist_sq(Point3D const& b) const {
-        Point3Dx p = (*this) - b;
-        return p.dot(p);
-    }
-
-    inline CoordType norm_sq() const {
+    inline CoordType norm_sq() const noexcept {
         return get<0>() * get<0>() + get<1>() * get<1>() + get<2>() * get<2>();
     }
 
@@ -142,14 +139,32 @@ struct Point3Dx: public Point3D {
         return std::sqrt(norm_sq());
     }
 
-    inline Point3D& unwrap() {
+    template <int coord_i>
+    inline Point3Dx& setx(CoordType val) {
+        set<coord_i>(val);
         return *this;
     }
 
+    inline Point3D& unwrap() noexcept {
+        return *this;
+    }
+
+    /// Relation with other points
+
+    inline CoordType dist_sq(Point3D const& p2) const {
+        const Point3Dx& p = (*this) - p2;
+        return p.norm_sq();
+    }
+
+    inline CoordType distance(Point3D const& p2) const {
+        return std::sqrt(dist_sq(p2));
+    }
+
     inline bool operator==(Point3D const& rhs) const {
-        auto dist2 = dist_sq(rhs);
-        if (dist2 == 0.f) return true;
-        return dist2 < norm_sq() * 1e-8f;  // relative tolerance
+        const auto dist2 = dist_sq(rhs);
+        if (dist2 == 0.f)
+            return true;
+        return dist2 < norm_sq() * SI_EQUALITY_TOLERANCE;
     }
 };
 

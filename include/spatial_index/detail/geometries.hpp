@@ -102,9 +102,33 @@ inline bool Sphere::intersects(Cylinder const& c) const {
 }
 
 
+inline bool Sphere::contains(Point3D const& p) const {
+    const auto dist_sq = (Point3Dx(p) - centroid).norm_sq();
+    return dist_sq < radius * radius;
+}
+
+
 inline bool Cylinder::intersects(Cylinder const& c) const {
     CoordType min_dist = detail::distance_segment_segment(p1, p2, c.p1, c.p2);
-    return (min_dist < radius + c.radius);
+    return min_dist < radius + c.radius;
+}
+
+
+inline bool Cylinder::contains(Point3D const& p) const {
+    // https://www.flipcode.com/archives/Fast_Point-In-Cylinder_Test.shtml
+    const auto& cyl_axis = Point3Dx(p2) - p1;
+    const auto& p1_ptest = Point3Dx(p) - p1;
+    const auto dot_prod = p1_ptest.dot(cyl_axis);
+    const auto axis_len_sq = cyl_axis.norm_sq();
+
+    // Over the caps?
+    if (dot_prod < .0f || dot_prod > axis_len_sq) {
+        return false;
+    }
+    // outside radius?
+    // three sides triangle: projection on axis, p1_ptest and distance to axis
+    const auto dist_sq = p1_ptest.norm_sq() - (dot_prod * dot_prod / axis_len_sq);
+    return dist_sq < radius * radius;
 }
 
 

@@ -12,7 +12,7 @@ from setuptools.command.build_ext import build_ext
 try:
     __version__ = subprocess.run(['git', 'describe', '--tags'],
                                  stdout=subprocess.PIPE).stdout.strip().decode()
-    if '-' in __version__: __version__ = __version__[:-9]
+    if '-' in __version__: __version__ = __version__[:-9]  # noqa
 except Exception as e:
     raise RuntimeError("Could not get version from Git repo") from e
 

@@ -26,7 +26,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN TRUE)  # inline symbols which dont need to be public
 
-add_definitions(-Wall -Wfatal-errors)
+add_definitions(
+    -Wall -Wextra -Wnon-virtual-dtor -Wunused
+    -Wfatal-errors
+)
 
 
 #
@@ -58,7 +61,7 @@ target_compile_definitions(SpatialIndex INTERFACE "-DBOOST_GEOMETRY_INDEX_DETAIL
 # Py-bindings with PyBind11
 #
 if(SI_PYTHON_BINDINGS)
-    find_package(PythonInterp 3.5 REQUIRED)
+    find_package(PythonInterp 3.6 REQUIRED)
     add_subdirectory(3rdparty/pybind11)
     add_subdirectory(python)
 endif()

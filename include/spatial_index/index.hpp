@@ -88,6 +88,9 @@ struct MorphPartId : public ShapeId {
 
 template <typename ShapeT, typename IndexT=ShapeId>
 struct IndexedShape : public IndexT, public ShapeT {
+    typedef ShapeT geometry_type;
+    typedef IndexT id_type;
+
     inline IndexedShape() = default;
 
     template <typename IdTup>
@@ -104,6 +107,10 @@ struct IndexedShape : public IndexT, public ShapeT {
         : IndexT{ids}
         , ShapeT{p1, std::forward<T>(shape_data)...} {}
 
+    // subclasses can easily create a string representation
+    inline std::ostream& repr(std::ostream& os,
+                              const std::string& cls_name="IShape") const;
+
   protected:
     friend class boost::serialization::access;
 
@@ -112,6 +119,7 @@ struct IndexedShape : public IndexT, public ShapeT {
         ar& this->id;
         ar& boost::serialization::base_object<ShapeT>(*this);
     }
+
 };
 
 

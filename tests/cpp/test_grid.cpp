@@ -15,7 +15,7 @@ struct GridPlacementHelper<int> : public GridPlacementHelperBase<int>{
 
     template <int VoxelLen>
     inline void insert(int value) {
-        this->grid_[point2voxel<VoxelLen>(Point3D{float(value), 0, 0})]
+        this->grid_[detail::point2voxel<VoxelLen>(Point3D{float(value), 0, 0})]
             .push_back(value);
     }
 

@@ -52,9 +52,9 @@ def test_print_rtree():
     p = PointIndex(points[0:3], radii=None)
     str_expect = (
         'IndexTree([\n'
-        '  Sphere(centroid=[1e-05 1 0], radius=0)\n'
-        '  Sphere(centroid=[-0.5 -0.546 0], radius=0)\n'
-        '  Sphere(centroid=[0.5 -0.5 0], radius=0)\n'
+        '  IShape(id=0, Sphere(centroid=[1e-05 1 0], radius=0))\n'
+        '  IShape(id=1, Sphere(centroid=[-0.5 -0.546 0], radius=0))\n'
+        '  IShape(id=2, Sphere(centroid=[0.5 -0.5 0], radius=0))\n'
         '])')
     str_result = str(p)
     assert str_result == str_expect

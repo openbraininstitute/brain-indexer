@@ -67,9 +67,9 @@ def test_add_neuron_with_soma_and_toString():
     rtree.add_neuron(1, points, radius, offsets)
     str_expect = (
         'IndexTree([\n'
-        '  Soma(id=(1, 0), centroid=[1 3 5], radius=3)\n'
-        '  Segment(id=(1, 1), centroids=([1 3 5], [2 4 6]), radius=3)\n'
-        '  Segment(id=(1, 2), centroids=([2 4 6], [10 10 10]), radius=2)\n'
+        '  Soma(id=(1, 0), Sphere(centroid=[1 3 5], radius=3))\n'
+        '  Segment(id=(1, 1), Cylinder(centroids=([1 3 5], [2 4 6]), radius=3))\n'
+        '  Segment(id=(1, 2), Cylinder(centroids=([2 4 6], [10 10 10]), radius=2))\n'
         '])')
     str_result = str(rtree)
     assert str_result == str_expect
@@ -89,8 +89,8 @@ def test_add_neuron_without_soma_and_toString():
     rtree.add_neuron(1, points, radius, offsets, has_Soma=False)
     str_expect = (
         'IndexTree([\n'
-        '  Segment(id=(1, 1), centroids=([1.12 3 5], [2 4 6]), radius=3)\n'
-        '  Segment(id=(1, 2), centroids=([2 4 6], [10 10 10]), radius=2)\n'
+        '  Segment(id=(1, 1), Cylinder(centroids=([1.12 3 5], [2 4 6]), radius=3))\n'
+        '  Segment(id=(1, 2), Cylinder(centroids=([2 4 6], [10 10 10]), radius=2))\n'
         '])')
     str_result = str(rtree)
     assert str_result == str_expect
@@ -102,9 +102,9 @@ def test_add_neuron_without_soma_and_toString():
     rtree.add_soma(s_id, s_p, s_r)
     str_expect = (
         'IndexTree([\n'
-        '  Segment(id=(1, 1), centroids=([1.12 3 5], [2 4 6]), radius=3)\n'
-        '  Segment(id=(1, 2), centroids=([2 4 6], [10 10 10]), radius=2)\n'
-        '  Soma(id=(1, 0), centroid=[1 3 5.14], radius=3.14e+03)\n'
+        '  Segment(id=(1, 1), Cylinder(centroids=([1.12 3 5], [2 4 6]), radius=3))\n'
+        '  Segment(id=(1, 2), Cylinder(centroids=([2 4 6], [10 10 10]), radius=2))\n'
+        '  Soma(id=(1, 0), Sphere(centroid=[1 3 5.14], radius=3.14e+03))\n'
         '])')
     str_result = str(rtree)
     assert str_result == str_expect
