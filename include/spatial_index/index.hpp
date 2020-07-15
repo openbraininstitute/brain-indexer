@@ -174,7 +174,8 @@ typedef boost::variant<Soma, Segment> MorphoEntry;
  *       avoid duplicating all the data in memory. Init using IndexTree(soa.begin(), soa.end())
  */
 template <typename T, typename A = bgi::linear<16, 2>>
-struct IndexTree: public bgi::rtree<T, A> {
+class IndexTree: public bgi::rtree<T, A> {
+public:
     using bgi::rtree<T, A>::rtree;
 
     using cref_t = std::reference_wrapper<const T>;

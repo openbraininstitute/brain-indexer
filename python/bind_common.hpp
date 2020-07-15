@@ -28,9 +28,9 @@ using array_offsets = py::array_t<unsigned, py::array::c_style | py::array::forc
 inline auto convert_input(array_t const& centroids, array_t const& radii) {
     static_assert(sizeof(point_t) == 3 * sizeof(coord_t),
                   "numpy array not convertible to point3d");
-    auto points_ptr = reinterpret_cast<const point_t*>(centroids.data(0, 0));
-    auto r = radii.template unchecked<1>();
-    return std::make_pair(points_ptr, r);
+    // Return value pair. only contains a pointer and reference
+    return std::make_pair(reinterpret_cast<const point_t*>(centroids.data(0, 0)),
+                          radii.template unchecked<1>());
 }
 
 inline auto convert_input(array_t const& centroids) {
@@ -46,33 +46,6 @@ inline const auto& mk_point(array_t const& point) {
     return *reinterpret_cast<const point_t*>(point.data(0));
 }
 
-
-//
-// Declarion of functions to create bindings
-//
-
-// Generic IndexTree can have generic bindings
-template <typename T, typename SomaT = T>
-py::class_<si::IndexTree<T>> create_IndexTree_bindings(py::module& m,
-                                                       const char* class_name);
-
-/// An instantiation of create_IndexTree_bindings for IndexedSphere
-void create_SphereIndex_bindings(py::module& m);
-
-/// MorphoEntry IndexTree theres a whole new set of python functions
-void create_MorphIndex_bindings(py::module& m);
-
-
-/// Generic Bindings for SpatialGrid
-template <typename T, int N>
-py::class_<si::SpatialGrid<T, N>>
-create_SpatialGrid_bindings(py::module& m, const char* class_name);
-
-/// A specialization of SpatialGrid for IndexedSphere
-void create_SphereGrid_bindings(py::module& m);
-
-/// Additional bindings for MorphSpatialGrid
-void create_MorphGrid_bindings(py::module& m);
 
 
 }  // namespace py_bindings

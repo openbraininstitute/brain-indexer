@@ -1,9 +1,7 @@
 
-set(PYBIND11_SOURCES rtree_index.cpp
-                     index_grid.cpp
-                     spatial_index.cpp)
+set(PY_BINDINGS_SOURCES py_bindings.cpp)
 
-pybind11_add_module(_spatial_index  ${PYBIND11_SOURCES})
+pybind11_add_module(_spatial_index  ${PY_BINDINGS_SOURCES})
 
 target_link_libraries(_spatial_index PUBLIC SpatialIndex)
 

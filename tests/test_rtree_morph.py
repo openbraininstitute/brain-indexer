@@ -86,7 +86,7 @@ def test_add_neuron_without_soma_and_toString():
     offsets = [0, 2]
     rtree = MorphIndex()
     # add segments
-    rtree.add_neuron(1, points, radius, offsets, has_Soma=False)
+    rtree.add_neuron(1, points, radius, offsets, has_soma=False)
     str_expect = (
         'IndexTree([\n'
         '  Segment(id=(1, 1), Cylinder(centroids=([1.12 3 5], [2 4 6]), radius=3))\n'
