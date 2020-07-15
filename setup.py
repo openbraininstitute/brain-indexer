@@ -137,8 +137,11 @@ def setup_package():
         cmdclass=dict(build_ext=CMakeBuild, docs=Docs),
         include_package_data=True,
         install_requires=['numpy>=1.13.1'],
-        tests_require=["flake8", "pytest"],
+        tests_require=["flake8", "pytest", "morphio"],
         setup_requires=maybe_docs + maybe_test_runner,
+        extras_require={
+            "mvd": ['numpy-quaternion']
+        },
         dependency_links=[
             "https://bbpteam.epfl.ch/repository/devpi/simple/docs_internal_upload"]
     )
