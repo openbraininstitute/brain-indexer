@@ -4,7 +4,9 @@
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/geometries/point.hpp>
+#include <geometry/cross_product.hpp>
 
+#include <array>
 
 namespace spatial_index {
 
@@ -36,7 +38,6 @@ struct Point3Dx: public Point3D {
 
     inline Point3Dx(Point3D&& o) noexcept
         : Point3D(std::move(o)) {}
-
 
     /// Vector component-wise
 
@@ -78,7 +79,7 @@ struct Point3Dx: public Point3D {
     }
 
     inline Point3D cross(Point3D const& other) const {
-        return bg::cross_product<Point3D, Point3D, Point3D>(*this, other);
+        return geometry::cross_product<Point3D, Point3D, Point3D>(*this, other);
     }
 
 
@@ -127,8 +128,8 @@ struct Point3Dx: public Point3D {
 
     /// Self operands
 
-    inline Point3Dx sqrt() const {
-        return {std::sqrt(get<0>()), std::sqrt(get<1>()), std::sqrt(get<2>())};
+    inline auto sqrt() const {
+        return Point3Dx{std::sqrt(get<0>()), std::sqrt(get<1>()), std::sqrt(get<2>())};
     }
 
     inline CoordType norm_sq() const noexcept {

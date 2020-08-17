@@ -220,20 +220,20 @@ public:
     template <typename ShapeT>
     inline decltype(auto) find_nearest(const ShapeT& shape, unsigned k_neighbors) const;
 
-    /// Checks whether a given shape intersects any object in the tree
+    /// \brief Checks whether a given shape intersects any object in the tree
     template <typename ShapeT>
     inline bool is_intersecting(const ShapeT& shape) const;
 
-    /// Constructor to rebuild from binary data file
+    /// \brief onstructor to rebuild from binary data file
     // Note: One must override char* and string since there is a template<T> constructor
     inline explicit IndexTree(const std::string& filename);
     inline explicit IndexTree(const char* dump_file)
         : IndexTree(std::string(dump_file)) {}
 
-    /// Output tree to binary data file
+    /// \brief Output tree to binary data file
     inline void dump(const std::string& filename) const;
 
-    /// Non-overlapping placement of Shapes
+    /// \brief Non-overlapping placement of Shapes
     template <typename ShapeT>
     inline bool place(const Box3D& region, ShapeT& shape);
 
@@ -242,6 +242,11 @@ public:
         // Allow user to provide a temporary if they dont care about the new position
         return place(region, shape);
     }
+
+    /// \brief list all ids in the tree
+    /// note: this will allocate a full vector. Consider iterating over the tree using
+    ///     begin()->end()
+    inline decltype(auto) all_ids();
 
   private:
     typedef bgi::rtree<T, A> super;

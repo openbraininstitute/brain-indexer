@@ -36,14 +36,14 @@ add_definitions(
 # Dependencies
 #
 set(Boost_NO_BOOST_CMAKE TRUE)  # Consistency
-set(BOOST_REQ_COMPONENTS serialization)
+set(BOOST_REQ_COMPONENTS serialization filesystem)
 if(SI_UNIT_TESTS)
     list(APPEND BOOST_REQ_COMPONENTS unit_test_framework)
     if(SI_BENCHMARKS)
         list(APPEND BOOST_REQ_COMPONENTS timer)
     endif()
 endif()
-find_package(Boost 1.65.0 REQUIRED COMPONENTS ${BOOST_REQ_COMPONENTS})
+find_package(Boost 1.59.0 REQUIRED COMPONENTS ${BOOST_REQ_COMPONENTS})
 
 
 #
@@ -53,7 +53,12 @@ set(SI_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 
 add_library(SpatialIndex INTERFACE)
 target_include_directories(SpatialIndex INTERFACE ${SI_INCLUDE_DIR})
-target_link_libraries(SpatialIndex INTERFACE Boost::boost Boost::serialization)
+target_link_libraries(SpatialIndex
+  INTERFACE
+    Boost::boost
+    Boost::serialization
+    Boost::filesystem
+)
 target_compile_definitions(SpatialIndex INTERFACE "-DBOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL")
 
 

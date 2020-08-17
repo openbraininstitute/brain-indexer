@@ -54,13 +54,13 @@ bool test_intersecting_ids(IndexTree<T> const& tree,
     BOOST_TEST(rtree.is_intersecting(Sphere{tcenter0, tradius}) == t1_result); \
     BOOST_TEST(rtree.is_intersecting(Sphere{tcenter1, tradius}) == t2_result); \
     BOOST_TEST(rtree.is_intersecting(Sphere{tcenter2, tradius}) == t3_result); \
-    BOOST_TEST(rtree.is_intersecting(Sphere{tcenter3, tradius}) == t4_result);
+    BOOST_TEST(rtree.is_intersecting(Sphere{tcenter3, tradius}) == t4_result)
 
 #define TEST_INTERSECTING_IDS(t1_result, t2_result, t3_result, t4_result)          \
     BOOST_TEST(test_intersecting_ids(rtree, Sphere{tcenter0, tradius}, t1_result)); \
     BOOST_TEST(test_intersecting_ids(rtree, Sphere{tcenter1, tradius}, t2_result)); \
     BOOST_TEST(test_intersecting_ids(rtree, Sphere{tcenter2, tradius}, t3_result)); \
-    BOOST_TEST(test_intersecting_ids(rtree, Sphere{tcenter3, tradius}, t4_result));
+    BOOST_TEST(test_intersecting_ids(rtree, Sphere{tcenter3, tradius}, t4_result))
 
 
 BOOST_AUTO_TEST_CASE(BasicSphereTree) {
@@ -85,16 +85,12 @@ BOOST_AUTO_TEST_CASE(IndexedSphereTree) {
 
     TESTS_INTERSECTING_CHECKS(true, false, true, false);
     TEST_INTERSECTING_IDS({2}, {}, {0}, {});
-}
 
+    // Dump and load
+    rtree.dump("sphere_index");
+    IndexTree<IndexedSphere> rtree_loaded("sphere_index");
+    BOOST_CHECK(rtree.all_ids() == rtree_loaded.all_ids());
 
-BOOST_AUTO_TEST_CASE(SomaTree) {
-    // Similar to the one above, but *is* a NeuronPiece
-    auto somas = util::make_vec<Soma>(N_ITEMS, util::identity<>(), centers, radius);
-    IndexTree<Soma> rtree(somas);
-
-    TESTS_INTERSECTING_CHECKS(true, false, true, false);
-    TEST_INTERSECTING_IDS({2}, {}, {0}, {});
 }
 
 
@@ -153,5 +149,5 @@ BOOST_AUTO_TEST_CASE(NonOverlapPlacement) {
     // Next one will be even further
     Sphere toplace2{{0., 0., 0.}, 2.};
     BOOST_TEST(rtree.place(Box3D{{.0, .0, -2.}, {20., 5., 2.}}, toplace2));
-    BOOST_TEST(toplace2.centroid.get<0>() > toplace.centroid.get<0>());
+    BOOST_CHECK(toplace2.centroid.get<0>() > toplace.centroid.get<0>());
 }

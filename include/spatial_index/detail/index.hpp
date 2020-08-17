@@ -163,6 +163,16 @@ inline void IndexTree<T, A>::dump(const std::string& filename) const {
 }
 
 
+template <typename T, typename A>
+inline decltype(auto) IndexTree<T, A>::all_ids() {
+    using ids_getter = typename detail::id_getter_for<T>::type;
+    std::vector<typename ids_getter::value_type> ids;
+    ids.reserve(this->size());
+    std::copy(this->begin(), this->end(), ids_getter(ids));
+    return ids;
+}
+
+
 // String representation
 
 inline std::ostream& operator<<(std::ostream& os, const ShapeId& obj) {

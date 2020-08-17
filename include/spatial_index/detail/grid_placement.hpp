@@ -1,41 +1,17 @@
 #pragma once
 
-#include <boost/container/small_vector.hpp>
-
-#include "../point3d.hpp"
+#include "grid_common.hpp"
+#include "../index.hpp"
 
 
 namespace spatial_index {
 
 namespace detail {
 
-/// \brief A hash array function for std::array
-template <typename T, std::size_t N>
-struct hash_array {
-    std::size_t operator()(const std::array<T, N>& key) const {
-        std::size_t out{};
-        for (const auto& item : key)
-            out = 127 * out + std::hash<T>{}(item);
-        return out;
-    }
-};
-
-/// \brief The underlying type of the voxel id
-using voxel_type = std::array<int, 3>;
-
-/// \brief The fundamental type of the grid
-template <typename T>
-using grid_type = std::unordered_map<voxel_type,
-                                     std::vector<T>,
-                                     hash_array<int, 3>>;
-
-/// Type for a vector containing voxels a geometry crosses
-using VoxelSet = boost::container::small_vector<voxel_type, 4>;
-
 
 /// \brief A Generic translator from 3d points to voxel
 template <int VoxelLen>
-inline voxel_type point2voxel(const Point3D& value) {
+inline voxel_id_type point2voxel(const Point3D& value) {
     return {
         int(std::floor(value.get<0>() / VoxelLen)),
         int(std::floor(value.get<1>() / VoxelLen)),
@@ -43,6 +19,13 @@ inline voxel_type point2voxel(const Point3D& value) {
     };
 }
 
+inline voxel_id_type point2voxel(const Point3D& value, int voxel_length) {
+    return {
+        int(std::floor(value.get<0>() / voxel_length)),
+        int(std::floor(value.get<1>() / voxel_length)),
+        int(std::floor(value.get<2>() / voxel_length))
+    };
+}
 
 template <int Dim>
 inline Point3Dx point_offset(const Point3Dx& p, CoordType offset) {
@@ -65,7 +48,9 @@ inline static bool voxels_add(const Point3D& point, VoxelSet& voxels) {
 }  // namespace detail
 
 
-/// \brief A base class for the several specializations of GridPlacementHelper's
+/**
+ * \brief A base class for the several specializations of GridPlacementHelper's
+ */
 template <typename T>
 struct GridPlacementHelperBase {
     GridPlacementHelperBase() = delete;
@@ -88,12 +73,14 @@ struct GridPlacementHelperBase {
         // Consider voxels containing center and 6 extremes of sphere
         const auto& c = sphere.centroid;
         voxels_add<VoxelLen>(c, voxels);
-        voxels_add<VoxelLen>(point_offset<0>(c, sphere.radius), voxels);
-        voxels_add<VoxelLen>(point_offset<0>(c, -sphere.radius), voxels);
-        voxels_add<VoxelLen>(point_offset<1>(c, sphere.radius), voxels);
-        voxels_add<VoxelLen>(point_offset<1>(c, -sphere.radius), voxels);
-        voxels_add<VoxelLen>(point_offset<2>(c, sphere.radius), voxels);
-        voxels_add<VoxelLen>(point_offset<2>(c, -sphere.radius), voxels);
+        // for the extremes of the sphere consider 95% of the radius to avoid corner cases
+        auto radius = sphere.radius * 0.95f;
+        voxels_add<VoxelLen>(point_offset<0>(c, radius), voxels);
+        voxels_add<VoxelLen>(point_offset<0>(c, -radius), voxels);
+        voxels_add<VoxelLen>(point_offset<1>(c, radius), voxels);
+        voxels_add<VoxelLen>(point_offset<1>(c, -radius), voxels);
+        voxels_add<VoxelLen>(point_offset<2>(c, radius), voxels);
+        voxels_add<VoxelLen>(point_offset<2>(c, -radius), voxels);
         return voxels;
     }
 
@@ -128,13 +115,14 @@ struct GridPlacementHelperBase {
 
 };
 
-
-// Default implementation
+/**
+ * \brief The generic GridPlacementHelper
+ */
 template <typename T>
 struct GridPlacementHelper : public GridPlacementHelperBase<T> {
     using GridPlacementHelperBase<T>::GridPlacementHelperBase;
 
-    /// Attempt using the low-level add() routines via overloading
+    // Attempt using the low-level add() routines via overloading
     template <int VoxelLen>
     inline void insert(const T& obj) {
         this-> template add<VoxelLen>(obj);
@@ -142,12 +130,15 @@ struct GridPlacementHelper : public GridPlacementHelperBase<T> {
 };
 
 
+/**
+ * \brief Specialization of GridPlacementHelper for MorphoEntry's
+ */
 template <>
 struct GridPlacementHelper<MorphoEntry> : public GridPlacementHelperBase<MorphoEntry>{
     using GridPlacementHelperBase<MorphoEntry>::GridPlacementHelperBase;
 
     template <int VoxelLen>
-    void insert(const MorphoEntry& value) {
+    inline void insert(const MorphoEntry& value) {
         boost::apply_visitor(
             [this](const auto& elem) { this-> template add<VoxelLen>(elem); },
             value
