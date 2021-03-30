@@ -44,7 +44,7 @@ class CMakeBuild(build_ext):
         build_args = ['--config', cfg, '--', '-j4']
 
         env = os.environ.copy()
-        env['CXXFLAGS'] = "{} -static-libstdc++ -DVERSION_INFO='{}'".format(
+        env['CXXFLAGS'] = "{} -DVERSION_INFO='{}'".format(
             env.get('CXXFLAGS', ''),
             self.distribution.get_version())
         if not os.path.exists(self.build_temp):
