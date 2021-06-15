@@ -39,6 +39,10 @@ struct Sphere {
         bg::add_point(centroid, vec);
     }
 
+    inline Point3D get_centroid() const{
+        return centroid;
+    }
+
   private:
     friend class boost::serialization::access;
 
@@ -88,6 +92,14 @@ struct Cylinder {
     inline void translate(Point3D const& vec) {
         bg::add_point(p1, vec);
         bg::add_point(p2, vec);
+    }
+
+    inline Point3D get_centroid() const {
+        Point3D centroid;
+        centroid.set<0>((p1.get<0>()+p2.get<0>())/2);
+        centroid.set<1>((p1.get<1>()+p2.get<1>())/2);
+        centroid.set<2>((p1.get<2>()+p2.get<2>())/2);
+        return centroid;
     }
 
   private:

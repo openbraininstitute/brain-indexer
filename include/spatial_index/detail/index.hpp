@@ -61,6 +61,14 @@ inline decltype(auto) IndexTree<T, A>::find_intersecting(const ShapeT& shape) co
     return ids;
 }
 
+template <typename T, typename A>
+template <typename ShapeT>
+inline decltype(auto) IndexTree<T, A>::find_intersecting_pos(const ShapeT& shape) const {
+    std::vector<Point3D> points;
+    find_intersecting(shape, iter_pos_getter(points));
+    return points;
+}
+
 
 template <typename T, typename A>
 template <typename ShapeT>

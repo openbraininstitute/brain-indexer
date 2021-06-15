@@ -23,8 +23,16 @@ def test_add_points():
     min_corner = [-1, -1, -1]
     max_corner = [1, 1, 1]
     idx = t.find_intersecting_window(min_corner, max_corner)
+    pos = t.find_intersecting_window_pos(min_corner, max_corner)
+    str_expect = (
+        '[[ 0.   1.   0. ]\n'
+        ' [-0.5 -0.5  0. ]\n'
+        ' [ 0.5 -0.5  0. ]\n'
+        ' [ 1.   1.   1. ]]')
+    str_result = str(pos)
     expected_result = np.array([0, 1, 2, 6], dtype=np.uintp)
     assert np.all(idx == expected_result), (idx, expected_result)
+    assert str_result == str_expect
 
 
 def test_init_points():

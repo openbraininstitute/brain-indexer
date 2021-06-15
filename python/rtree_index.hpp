@@ -1,6 +1,8 @@
 #pragma once
-
+#include <iostream>
 #include "bind_common.hpp"
+
+namespace bg = boost::geometry;
 
 namespace spatial_index {
 namespace py_bindings {
@@ -215,6 +217,25 @@ inline py::class_<si::IndexTree<T>> create_IndexTree_bindings(py::module& m,
         },
         R"(
         Searches objects intersecting the given window, and returns their ids.
+
+        Args:
+            min_corner, max_corner(float32) : min/max corners of the query window
+        )"
+    )
+
+    .def("find_intersecting_window_pos",
+        [](Class& obj, const array_t& min_corner, const array_t& max_corner) {
+            const auto& vec = obj.find_intersecting_pos(si::Box3D{mk_point(min_corner),
+                                                              mk_point(max_corner)});
+            std::vector<std::array<double, 3>> vec_conv;
+            vec_conv.reserve(vec.size());
+            for (auto point : vec){
+                vec_conv.push_back({static_cast<double>(bg::get<0>(point)), static_cast<double>(bg::get<1>(point)), static_cast<double>(bg::get<2>(point))}); 
+            }
+            return pyutil::to_pyarray(vec_conv);
+        },
+        R"(
+        Searches objects intersecting the given window, and returns their position.
 
         Args:
             min_corner, max_corner(float32) : min/max corners of the query window

@@ -15,7 +15,8 @@
 
 
 #include "geometries.hpp"
-
+#define N_SEGMENT_BITS 16
+#define MASK_SEGMENT_BITS ((1 << N_SEGMENT_BITS)-1)
 
 namespace spatial_index {
 
@@ -45,6 +46,9 @@ struct iter_ids_getter;
 /// \brief result iterator to collect gids and segment ids
 struct iter_gid_segm_getter;
 
+/// \brief result iterator to collect positions
+struct iter_pos_getter;
+
 
 /**
  * \brief ShapeId adds an 'id' field to the underlying struct
@@ -70,17 +74,17 @@ struct MorphPartId : public ShapeId {
     inline MorphPartId() = default;
 
     inline MorphPartId(identifier_t gid, unsigned segment_i = 0)
-        : ShapeId{(gid << 12) + segment_i} {}
+        : ShapeId{((gid << N_SEGMENT_BITS) & (~MASK_SEGMENT_BITS)) + (segment_i & MASK_SEGMENT_BITS)} {}
 
     inline MorphPartId(const std::tuple<const identifier_t&, const unsigned&>& ids)
         : MorphPartId(std::get<0>(ids), std::get<1>(ids)) {}
 
     inline identifier_t gid() const noexcept {
-        return id >> 12;
+        return id >> N_SEGMENT_BITS;
     }
 
     inline unsigned segment_i() const noexcept {
-        return static_cast<unsigned>(id & 0x0fff);
+        return static_cast<unsigned>(id & MASK_SEGMENT_BITS);
     }
 };
 
@@ -205,6 +209,13 @@ public:
      */
     template <typename ShapeT>
     inline decltype(auto) find_intersecting(const ShapeT& shape) const;
+
+        /**
+     * \brief Gets the pos of the intersecting objects
+     * \returns The object pos, depending on the default pos getter
+     */
+    template <typename ShapeT>
+    inline decltype(auto) find_intersecting_pos(const ShapeT& shape) const;
 
     /**
      * \brief Finds & return objects which intersect. To be used mainly with id-less objects

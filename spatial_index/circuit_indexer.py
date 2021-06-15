@@ -24,10 +24,9 @@ logging.basicConfig(level=logging.INFO)
 
 
 N_CELLS_RANGE = 100
-
+MorphInfo = namedtuple("MorphInfo", "soma, points, radius, branch_offsets")
 
 class MorphologyLib:
-    MorphInfo = namedtuple("MorphInfo", "soma, points, radius, branch_offsets")
 
     def __init__(self, pth):
         self._pth = pth
@@ -42,7 +41,7 @@ class MorphologyLib:
             raise Exception("Morphology file not found")
 
         soma = morph.soma
-        morph_infos = self.MorphInfo(
+        morph_infos = MorphInfo(
             (soma.center, soma.max_distance),
             morph.points,
             morph.diameters,
@@ -73,9 +72,11 @@ class MvdMorphIndexer:
         points += position
         return points
 
-    def process_cell(self, gid, morph, points):
+    def process_cell(self, gid, morph, points, position):
         morph = self.morph_lib.get(morph)
-        self.spatialindex.add_soma(gid, *morph.soma)
+        soma_center, soma_rad = morph.soma
+        soma_center += position
+        self.spatialindex.add_soma(gid, soma_center, soma_rad)
         self.spatialindex.add_neuron(
             gid, points, morph.radius, morph.branch_offsets[:-1], False
         )
@@ -90,10 +91,11 @@ class MvdMorphIndexer:
         morph_names = mvd.morphologies(*range_)
         positions = mvd.positions(*range_)
         rotations = mvd.rotations(*range_) if mvd.rotated else itertools.repeat(None)
-
         for gid, morph, pos, rot in zip(gids, morph_names, positions, rotations):
+            # GIDs in files are zero-based, while they're typically 1-based in application.
+            gid += 1
             rotopoints = self.rototranslate(morph, pos, rot)
-            self.process_cell(gid, morph, rotopoints)
+            self.process_cell(gid, morph, rotopoints, pos)
 
 
 def gen_ranges(limit, blocklen):
@@ -121,8 +123,8 @@ def main_serial(morphology_dir, mvd_file):
     for i, range_ in enumerate(gen_ranges(n_cells, N_CELLS_RANGE)):
         indexer.process_range(range_)
         logging.info("Processed %d%%", float(i+1) * 100 / nranges )
-
     return indexer
+
 
 def main_parallel(morphology_dir, mvd_file):
     import multiprocessing
