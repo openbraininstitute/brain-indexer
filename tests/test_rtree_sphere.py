@@ -100,11 +100,17 @@ def test_intersection_all():
     radius = np.random.uniform(low=0.5, high=1.0)
 
     idx = t.find_intersecting(centroid, radius)
+    objs = t.find_intersecting_objs(centroid, radius)
+
     if len(idx.dtype) > 1:
         idx = idx['gid']  # Records
 
     expected_result = np.array([0, 1, 2], dtype=np.uintp)
+
+    # New API: retrieve object references
     assert np.all(idx == expected_result), (idx, expected_result, centroids, radii)
+    for obj, exp_gid in zip(objs, expected_result):
+        assert obj.gid == exp_gid
 
 
 def test_intersection_random():
@@ -154,15 +160,20 @@ def test_intersection_window():
     pos = t.find_intersecting_window_pos(min_corner, max_corner)
     if len(idx.dtype) > 1:
         idx = idx['gid']  # Records
-    expected_result = np.array([0, 1, 2, 6], dtype=np.uintp)
-    str_expect = (
-        '[[ 0.          1.          0.        ]\n'
-        ' [-0.5        -0.5         0.        ]\n'
-        ' [ 0.5        -0.5         0.        ]\n'
-        ' [ 1.20000005  1.20000005  1.20000005]]')
-    str_result = str(pos)
+    expected_result = [0, 1, 2, 6]
+    expected_pos = [
+        [ 0.,   1.,  0.],
+        [-0.5, -0.5, 0.],
+        [ 0.5, -0.5, 0.],
+        [ 1.2,  1.2, 1.2]
+    ]
     assert np.all(idx == expected_result), (idx, expected_result)
-    assert str_result == str_expect
+    assert np.allclose(pos, expected_pos)
+
+    # NEW API
+    for sphere in t.find_intersecting_window_objs(min_corner, max_corner):
+        i = expected_result.index(sphere.gid)  # asserts gid is in the list
+        assert np.allclose(sphere.centroid, expected_pos[i])
 
 
 def test_bulk_spheres_points_add():

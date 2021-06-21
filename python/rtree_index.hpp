@@ -12,6 +12,29 @@ namespace py_bindings {
 /// 1 - Generic bindings
 ///
 
+// We provide bindings to spatial indexes of spheres since they'r space efficient
+inline void createSphereBindings(py::module& m) {
+    using Class = IndexedSphere;
+    py::class_<Class>(m, "IndexedSphere")
+        .def_property_readonly("centroid", [](Class& obj) {
+                return py::array(3, reinterpret_cast<const si::CoordType*>(&obj.get_centroid()));
+            },
+            "Returns the centroid of the sphere"
+        )
+        .def_property_readonly("ids", [](Class& obj) {
+                return std::make_tuple(long(obj.id));
+            },
+            "Return the tuple of ids, i.e. (gid, section_id, segment_id)"
+        )
+        .def_property_readonly("gid", [](Class& obj) {
+                return long(obj.id);
+            },
+            "Returns the gid of the indexed morphology part"
+        )
+    ;
+}
+
+
 template <typename T, typename SomaT = T>
 inline py::class_<si::IndexTree<T>> create_IndexTree_bindings(py::module& m,
                                                               const char* class_name) {
@@ -71,8 +94,8 @@ inline py::class_<si::IndexTree<T>> create_IndexTree_bindings(py::module& m,
                 const auto& point_radius = convert_input(centroids, radii);
                 const auto ids = py_ids.template unchecked<1>();
                 auto soa = si::util::make_soa_reader<SomaT>(ids,
-                                                     point_radius.first,
-                                                     point_radius.second);
+                                                            point_radius.first,
+                                                            point_radius.second);
                 return std::make_unique<Class>(soa.begin(), soa.end());
             }
         }),
@@ -226,19 +249,34 @@ inline py::class_<si::IndexTree<T>> create_IndexTree_bindings(py::module& m,
     .def("find_intersecting_window_pos",
         [](Class& obj, const array_t& min_corner, const array_t& max_corner) {
             const auto& vec = obj.find_intersecting_pos(si::Box3D{mk_point(min_corner),
-                                                              mk_point(max_corner)});
-            std::vector<std::array<double, 3>> vec_conv;
-            vec_conv.reserve(vec.size());
-            for (auto point : vec){
-                vec_conv.push_back({static_cast<double>(bg::get<0>(point)), static_cast<double>(bg::get<1>(point)), static_cast<double>(bg::get<2>(point))}); 
-            }
-            return pyutil::to_pyarray(vec_conv);
+                                                                  mk_point(max_corner)});
+            return py::array(std::array<unsigned long, 2>{vec.size(), 3},
+                             reinterpret_cast<const si::CoordType*>(vec.data()));
         },
         R"(
         Searches objects intersecting the given window, and returns their position.
 
         Args:
             min_corner, max_corner(float32) : min/max corners of the query window
+        )"
+    )
+
+    .def("find_intersecting_objs",
+        [](Class& obj, const array_t& centroid, const coord_t& radius) {
+            return obj.find_intersecting_objs(si::Sphere{mk_point(centroid), radius});
+        },
+        R"(
+        Searches objects intersecting the given Sphere, and returns them
+        )"
+    )
+
+    .def("find_intersecting_window_objs",
+        [](Class& obj, const array_t& min_corner, const array_t& max_corner) {
+            return obj.find_intersecting_objs(si::Box3D{mk_point(min_corner),
+                                                        mk_point(max_corner)});
+        },
+        R"(
+        Searches objects intersecting the given Box3D, and returns them
         )"
     )
 
@@ -272,9 +310,53 @@ inline py::class_<si::IndexTree<T>> create_IndexTree_bindings(py::module& m,
 /// 2 - MorphIndex tree
 ///
 
+/// Bindings for Base Type si::MorphoEntry
+
+void create_MorphoEntry_bindings(py::module& m) {
+
+    using Class = MorphoEntry;
+
+    py::class_<Class>(m, "MorphoEntry")
+        .def_property_readonly("centroid", [](Class& obj) {
+                const auto& p3d = boost::apply_visitor(
+                    [](const auto& g){ return g.get_centroid(); },
+                    obj
+                );
+                return py::array(3, &p3d.get<0>());
+            },
+            "Returns the centroid of the morphology parts as a Numpy array"
+        )
+        .def_property_readonly("ids", [](Class& obj) {
+                return boost::apply_visitor([](const auto& g){
+                    return std::make_tuple(g.gid(), g.section_id(), g.segment_id());
+                }, obj);
+            },
+            "Return the tuple of ids, i.e. (gid, section_id, segment_id)"
+        )
+        .def_property_readonly("gid", [](Class& obj) {
+                return boost::apply_visitor([](const auto& g){ return g.gid();}, obj);
+            },
+            "Returns the gid of the indexed morphology part"
+        )
+        .def_property_readonly("section_id", [](Class& obj) {
+                return boost::apply_visitor([](const auto& g){ return g.section_id(); }, obj);
+            },
+            "Returns the section_id of the indexed morphology part"
+        )
+        .def_property_readonly("segment_id", [](Class& obj) {
+                return boost::apply_visitor([](const auto& g){ return g.segment_id(); }, obj);
+            },
+            "Returns the segment_id of the indexed morphology part"
+        )
+    ;
+
+}
+
+
 using MorphIndexTree = si::IndexTree<MorphoEntry>;
 
 
+/// Aux function to insert all segments of a branch
 inline static void add_branch(MorphIndexTree& obj,
                               const id_t neuron_id,
                               unsigned section_id,
@@ -288,6 +370,7 @@ inline static void add_branch(MorphIndexTree& obj,
 }
 
 
+/// Bindings to index si::IndexTree<MorphoEntry>
 inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
     using Class = MorphIndexTree;
 

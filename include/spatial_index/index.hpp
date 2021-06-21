@@ -235,7 +235,7 @@ public:
      * \returns A vector of references to tree objects
      */
     template <typename ShapeT>
-    inline std::vector<cref_t> find_get_intersecting(const ShapeT& shape) const;
+    inline std::vector<cref_t> find_intersecting_objs(const ShapeT& shape) const;
 
     /**
      * \brief Gets the ids of the the nearest K objects

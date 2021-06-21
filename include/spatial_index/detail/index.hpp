@@ -73,7 +73,7 @@ inline decltype(auto) IndexTree<T, A>::find_intersecting_pos(const ShapeT& shape
 template <typename T, typename A>
 template <typename ShapeT>
 inline std::vector<typename IndexTree<T, A>::cref_t>
-IndexTree<T, A>::find_get_intersecting(const ShapeT& shape) const {
+IndexTree<T, A>::find_intersecting_objs(const ShapeT& shape) const {
     std::vector<cref_t> results;
     find_intersecting(shape, std::back_inserter(results));
     return results;

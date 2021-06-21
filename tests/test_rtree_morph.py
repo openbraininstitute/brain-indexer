@@ -58,6 +58,13 @@ def test_bulk_neuron_add():
     for out_id in idx:
         assert out_id in idx
 
+    # New API
+    objs = rtree.find_intersecting_window_objs([COORD_SEARCH[0]-0.9, -.1, -.1],
+                                               [COORD_SEARCH[0]+0.9,  .1,  .1])
+    assert len(objs) == len(EXPECTED_IDS)
+    for obj in objs:
+        assert (obj.gid, obj.section_id, obj.segment_id) in EXPECTED_IDS
+
 
 def test_add_neuron_with_soma_and_toString():
     points = [

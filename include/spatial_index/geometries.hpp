@@ -39,7 +39,7 @@ struct Sphere {
         bg::add_point(centroid, vec);
     }
 
-    inline Point3D get_centroid() const{
+    inline const Point3D& get_centroid() const noexcept {
         return centroid;
     }
 

@@ -36,7 +36,7 @@ bool test_intersecting_ids(IndexTree<T> const& tree,
                            S const& shape,
                            std::vector<identifier_t> expected) {
     size_t cur_i = 0;
-    for (const T& item : tree.find_get_intersecting(shape)) {
+    for (const T& item : tree.find_intersecting_objs(shape)) {
         if (cur_i >= expected.size())
             return false;
         identifier_t id = detail::get_id_from(item);
