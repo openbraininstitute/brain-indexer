@@ -151,9 +151,9 @@ struct GridPlacementHelper<MorphoEntry> : public GridPlacementHelperBase<MorphoE
     }
 
     template <int VoxelLen>
-    inline void insert(identifier_t gid, unsigned segment_i,
+    inline void insert(identifier_t gid, unsigned section_id, unsigned segment_id,
                        const Point3D& p1, const Point3D& p2, CoordType radius) {
-        this-> template add<VoxelLen>(Segment{gid, segment_i, p1, p2, radius});
+        this-> template add<VoxelLen>(Segment{gid, section_id, segment_id, p1, p2, radius});
     }
 };
 

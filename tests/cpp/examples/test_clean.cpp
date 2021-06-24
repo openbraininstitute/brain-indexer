@@ -15,7 +15,7 @@ int main() {
     for (auto const& x: spheres) {
         rtree.insert(Soma{i++, x});
     }
-    rtree.insert(Segment{i++, 1u, Point3D{2., 0.}, Point3D{4., 0.}, 1.f});
+    rtree.insert(Segment{i++, 1u, 1u, Point3D{2., 0.}, Point3D{4., 0.}, 1.f});
 
     Box3D query_box(Point3D(2, 0), Point3D(3, 1));
 

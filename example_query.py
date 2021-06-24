@@ -36,8 +36,8 @@ print(indexer.spatialindex)
 print ("Intersecting window query took [s]: ")
 print(end - start)
 for i in range(idx.size):
-    gid, segment_i = idx[i]
-    print("Coordinates of gid %d segment %d: %s" % (gid, segment_i, pos[i]))
+    gid, section_id, segment_id = idx[i]
+    print("Coordinates of gid %d section %d segment %d: %s" % (gid, section_id, segment_id, pos[i]))
 
 np.savetxt('query_SI_v6.csv', pos, delimiter=',', fmt='%1.3f')
 idx = indexer.spatialindex.find_nearest(center, 10)

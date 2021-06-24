@@ -112,13 +112,13 @@ class MorphSpatialGrid : public SpatialGrid<MorphoEntry, VoxelLen> {
                              const CoordType *radius,
                              const unsigned *offsets) {
         auto placer = GridPlacementHelper<MorphoEntry>{this->grid_};
-        unsigned segment_i = 1;
 
         for (int branch_i = 0; branch_i < n_branches; branch_i++) {
             const auto branch_end = offsets[branch_i + 1] - 1;
-            for (auto i = offsets[branch_i]; i < branch_end; i++) {
+            unsigned segment_i = 1;
+            for (auto i = offsets[branch_i]; i < branch_end; i++, segment_i++) {
                 placer. template insert<VoxelLen>(
-                    gid, segment_i++, points[i], points[i + 1], radius[i]);
+                    gid, branch_i + 1, segment_i, points[i], points[i + 1], radius[i]);
             }
         }
     }

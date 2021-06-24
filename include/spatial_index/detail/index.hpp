@@ -188,7 +188,7 @@ inline std::ostream& operator<<(std::ostream& os, const ShapeId& obj) {
 }
 
 inline std::ostream& operator<<(std::ostream& os, const MorphPartId& obj) {
-    return os << '(' << obj.gid() << ", " << obj.segment_i() << ')';
+    return os << '(' << obj.gid() << ", " << obj.section_id() << ", " << obj.segment_id() << ')';
 }
 
 template <typename ShapeT, typename IndexT>

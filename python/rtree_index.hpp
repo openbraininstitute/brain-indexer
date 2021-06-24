@@ -277,12 +277,13 @@ using MorphIndexTree = si::IndexTree<MorphoEntry>;
 
 inline static void add_branch(MorphIndexTree& obj,
                               const id_t neuron_id,
-                              unsigned segment_i,
+                              unsigned section_id,
                               const unsigned n_segments,
                               const point_t* points,
                               const coord_t* radii) {
-    for (unsigned i = 0; i < n_segments; i++, segment_i++) {
-        obj.insert(si::Segment{neuron_id, segment_i, points[i], points[i + 1], radii[i]});
+    // loop over segments. id is i + 1
+    for (unsigned i = 0; i < n_segments; i++) {
+        obj.insert(si::Segment{neuron_id, section_id, i + 1, points[i], points[i + 1], radii[i]});
     }
 }
 
@@ -292,16 +293,17 @@ inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
 
     create_IndexTree_bindings<si::MorphoEntry, si::Soma>(m, class_name)
     .def("insert",
-        [](Class& obj, const id_t gid, const unsigned segment_i,
+        [](Class& obj, const id_t gid, const unsigned section_id, const unsigned segment_id,
                        const array_t& p1, const array_t& p2, const coord_t radius) {
-            obj.insert(si::Segment{gid, segment_i, mk_point(p1), mk_point(p2), radius});
+            obj.insert(si::Segment{gid, section_id, segment_id, mk_point(p1), mk_point(p2), radius});
         },
         R"(
         Inserts a new segment object in the tree.
 
         Args:
             gid(int): The id of the neuron
-            segment_i(int): The id of the segment
+            section_id(int): The id of the section
+            segment_id(int): The id of the segment
             p1(array): A len-3 list or np.array[float32] with the cylinder first point
             p2(array): A len-3 list or np.array[float32] with the cylinder second point
             radius(float): The radius of the cylinder
@@ -310,7 +312,7 @@ inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
 
     .def("place",
         [](Class& obj, const array_t& region_corners,
-                       const id_t gid, const unsigned segment_i,
+                       const id_t gid, const unsigned section_id, const unsigned segment_id,
                        const array_t& p1, const array_t& p2, const coord_t radius) {
             if (region_corners.ndim() != 2 || region_corners.size() != 6) {
                 throw std::invalid_argument("Please provide a 2x3[float32] array");
@@ -319,7 +321,7 @@ inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
             const coord_t* c1 = region_corners.data(1, 0);
             return obj.place(si::Box3D{point_t(c0[0], c0[1], c0[2]),
                                        point_t(c1[0], c1[1], c1[2])},
-                             si::Segment{gid, segment_i, mk_point(p1), mk_point(p2), radius});
+                             si::Segment{gid, section_id, segment_id, mk_point(p1), mk_point(p2), radius});
         },
         R"(
         Attempts at inserting a segment without overlapping any existing shape.
@@ -328,7 +330,8 @@ inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
             region_corners(array): A 2x3 list/np.array of the region corners.\
                 E.g. region_corners[0] is the 3D min_corner point.
             gid(int): The id of the neuron
-            segment_i(int): The id of the segment
+            section_id(int): The id of the section
+            segment_id(int): The id of the segment
             p1(array): A len-3 list or np.array[float32] with the cylinder first point
             p2(array): A len-3 list or np.array[float32] with the cylinder second point
             radius(float): The radius of the cylinder
@@ -336,10 +339,10 @@ inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
     )
 
     .def("add_branch",
-        [](Class& obj, const id_t gid, const unsigned segment_i,
-                       const array_t& centroids_np, const array_t& radii_np) {
+        [](Class& obj, const id_t gid, const unsigned section_id, const array_t& centroids_np,
+                       const array_t& radii_np) {
             const auto& point_radii = convert_input(centroids_np, radii_np);
-            add_branch(obj, gid, segment_i, unsigned(radii_np.size() - 1), point_radii.first,
+            add_branch(obj, gid, section_id, unsigned(radii_np.size() - 1), point_radii.first,
                        point_radii.second.data(0));
         },
         R"(
@@ -351,7 +354,7 @@ inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
 
         Args:
             gid(int): The id of the soma
-            segment_i(int): The id of the first segment of the branch
+            section_id(int): The id of the section
             centroids_np(np.array): A Nx3 array[float32] of the segments' end points
             radii_np(np.array): An array[float32] with the segments' radii
         )"
@@ -388,18 +391,18 @@ inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
             }
 
             // Add segments
-            unsigned cur_segment_i = 1;
             for (unsigned branch_i = 0; branch_i < n_branches - 1; branch_i++) {
                 const unsigned p_start = offsets[branch_i];
                 const unsigned n_segments = offsets[branch_i + 1] - p_start - 1;
-                add_branch(obj, gid, cur_segment_i, n_segments, points + p_start,
+                add_branch(obj, gid, branch_i + 1, n_segments, points + p_start,
                            radii + p_start);
-                cur_segment_i += n_segments;
             }
             // Last
-            const unsigned p_start = offsets[n_branches - 1];
-            const unsigned n_segments = unsigned(radii_np.size()) - p_start - 1;
-            add_branch(obj, gid, cur_segment_i, n_segments, points + p_start, radii + p_start);
+            if (n_branches) {
+                const unsigned p_start = offsets[n_branches - 1];
+                const unsigned n_segments = unsigned(radii_np.size()) - p_start - 1;
+                add_branch(obj, gid, n_branches, n_segments, points + p_start, radii + p_start);
+            }
         },
         py::arg("gid"), py::arg("points"), py::arg("radii"), py::arg("branch_offsets"),
         py::arg("has_soma") = true,

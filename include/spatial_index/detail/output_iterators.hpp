@@ -116,7 +116,7 @@ struct iter_gid_segm_getter: public detail::iter_append_only<iter_gid_segm_gette
 
     template <typename S>
     inline iter_gid_segm_getter& operator=(const IndexedShape<S, MorphPartId>& result_entry) {
-        output_.emplace_back(result_entry.gid(), result_entry.segment_i());
+        output_.emplace_back(result_entry.gid(), result_entry.section_id(), result_entry.segment_id());
         return *this;
     }
 
@@ -124,7 +124,7 @@ struct iter_gid_segm_getter: public detail::iter_append_only<iter_gid_segm_gette
     inline iter_gid_segm_getter& operator=(const boost::variant<ManyT...>& v) {
         output_.emplace_back(boost::apply_visitor(
             [](const auto& t) {
-                return gid_segm_t{t.gid(), t.segment_i()};
+                return gid_segm_t{t.gid(), t.section_id(), t.segment_id()};
             },
             v));
         return *this;

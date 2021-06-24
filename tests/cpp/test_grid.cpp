@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(MorphoEntryTest) {
     // Bulk insert
     grid.insert({
         Soma(2ul, Point3D{-2, 2, 2}, 1.f),  // to voxel -1
-        Segment(3ul, 1u, Point3D{-2, -2, 2}, Point3D{1, -2, 2}, 1.f)  // split in voxels [-1/0, -1, 0]
+        Segment(3ul, 1u, 1u, Point3D{-2, -2, 2}, Point3D{1, -2, 2}, 1.f)  // split in voxels [-1/0, -1, 0]
     });
 
     //std::cout << grid << std::endl;
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(TestOptimizedMorphoGrid) {
     MorphSpatialGrid<5> grid;
 
     // 5 points, 2 branches, 3 segments
-    std::vector<CoordType> points{1,1,1, 2,2,2, 3,3,3, 3,2,2, 7,7,7};
+    std::vector<std::array<CoordType, 3>> points{{1,1,1}, {2,2,2}, {3,3,3}, {3,2,2}, {7,7,7}};
     std::vector<CoordType> radius{1, 1, 1, 1, 1};
     std::vector<unsigned> offsets{0, 3, 5};
 
@@ -104,19 +104,19 @@ BOOST_AUTO_TEST_CASE(TestOptimizedMorphoGrid) {
     BOOST_CHECK_EQUAL(v0.size(), 3);
     BOOST_CHECK_EQUAL(v1.size(), 1);
 
-    auto check_ids = [](auto v, std::vector<unsigned> ids_expected) {
+    auto check_ids = [](auto v, std::vector<std::array<unsigned,2>> ids_expected) {
         std::vector<gid_segm_t> ids;
         std::copy(v.cbegin(), v.cend(), iter_gid_segm_getter{ids});
         unsigned i = 0;
         for (const auto& id : ids) {
-            if (id.segment_i != ids_expected[i++])
-                return false;
+            BOOST_CHECK_EQUAL(id.section_id, ids_expected[i][0]);
+            BOOST_CHECK_EQUAL(id.segment_id, ids_expected[i][1]);
+            i++;
         }
-        return true;
     };
 
-    BOOST_CHECK(check_ids(v0, {1, 2, 3}));
-    BOOST_CHECK(check_ids(v1, {3}));
+    check_ids(v0, {{1, 1}, {1, 2}, {2, 1}});
+    check_ids(v1, {{2, 1}});
 
 }
 

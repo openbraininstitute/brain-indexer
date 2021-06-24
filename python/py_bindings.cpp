@@ -17,7 +17,7 @@ using MorphGridT = si::MorphSpatialGrid<SI_GRID_VOXEL_LENGTH>;
 
 
 PYBIND11_MODULE(_spatial_index, m) {
-    PYBIND11_NUMPY_DTYPE(si::gid_segm_t, gid, segment_i);  // Pybind11 wow!
+    PYBIND11_NUMPY_DTYPE(si::gid_segm_t, gid, section_id, segment_id);  // struct as numpy dtype
 
     si_python::create_IndexTree_bindings<si::IndexedSphere>(m, "SphereIndex");
     si_python::create_MorphIndex_bindings(m, "MorphIndex");

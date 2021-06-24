@@ -15,8 +15,12 @@
 
 
 #include "geometries.hpp"
-#define N_SEGMENT_BITS 16
+#define N_SEGMENT_BITS 10
+#define N_SECTION_BITS 14
+#define N_TOTAL_BITS (N_SEGMENT_BITS + N_SECTION_BITS)
 #define MASK_SEGMENT_BITS ((1 << N_SEGMENT_BITS)-1)
+#define MASK_SECTION_BITS (((1 << N_SECTION_BITS)-1) << N_SEGMENT_BITS)
+#define MASK_TOTAL_BITS ((1 << N_TOTAL_BITS)-1)
 
 namespace spatial_index {
 
@@ -29,10 +33,11 @@ using identifier_t = unsigned long;
 /// Result processing iterators
 ///
 
-/// \brief structure holding composite ids (gid and segment id)
+/// \brief structure holding composite ids (gid, section id and segment id)
 struct gid_segm_t {
     identifier_t gid;
-    unsigned segment_i;
+    unsigned section_id;
+    unsigned segment_id;
 };
 
 
@@ -65,7 +70,7 @@ struct ShapeId {
 
 
 /**
- * \brief A neuron piece extends IndexedShape in concept, adding gid() and segment_i()
+ * \brief A neuron piece extends IndexedShape in concept, adding gid(), section_id and segment_id()
  *        accessors where both infos are encoded in the id
  */
 struct MorphPartId : public ShapeId {
@@ -73,18 +78,26 @@ struct MorphPartId : public ShapeId {
 
     inline MorphPartId() = default;
 
-    inline MorphPartId(identifier_t gid, unsigned segment_i = 0)
-        : ShapeId{((gid << N_SEGMENT_BITS) & (~MASK_SEGMENT_BITS)) + (segment_i & MASK_SEGMENT_BITS)} {}
+    inline MorphPartId(identifier_t gid, unsigned section_id = 0, unsigned segment_id = 0)
+        : ShapeId{((gid << N_TOTAL_BITS) & (~MASK_TOTAL_BITS))
+                  + ((section_id << N_SEGMENT_BITS) & MASK_SECTION_BITS)
+                  + (segment_id & MASK_SEGMENT_BITS)}
+    {}
 
-    inline MorphPartId(const std::tuple<const identifier_t&, const unsigned&>& ids)
-        : MorphPartId(std::get<0>(ids), std::get<1>(ids)) {}
+    inline MorphPartId(const std::tuple<const identifier_t&, const unsigned&, const unsigned&>& ids)
+        : MorphPartId(std::get<0>(ids), std::get<1>(ids), std::get<2>(ids))
+    {}
 
     inline identifier_t gid() const noexcept {
-        return id >> N_SEGMENT_BITS;
+        return id >> N_TOTAL_BITS;
     }
 
-    inline unsigned segment_i() const noexcept {
+    inline unsigned segment_id() const noexcept {
         return static_cast<unsigned>(id & MASK_SEGMENT_BITS);
+    }
+
+    inline unsigned section_id() const noexcept {
+        return static_cast<unsigned>((id & MASK_SECTION_BITS) >> N_SEGMENT_BITS);
     }
 };
 
@@ -146,10 +159,10 @@ class Segment: public IndexedShape<Cylinder, MorphPartId> {
     /**
      * \brief Initialize the Segment directly from ids and gemetric properties
      **/
-    inline Segment(identifier_t gid, unsigned segment_i,
+    inline Segment(identifier_t gid, unsigned section_id, unsigned segment_id,
                    Point3D const& center1, Point3D const& center2, CoordType const& r)
         noexcept
-        : super(std::tie(gid, segment_i), center1, center2, r)
+        : super(std::tie(gid, section_id, segment_id), center1, center2, r)
     {}
 };
 
@@ -162,7 +175,7 @@ class Segment: public IndexedShape<Cylinder, MorphPartId> {
 
 // User can use Rtree directly with Any of the single Geometries or
 // use combined variant<geometries...> or variant<morphologies...>
-// the latters include gid() and segment_id() methods.
+// the latters include gid(), section_id() and segment_id() methods.
 
 // To simplify typing, GeometryEntry and MorphoEntry are predefined
 typedef IndexedShape<Sphere> IndexedSphere;
