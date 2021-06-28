@@ -1,11 +1,12 @@
 #!/bin/env python
-# ------------------------------------------------------
-# copyright Blue Brain Project 2020. All rights reserved
-# ------------------------------------------------------
+#
+# This file is part of SpatialIndex, the new-gen spatial indexer for BBP
+# Copyright Blue Brain Project 2020-2021. All rights reserved
 """
-Implementation of MvdMorphIndexer which, builds a MorphologyIndex
-and indexes all cells contained in an MVD/SONATA file
+    Implementation of MvdMorphIndexer which, builds a MorphologyIndex
+    and indexes all cells contained in an MVD/SONATA file
 """
+
 import functools
 import itertools
 import logging
@@ -25,6 +26,7 @@ logging.basicConfig(level=logging.INFO)
 
 N_CELLS_RANGE = 100
 MorphInfo = namedtuple("MorphInfo", "soma, points, radius, branch_offsets")
+
 
 class MorphologyLib:
 
