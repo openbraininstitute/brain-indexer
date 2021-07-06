@@ -134,6 +134,10 @@ def setup_package():
                 '-DSI_VERSION=' + __version__
             ]
         )],
+        entry_points=dict(console_scripts=[
+            'spatial-index-nodes=spatial_index.commands:spatial_index_nodes',
+            'spatial-index-circuit=spatial_index.commands:spatial_index_circuit',
+        ]),
         cmdclass=dict(build_ext=CMakeBuild, docs=Docs),
         include_package_data=True,
         install_requires=['numpy>=1.13.1'],

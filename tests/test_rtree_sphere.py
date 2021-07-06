@@ -162,10 +162,10 @@ def test_intersection_window():
         idx = idx['gid']  # Records
     expected_result = [0, 1, 2, 6]
     expected_pos = [
-        [ 0.,   1.,  0.],
+        [0.,    1.,  0.],
         [-0.5, -0.5, 0.],
-        [ 0.5, -0.5, 0.],
-        [ 1.2,  1.2, 1.2]
+        [0.5,  -0.5, 0.],
+        [1.2,   1.2, 1.2]
     ]
     assert np.all(idx == expected_result), (idx, expected_result)
     assert np.allclose(pos, expected_pos)

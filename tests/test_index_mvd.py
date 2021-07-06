@@ -2,7 +2,7 @@ import os.path
 import numpy.testing as nptest
 from collections import namedtuple
 
-from spatial_index import circuit_indexer
+from spatial_index.node_indexer import NodeMorphIndexer
 
 _CURDIR = os.path.dirname(__file__)
 FILETEST = "tests/data/circuit_mod.mvd3"
@@ -25,7 +25,7 @@ def test_morph_loading():
 
     def compute_final_points(m):
         rot_quat = npq.quaternion(m.rotation[3], *m.rotation[:3]).normalized()
-        soma_pts =  m.translation  # by definition soma is at 0,0,0
+        soma_pts = m.translation  # by definition soma is at 0,0,0
         soma_rad = m.morph.soma.max_distance
         section_pts = npq.rotate_vectors(rot_quat, m.morph.points) + m.translation
         return soma_pts, soma_rad, section_pts
@@ -42,8 +42,10 @@ def test_morph_loading():
     m2_s3_p12 = section_pts[m2.morph.section_offsets[2] + 12]
     nptest.assert_allclose(m2_s3_p12, [25.1764, 3.07876, 34.16223], rtol=1e-6)
 
+
 def test_serial_exec():
-    indexer = circuit_indexer.main_serial(MORPHOLOGY_FILES[1], FILETEST)
+    NodeMorphIndexer(MORPHOLOGY_FILES[1], FILETEST)
+
 
 def test_parallel_exec():
-    indexer = circuit_indexer.main_parallel(MORPHOLOGY_FILES[1], FILETEST)
+    NodeMorphIndexer.create_parallel(MORPHOLOGY_FILES[1], FILETEST)
