@@ -78,7 +78,7 @@ class CMakeBuild(build_ext):
 class Docs(Command):
     description = "Generate & optionally upload documentation to docs server"
     user_options = [("upload", None, "Upload to BBP internal docs server")]
-    finalize_options = lambda self: None
+    finalize_options = lambda self: None  # noqa
 
     def initialize_options(self):
         self.upload = False
@@ -121,7 +121,7 @@ def setup_package():
     # sphinx-bluebrain-theme depends on a specific sphinx version. Let it choose
     docs_require = ["sphinx-bluebrain-theme", "docs_internal_upload"]
     maybe_docs = docs_require if "docs" in sys.argv else []
-    maybe_test_runner = ['pytest-runner'] if "test" in sys.argv else []
+    maybe_test_runner = ["pytest-runner"] if "test" in sys.argv else []
 
     setup(
         name='spatial-index',
@@ -140,14 +140,17 @@ def setup_package():
         ]),
         cmdclass=dict(build_ext=CMakeBuild, docs=Docs),
         include_package_data=True,
-        install_requires=['numpy>=1.13.1'],
-        tests_require=["flake8", "pytest", "morphio", "h5py"],
+        install_requires=[
+            "numpy>=1.13.1",
+            "numpy-quaternion",
+            "morphio",
+            "mvdtool>=2.4.1"
+        ],
+        tests_require=["flake8", "pytest", "morphio", "h5py", "libsonata"],
         setup_requires=maybe_docs + maybe_test_runner,
-        extras_require={
-            "mvd": ['numpy-quaternion']
-        },
         dependency_links=[
-            "https://bbpteam.epfl.ch/repository/devpi/simple/docs_internal_upload"]
+            "https://bbpteam.epfl.ch/repository/devpi/simple/docs_internal_upload"
+        ]
     )
 
 

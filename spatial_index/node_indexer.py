@@ -9,7 +9,6 @@
 """
 
 import itertools
-import logging
 import warnings; warnings.simplefilter("ignore")  # NOQA
 from collections import namedtuple
 from os import path as ospath
@@ -23,7 +22,6 @@ from ._spatial_index import MorphIndex
 from .util import ChunckedProcessingMixin
 
 morphio.set_ignored_warning(morphio.Warning.only_child)
-logging.basicConfig(level=logging.INFO)
 MorphInfo = namedtuple("MorphInfo", "soma, points, radius, branch_offsets")
 
 

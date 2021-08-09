@@ -145,7 +145,7 @@ def test_intersection_window():
             [-0.5, -0.5, 0],
             [0.5, -0.5, 0],
             # Some outside
-            [-2.1,  0.0, 0],
+            [-2.1, 0.0, 0],
             [0.0,  2.1, 0],
             [0.0,  0.0, 2.1],
             # Another partially inside (double check)
@@ -200,12 +200,12 @@ def test_bulk_spheres_points_add():
     points = np.array(
         [
             [0.5, -0.5,  1],
-            [-1.0,  2.0, -1.1],
+            [-1.0, 2.0, -1.1],
             [1.0,  1.0,  1.0],
             [0.0,  0.0,  0.0],
-            [-1.0, -0.1,  1.1]
+            [-1.0, -0.1, 1.1]
         ], dtype=np.float32)
-    ids = np.arange(10, 10+len(points), dtype=np.intp)
+    ids = np.arange(10, 10 + len(points), dtype=np.intp)
     rtree.add_points(points, ids)
 
     # Query

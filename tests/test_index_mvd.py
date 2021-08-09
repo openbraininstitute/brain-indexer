@@ -1,8 +1,16 @@
-import os.path
-import numpy.testing as nptest
-from collections import namedtuple
+"""
+    Blue Brain Project - Spatial-Index
 
+    Test indexing circuits, from mvd and morphology libraries
+"""
+import logging
+import os.path
+
+import numpy.testing as nptest
 from spatial_index.node_indexer import NodeMorphIndexer
+import morphio
+import quaternion as npq
+
 
 _CURDIR = os.path.dirname(__file__)
 FILETEST = "tests/data/circuit_mod.mvd3"
@@ -12,31 +20,42 @@ MORPHOLOGY_FILES = [
 ]
 
 
+class _3DMorphology:
+    __slots__ = ("morph", "rotation", "translation")
+
+    def __init__(self, morph, rotation, translation):
+        self.morph, self.rotation, self.translation = morph, rotation, translation
+
+    def compute_final_points(self):
+        """ The kernel used to compute final positions, inspiring the final impl.
+            We test it againt known data (test_morph_loading) and against the core impl.
+        """
+        rot_quat = npq.quaternion(self.rotation[3], *self.rotation[:3]).normalized()
+        soma_pts = self.translation  # by definition soma is at 0,0,0
+        soma_rad = self.morph.soma.max_distance
+        section_pts = npq.rotate_vectors(rot_quat, self.morph.points) + self.translation
+        return soma_pts, soma_rad, section_pts
+
+
 def test_morph_loading():
-    import morphio
-    import quaternion as npq
-    morph_info = namedtuple("morph_info", ("morph", "rotation", "translation"))
-    m1 = morph_info(morphio.Morphology(MORPHOLOGY_FILES[0]), (1, 0, 0, 0), (1, 1, 1))
-    m2 = morph_info(
+    m1 = _3DMorphology(
+        morphio.Morphology(MORPHOLOGY_FILES[0]),
+        (1, 0, 0, 0),
+        (1, 1, 1)
+    )
+    m2 = _3DMorphology(
         morphio.Morphology(MORPHOLOGY_FILES[1]),
         (0.8728715609439696, 0.4364357804719848, 0.2182178902359924, 0.0),
         (1, .5, .25)
     )
 
-    def compute_final_points(m):
-        rot_quat = npq.quaternion(m.rotation[3], *m.rotation[:3]).normalized()
-        soma_pts = m.translation  # by definition soma is at 0,0,0
-        soma_rad = m.morph.soma.max_distance
-        section_pts = npq.rotate_vectors(rot_quat, m.morph.points) + m.translation
-        return soma_pts, soma_rad, section_pts
-
-    soma_pt, soma_rad, section_pts = compute_final_points(m1)
+    soma_pt, soma_rad, section_pts = m1.compute_final_points()
     nptest.assert_allclose(soma_pt, [1., 1., 1.])
     nptest.assert_almost_equal(soma_rad, 0, decimal=6)
     m1_s3_p12 = section_pts[m1.morph.section_offsets[2] + 12]
     nptest.assert_allclose(m1_s3_p12, [7.98622, 13.17931, 18.53813], rtol=1e-6)
 
-    soma_pt, soma_rad, section_pts = compute_final_points(m2)
+    soma_pt, soma_rad, section_pts = m2.compute_final_points()
     nptest.assert_allclose(soma_pt, [1., 0.5, 0.25])
     nptest.assert_almost_equal(soma_rad, 4.41688, decimal=6)
     m2_s3_p12 = section_pts[m2.morph.section_offsets[2] + 12]
@@ -44,8 +63,35 @@ def test_morph_loading():
 
 
 def test_serial_exec():
-    NodeMorphIndexer(MORPHOLOGY_FILES[1], FILETEST)
+    index = NodeMorphIndexer(MORPHOLOGY_FILES[1], FILETEST)
+    index.process_range((0, 1))  # Process first neuron
+    assert len(index) > 1700
+    objs_in_region = index.find_intersecting_window_objs([100, 50, 100], [200, 100, 200])
+    assert len(objs_in_region) == 23
+
+    m = _3DMorphology(
+        morphio.Morphology(MORPHOLOGY_FILES[1]),
+        index.mvd.rotations(0)[0],
+        index.mvd.positions(0)[0],
+    )
+    _, _, final_section_pts = m.compute_final_points()
+
+    for obj in objs_in_region:
+        assert 49 <= obj.centroid[1] <= 101  # centroid can be sightly outside the area
+        # Compare obtained centroid to raw point extracted from mvd and processed
+        seq_point_i = m.morph.section_offsets[obj.section_id - 1] + obj.segment_id
+        point_built_from_mvd = final_section_pts[seq_point_i]
+        # The point is the start of the segment, hence give good tolerance
+        nptest.assert_allclose(obj.centroid, point_built_from_mvd, atol=0.5)
 
 
 def test_parallel_exec():
-    NodeMorphIndexer.create_parallel(MORPHOLOGY_FILES[1], FILETEST)
+    # Load all 1000 neurons
+    # Note parallel load requires a version of hdf5 with parallel support
+    NodeMorphIndexer.create_parallel(MORPHOLOGY_FILES[1], FILETEST, num_cpus=4)
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
+    test_serial_exec()
+    test_parallel_exec()

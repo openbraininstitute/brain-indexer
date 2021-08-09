@@ -1,3 +1,4 @@
+import logging
 from abc import abstractmethod
 
 
@@ -13,8 +14,11 @@ class ChunckedProcessingMixin:
     def process_range(self, range_):
         return NotImplemented
 
+    def process_all(self):
+        self.process_range(())  # The empty range loads everything
+
     @classmethod
-    def icreate(cls, *args):
+    def create(cls, *args):
         """Interactively create, with some progress"""
         indexer = cls(*args)
         n_cells = indexer.cell_count()
@@ -22,7 +26,8 @@ class ChunckedProcessingMixin:
 
         for i, range_ in enumerate(gen_ranges(n_cells, cls.N_CELLS_RANGE)):
             indexer.process_range(range_)
-            print(" - Processed {:.0f}%".format(float(i+1) * 100 / nranges))
+            logging.info(" - Processed %.0f%%", float(i) * 100 / nranges)
+        return indexer
 
     @classmethod
     def create_parallel(cls, *ctor_args, num_cpus=None):
@@ -33,23 +38,28 @@ class ChunckedProcessingMixin:
             num_cpus_env = os.environ.get("SLURM_TASKS_PER_NODE")
             num_cpus = int(num_cpus_env) if num_cpus_env else multiprocessing.cpu_count()
 
+        # make indexer global, so that in each runner process, among processing chunks,
+        # morphologies dont get deleted
         indexer = globals()["indexer"] = cls(*ctor_args)
+        indexer = cls(*ctor_args)
         n_cells = len(indexer.mvd)
         nranges = int(n_cells) / cls.N_CELLS_RANGE
         ranges = gen_ranges(n_cells, cls.N_CELLS_RANGE)
         # use functools as lambdas are not serializable
         build_index = functools.partial(_process_range_increment, cls, ctor_args)
 
-        print("Running in parallel. CPUs=" + str(num_cpus))
+        logging.info("Running in parallel. CPUs=" + str(num_cpus))
         with multiprocessing.Pool(num_cpus) as pool:
             for i, _ in enumerate(pool.imap_unordered(build_index, ranges)):
-                print(" - Processed {:.0f}%".format(float(i+1) * 100 / nranges))
+                logging.info(" - Processed %.0f%%", float(i) * 100 / nranges)
+        return indexer  # the indexer on rank0
 
 
 def _process_range_increment(cls, ctor_args, part):
     # Instantiate indexer just once per process
     indexer = globals().get("indexer")
     if not indexer:
+        logging.debug("No cached indexer. Building new... %s", ctor_args)
         indexer = globals()["indexer"] = cls(*ctor_args)
     indexer.process_range(part)
 

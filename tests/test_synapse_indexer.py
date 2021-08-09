@@ -6,11 +6,25 @@ from spatial_index.synapse_indexer import SynapseIndexer
 from libsonata import Selection
 import h5py
 
+import os.path
+import sys
 
+_CURDIR = os.path.dirname(__file__)
+EDGE_FILE = os.path.join(_CURDIR, "data", "edges_2k.h5")
+
+
+try:
+    # To properly skip test with pytest
+    import pytest
+    pytest_skipif = pytest.mark.skipif
+except ImportError:
+    pytest_skipif = lambda *x, **kw: lambda y: y  # noqa
+
+
+@pytest_skipif(not os.path.exists(EDGE_FILE),
+               reason="Edge file not available")
 def test_syn_index():
-    EDGE_FILE = ("/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-2k/"
-                 "touches/functional/circuit_from_parquet.h5")
-    index = SynapseIndexer(EDGE_FILE, None, "All")
+    index = SynapseIndexer.from_sonata_file(EDGE_FILE, "All")
     print("Index size:", len(index))
 
     f = h5py.File(EDGE_FILE, 'r')
@@ -37,4 +51,9 @@ def test_syn_index():
 
 
 if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        EDGE_FILE = sys.argv[1]
+    if not os.path.exists(EDGE_FILE):
+        print("EDGE file is not available:", EDGE_FILE)
+        sys.exit()
     test_syn_index()

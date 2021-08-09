@@ -23,7 +23,7 @@ def test_morphos_insert():
 
     t = MorphIndex()
     for i in range(len(c1)):
-        t.insert(i//4, i % 4, i % 4, c1[i], c2[i], radii[i])
+        t.insert(i // 4, i % 4, i % 4, c1[i], c2[i], radii[i])
 
     for i, c in enumerate(c1):
         idx = t.find_nearest(c, 1)[0]
@@ -59,8 +59,8 @@ def test_bulk_neuron_add():
         assert out_id in idx
 
     # New API
-    objs = rtree.find_intersecting_window_objs([COORD_SEARCH[0]-0.9, -.1, -.1],
-                                               [COORD_SEARCH[0]+0.9,  .1,  .1])
+    objs = rtree.find_intersecting_window_objs([COORD_SEARCH[0] - 0.9, -.1, -.1],
+                                               [COORD_SEARCH[0] + 0.9, .1, .1])
     assert len(objs) == len(EXPECTED_IDS)
     for obj in objs:
         assert (obj.gid, obj.section_id, obj.segment_id) in EXPECTED_IDS
