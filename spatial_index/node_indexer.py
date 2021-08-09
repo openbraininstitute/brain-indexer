@@ -10,6 +10,7 @@
 
 import itertools
 import warnings; warnings.simplefilter("ignore")  # NOQA
+import logging
 from collections import namedtuple
 from os import path as ospath
 
@@ -57,10 +58,12 @@ class NodeMorphIndexer(ChunckedProcessingMixin, MorphIndex):
     def __init__(self, morphology_dir, mvd_file, gids=None):
         super().__init__()
         self.morph_lib = MorphologyLib(morphology_dir)
-        self.mvd = mvdtool.open(mvd_file)  # type: mvdtool.MVD3.File
+        self.mvd: mvdtool.MVD3.File = mvdtool.open(mvd_file)
+        self._gids = range(0, len(self.mvd)) if gids is None else gids
+        logging.info("Index count: %d cells", len(self._gids))
 
     def cell_count(self):
-        return len(self.mvd)
+        return len(self._gids)
 
     def rototranslate(self, morph, position, rotation):
         morph = self.morph_lib.get(morph)
@@ -91,9 +94,14 @@ class NodeMorphIndexer(ChunckedProcessingMixin, MorphIndex):
         """
         gids = itertools.count(range_[0] if range_ else 0)
         mvd = self.mvd
-        morph_names = mvd.morphologies(*range_)
-        positions = mvd.positions(*range_)
-        rotations = mvd.rotations(*range_) if mvd.rotated else itertools.repeat(None)
+        if self._gids is None:
+            indexes = range_
+        else:
+            indexes = (self._gids[slice(range_[0], range_[0] + range_[1])], )
+        morph_names = mvd.morphologies(*indexes)
+        positions = mvd.positions(*indexes)
+        rotations = mvd.rotations(*indexes) if mvd.rotated else itertools.repeat(None)
+
         for gid, morph, pos, rot in zip(gids, morph_names, positions, rotations):
             # GIDs in files are zero-based, while they're typically 1-based in application
             gid += 1

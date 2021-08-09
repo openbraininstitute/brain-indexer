@@ -144,7 +144,8 @@ def setup_package():
             "numpy>=1.13.1",
             "numpy-quaternion",
             "morphio",
-            "mvdtool>=2.4.1"
+            "mvdtool>=2.4.1",
+            "docopt"
         ],
         tests_require=["flake8", "pytest", "morphio", "h5py", "libsonata"],
         setup_requires=maybe_docs + maybe_test_runner,

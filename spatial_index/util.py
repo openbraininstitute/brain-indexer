@@ -26,7 +26,9 @@ class ChunckedProcessingMixin:
 
         for i, range_ in enumerate(gen_ranges(n_cells, cls.N_CELLS_RANGE)):
             indexer.process_range(range_)
-            logging.info(" - Processed %.0f%%", float(i) * 100 / nranges)
+            last_index = range_[0] + range_[1]
+            percent_done = float(i) * 100 / nranges
+            logging.info("[%.0f%%] Processed %d cells ", percent_done, last_index)
         return indexer
 
     @classmethod
@@ -41,7 +43,6 @@ class ChunckedProcessingMixin:
         # make indexer global, so that in each runner process, among processing chunks,
         # morphologies dont get deleted
         indexer = globals()["indexer"] = cls(*ctor_args)
-        indexer = cls(*ctor_args)
         n_cells = len(indexer.mvd)
         nranges = int(n_cells) / cls.N_CELLS_RANGE
         ranges = gen_ranges(n_cells, cls.N_CELLS_RANGE)

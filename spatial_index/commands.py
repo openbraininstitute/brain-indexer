@@ -18,7 +18,7 @@ def spatial_index_nodes(args=None):
         -o, --out=<filename>     The index output filename [default:out.spi]
     """
     options = docopt_get_args(spatial_index_nodes, args)
-    index = NodeMorphIndexer.icreate(options["morphology_dir"], options["nodes_file"])
+    index = NodeMorphIndexer.create(options["morphology_dir"], options["nodes_file"])
     index.dump(options.get("out") or "out.spi")
 
 
@@ -29,22 +29,35 @@ def spatial_index_circuit(args=None):
     Note: requires BluePy
 
     Usage:
-        spatial-index-circuit circuit-file target [--out=<out_file>]
+        spatial-index-circuit <circuit-file> [<target>] [--out=<out_file>]
         spatial-index-circuit --help
 
     Options:
-        -v --verbose            Increase verbosity level
-        -o --out                The index output filename [default:out.spi]
+        -o --out=<out_file>     The index output filename [default:out.spi]
     """
-    from bluepy import Circuit
-    options = docopt_get_args(spatial_index_nodes, args)
+    import logging
+    try:
+        from bluepy import Circuit
+    except ImportError:
+        print("Error: indexing a circuit requires bluepy")
+        return 1
+
+    options = docopt_get_args(spatial_index_circuit, args)
+    logging.basicConfig(level=logging.INFO)
     circuit = Circuit(options["circuit_file"])
 
     nodes_file = circuit.config["cells"]
-    morphology_dir = circuit.config["morphologies"]
-    cells = _get_circuit_cells(circuit, options.get("target"))
-    index = NodeMorphIndexer.create_i(morphology_dir, nodes_file, cells)
-    index.dump(options["out_file"])
+    morphology_dir = circuit.config["morphologies"] + "/ascii"
+    target = options.get("target") or circuit.config.get("CircuitTarget")
+    if not target:
+        print("Target not specified, will index the whole circuit")
+        cells = None
+    else:
+        cells = _get_circuit_cells(circuit, target)
+        print("Indexing", target, "containing", len(cells), "cells")
+
+    index = NodeMorphIndexer.create(morphology_dir, nodes_file, cells)
+    index.dump(options.get("out") or "out.spi")
 
 
 def _get_circuit_cells(circuit, target):
