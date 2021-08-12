@@ -92,17 +92,22 @@ class NodeMorphIndexer(ChunckedProcessingMixin, MorphIndex):
 
         :param: range_ (offset, count), or () [all]
         """
-        gids = itertools.count(range_[0] if range_ else 0)
-        mvd = self.mvd
         if self._gids is None:
-            indexes = range_
+            # No need to translate to gids since ranges are valid gids
+            index_args = range_
+            cur_gids = itertools.count(range_[0] if range_ else 0)
         else:
-            indexes = (self._gids[slice(range_[0], range_[0] + range_[1])], )
-        morph_names = mvd.morphologies(*indexes)
-        positions = mvd.positions(*indexes)
-        rotations = mvd.rotations(*indexes) if mvd.rotated else itertools.repeat(None)
+            # Translate the current range to indexable gids
+            cur_gids = self._gids
+            if range_:
+                cur_gids = self._gids[slice(range_[0], range_[0] + range_[1])]
+            index_args = (cur_gids,)
+        mvd = self.mvd
+        morph_names = mvd.morphologies(*index_args)
+        positions = mvd.positions(*index_args)
+        rotations = mvd.rotations(*index_args) if mvd.rotated else itertools.repeat(None)
 
-        for gid, morph, pos, rot in zip(gids, morph_names, positions, rotations):
+        for gid, morph, pos, rot in zip(cur_gids, morph_names, positions, rotations):
             # GIDs in files are zero-based, while they're typically 1-based in application
             gid += 1
             rotopoints = self.rototranslate(morph, pos, rot)
