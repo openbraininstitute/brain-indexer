@@ -2,23 +2,19 @@
 # This file is part of SpatialIndex, the new-gen spatial indexer for BBP
 # Copyright Blue Brain Project 2020-2021. All rights reserved
 
-from spatial_index.synapse_indexer import SynapseIndexer
-from libsonata import Selection
 import h5py
-
 import os.path
 import sys
-
-_CURDIR = os.path.dirname(__file__)
-EDGE_FILE = os.path.join(_CURDIR, "data", "edges_2k.h5")
-
-
+from libsonata import Selection
+from spatial_index import SynapseIndexer
 try:
-    # To properly skip test with pytest
     import pytest
     pytest_skipif = pytest.mark.skipif
 except ImportError:
     pytest_skipif = lambda *x, **kw: lambda y: y  # noqa
+
+_CURDIR = os.path.dirname(__file__)
+EDGE_FILE = os.path.join(_CURDIR, "data", "edges_2k.h5")
 
 
 @pytest_skipif(not os.path.exists(EDGE_FILE),

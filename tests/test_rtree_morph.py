@@ -51,7 +51,7 @@ def test_bulk_neuron_add():
 
     # around a point, expect 4 segments, 2 from branch 1, 2 from branch 2
     COORD_SEARCH = [5, 0, 0]
-    EXPECTED_IDS = {(1, 1, 4), (1, 1, 5), (1, 2, 1), (1, 2, 2)}
+    EXPECTED_IDS = {(1, 1, 3), (1, 1, 4), (1, 2, 0), (1, 2, 1)}
     idx = rtree.find_nearest(COORD_SEARCH, 4)
 
     assert len(idx) == len(EXPECTED_IDS)
@@ -80,8 +80,8 @@ def test_add_neuron_with_soma_and_toString():
     str_expect = (
         'IndexTree([\n'
         '  Soma(id=(1, 0, 0), Sphere(centroid=[1 3 5], radius=3))\n'
-        '  Segment(id=(1, 1, 1), Cylinder(centroids=([1 3 5], [2 4 6]), radius=3))\n'
-        '  Segment(id=(1, 2, 1), Cylinder(centroids=([2 4 6], [10 10 10]), radius=2))\n'
+        '  Segment(id=(1, 1, 0), Cylinder(centroids=([1 3 5], [2 4 6]), radius=3))\n'
+        '  Segment(id=(1, 2, 0), Cylinder(centroids=([2 4 6], [10 10 10]), radius=2))\n'
         '])')
     str_result = str(rtree)
     assert str_result == str_expect
@@ -101,8 +101,8 @@ def test_add_neuron_without_soma_and_toString():
     rtree.add_neuron(1, points, radius, offsets, has_soma=False)
     str_expect = (
         'IndexTree([\n'
-        '  Segment(id=(1, 1, 1), Cylinder(centroids=([1.12 3 5], [2 4 6]), radius=3))\n'
-        '  Segment(id=(1, 2, 1), Cylinder(centroids=([2 4 6], [10 10 10]), radius=2))\n'
+        '  Segment(id=(1, 1, 0), Cylinder(centroids=([1.12 3 5], [2 4 6]), radius=3))\n'
+        '  Segment(id=(1, 2, 0), Cylinder(centroids=([2 4 6], [10 10 10]), radius=2))\n'
         '])')
     str_result = str(rtree)
     assert str_result == str_expect
@@ -114,8 +114,8 @@ def test_add_neuron_without_soma_and_toString():
     rtree.add_soma(s_id, s_p, s_r)
     str_expect = (
         'IndexTree([\n'
-        '  Segment(id=(1, 1, 1), Cylinder(centroids=([1.12 3 5], [2 4 6]), radius=3))\n'
-        '  Segment(id=(1, 2, 1), Cylinder(centroids=([2 4 6], [10 10 10]), radius=2))\n'
+        '  Segment(id=(1, 1, 0), Cylinder(centroids=([1.12 3 5], [2 4 6]), radius=3))\n'
+        '  Segment(id=(1, 2, 0), Cylinder(centroids=([2 4 6], [10 10 10]), radius=2))\n'
         '  Soma(id=(1, 0, 0), Sphere(centroid=[1 3 5.14], radius=3.14e+03))\n'
         '])')
     str_result = str(rtree)

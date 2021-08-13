@@ -15,20 +15,20 @@ class ChunckedProcessingMixin:
         return NotImplemented
 
     def process_all(self):
-        self.process_range(())  # The empty range loads everything
+        n_cells = self.cell_count()
+        nranges = int(n_cells / self.N_CELLS_RANGE)
+
+        for i, range_ in enumerate(gen_ranges(n_cells, self.N_CELLS_RANGE)):
+            self.process_range(range_)
+            last_index = range_[0] + range_[1]
+            percent_done = float(i) * 100 / nranges
+            logging.info("[%.0f%%] Processed %d cells ", percent_done, last_index)
 
     @classmethod
     def create(cls, *args):
         """Interactively create, with some progress"""
         indexer = cls(*args)
-        n_cells = indexer.cell_count()
-        nranges = int(n_cells / cls.N_CELLS_RANGE)
-
-        for i, range_ in enumerate(gen_ranges(n_cells, cls.N_CELLS_RANGE)):
-            indexer.process_range(range_)
-            last_index = range_[0] + range_[1]
-            percent_done = float(i) * 100 / nranges
-            logging.info("[%.0f%%] Processed %d cells ", percent_done, last_index)
+        indexer.process_all()
         return indexer
 
     @classmethod

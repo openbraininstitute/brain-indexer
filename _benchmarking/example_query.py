@@ -11,14 +11,9 @@ from line_profiler import LineProfiler
 
 
 # Loading some small circuits and morphology files on BB5
-CIRCUIT_FILE = (
-    "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-2k/circuit.mvd3"
-    # "/gpfs/bbp.cscs.ch/project/proj42/circuits/rat.CA1/20180309/circuit.mvd3"
-)
-MORPH_FILE = (
-    "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-2k/morphologies/ascii"
-    # "/gpfs/bbp.cscs.ch/project/proj42/entities/morphologies/20180215/ascii"
-)
+CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-2k"
+CIRCUIT_FILE = CIRCUIT_2K + "/circuit.mvd3"
+MORPH_FILE = CIRCUIT_2K + "/morphologies/ascii"
 
 # Parallel execution currently commented out since not tested yet
 # start = timer()

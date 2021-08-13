@@ -365,7 +365,7 @@ inline static void add_branch(MorphIndexTree& obj,
                               const coord_t* radii) {
     // loop over segments. id is i + 1
     for (unsigned i = 0; i < n_segments; i++) {
-        obj.insert(si::Segment{neuron_id, section_id, i + 1, points[i], points[i + 1], radii[i]});
+        obj.insert(si::Segment{neuron_id, section_id, i , points[i], points[i + 1], radii[i]});
     }
 }
 
