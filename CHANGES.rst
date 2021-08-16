@@ -1,6 +1,56 @@
 Change Log
 ==========
 
+
+Version 0.3.0
+-------------
+**August 2021**
+
+A major, and long waited, update since the previous release.
+This is the first version effectively validated against FLAT index results.
+It would take a lot of time to reconstruct everything that has changed from the first release so we'll just give a brief overview of the changes made in this new shiny version.
+
+*Major changes*
+  * Morph object Indices are now tuples (gid, section, segment)
+  * New High level API/CLI for loading nodes and edges
+  * Initial IndexGrid and bindings, for future very large circuits
+
+*Features*
+  * Added support for Section IDs
+  * Added support for Synapses Indexer
+  * Now supports CLI for indexing circuits
+  * Easier installation and interoperability with Sonata
+  * Gids, Section and Segment IDs are now ensured to be compliant with FLAT (0/1-based)
+  * Lots of validation fixes
+  * Improved installation experience
+  * Introduced IndexGrid/MultiIndex
+
+*Improvements*
+  * Refactoring internal index intities, less inheritance
+  * Extensive validation against FLAT
+  * Many fixes for robustness and stability
+
+
+Version 0.2.0
+-------------
+
+*Features*
+  * Point API
+  * Support for window queries
+  * has_Soma flag (default=true) in add_neuron to allow the API to add segments only.
+
+
+Version 0.1.0
+-------------
+
+*Features*
+  * Support saving and loading dumps
+
+*Improvements*
+  * Also some refactoring in the way we collect ids, automatic using `id_getter_for*`
+  * Docs and tests
+
+
 Version 0.0.1
 -------------
 

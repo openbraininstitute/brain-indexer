@@ -119,7 +119,7 @@ class Docs(Command):
 
 def setup_package():
     # sphinx-bluebrain-theme depends on a specific sphinx version. Let it choose
-    docs_require = ["sphinx-bluebrain-theme", "docs_internal_upload"]
+    docs_require = ["sphinx-bluebrain-theme", "docs_internal_upload", "m2r2"]
     maybe_docs = docs_require if "docs" in sys.argv else []
     maybe_test_runner = ["pytest-runner"] if "test" in sys.argv else []
 

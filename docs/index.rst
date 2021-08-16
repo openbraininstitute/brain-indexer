@@ -1,7 +1,7 @@
 BBP Spatial Index
 =================
 
-.. include:: ../README.txt
+.. mdinclude:: ../README.md
 
 .. toctree::
    :maxdepth: 1
