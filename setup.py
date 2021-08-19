@@ -143,11 +143,12 @@ def setup_package():
         install_requires=[
             "numpy>=1.13.1",
             "numpy-quaternion",
+            "libsonata",
             "morphio",
             "mvdtool>=2.4.1",
-            "docopt"
+            "docopt",
         ],
-        tests_require=["flake8", "pytest", "morphio", "h5py", "libsonata"],
+        tests_require=["flake8", "pytest", "morphio", "h5py", ],
         setup_requires=maybe_docs + maybe_test_runner,
         dependency_links=[
             "https://bbpteam.epfl.ch/repository/devpi/simple/docs_internal_upload"
