@@ -28,7 +28,7 @@ class _3DMorphology:
 
     def compute_final_points(self):
         """ The kernel used to compute final positions, inspiring the final impl.
-            We test it againt known data (test_morph_loading) and against the core impl.
+            We test it against known data (test_morph_loading) and against the core impl.
         """
         rot_quat = npq.quaternion(self.rotation[3], *self.rotation[:3]).normalized()
         soma_pts = self.translation  # by definition soma is at 0,0,0

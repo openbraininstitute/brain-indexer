@@ -55,6 +55,7 @@ class MorphologyLib:
 
 
 class NodeMorphIndexer(ChunckedProcessingMixin, MorphIndex):
+
     def __init__(self, morphology_dir, mvd_file, gids=None):
         super().__init__()
         self.morph_lib = MorphologyLib(morphology_dir)
@@ -62,7 +63,7 @@ class NodeMorphIndexer(ChunckedProcessingMixin, MorphIndex):
         self._gids = range(0, len(self.mvd)) if gids is None else gids
         logging.info("Index count: %d cells", len(self._gids))
 
-    def cell_count(self):
+    def n_elements_to_import(self):
         return len(self._gids)
 
     def rototranslate(self, morph, position, rotation):

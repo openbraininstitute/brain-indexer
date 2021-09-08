@@ -4,10 +4,10 @@ from abc import abstractmethod
 
 class ChunckedProcessingMixin:
 
-    N_CELLS_RANGE = 100
+    N_ELEMENTS_CHUNK = 100
 
     @abstractmethod
-    def cell_count(self):
+    def n_elements_to_import(self):
         return NotImplemented
 
     @abstractmethod
@@ -15,14 +15,12 @@ class ChunckedProcessingMixin:
         return NotImplemented
 
     def process_all(self):
-        n_cells = self.cell_count()
-        nranges = int(n_cells / self.N_CELLS_RANGE)
+        n_elements = self.n_elements_to_import()
+        nchunks = (n_elements - 1) // self.N_ELEMENTS_CHUNK + 1
 
-        for i, range_ in enumerate(gen_ranges(n_cells, self.N_CELLS_RANGE)):
+        for i, range_ in enumerate(gen_ranges(n_elements, self.N_ELEMENTS_CHUNK)):
             self.process_range(range_)
-            last_index = range_[0] + range_[1]
-            percent_done = float(i) * 100 / nranges
-            logging.info("[%.0f%%] Processed %d cells ", percent_done, last_index)
+            show_progress(i + 1, nchunks)
 
     @classmethod
     def create(cls, *args):
@@ -43,16 +41,16 @@ class ChunckedProcessingMixin:
         # make indexer global, so that in each runner process, among processing chunks,
         # morphologies dont get deleted
         indexer = globals()["indexer"] = cls(*ctor_args)
-        n_cells = len(indexer.mvd)
-        nranges = int(n_cells) / cls.N_CELLS_RANGE
-        ranges = gen_ranges(n_cells, cls.N_CELLS_RANGE)
+        n_elements = indexer.n_elements_to_import()
+        nchunks = int(n_elements) / cls.N_ELEMENTS_CHUNK
+        ranges = gen_ranges(n_elements, cls.N_ELEMENTS_CHUNK)
         # use functools as lambdas are not serializable
         build_index = functools.partial(_process_range_increment, cls, ctor_args)
 
         logging.info("Running in parallel. CPUs=" + str(num_cpus))
         with multiprocessing.Pool(num_cpus) as pool:
             for i, _ in enumerate(pool.imap_unordered(build_index, ranges)):
-                logging.info(" - Processed %.0f%%", float(i) * 100 / nranges)
+                show_progress(i + 1, nchunks)
         return indexer  # the indexer on rank0
 
 
@@ -65,13 +63,20 @@ def _process_range_increment(cls, ctor_args, part):
     indexer.process_range(part)
 
 
-def gen_ranges(limit, blocklen):
-    low_i = 0
-    for high_i in range(blocklen, limit, blocklen):
+def gen_ranges(limit, blocklen, low_i=0):
+    for high_i in range(low_i + blocklen, limit, blocklen):
         yield low_i, high_i - low_i
         low_i = high_i
     if low_i < limit:
         yield low_i, limit - low_i
+
+
+def split_range(limit, step, low=0):
+    for high in range(low + step, limit, step):
+        yield low, high
+        low = high
+    if low < limit:
+        yield low, limit
 
 
 def docopt_get_args(func, extra_args=None):
@@ -89,3 +94,13 @@ def docopt_get_args(func, extra_args=None):
                 val = True
         opts[key] = val
     return opts
+
+
+def show_progress(iteration, total, prefix='Progress:', decimals=1, length=80, fill='█'):
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + '-' * (length - filledLength)
+    print(f'\r{prefix} |{bar}| {percent}% ', end="   ")
+    # Print New Line on Complete
+    if iteration == total:
+        print()

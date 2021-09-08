@@ -1,6 +1,5 @@
 """ spatial_index classes """
 import pkg_resources
-from ._spatial_index import *  # NOQA
 
 __copyright__ = "2019 Blue Brain Project, EPFL"
 
@@ -9,5 +8,6 @@ try:
 except Exception:
     __version__ = 'devel'
 
+from ._spatial_index import *  # NOQA
 from .node_indexer import NodeMorphIndexer  # noqa
-from .synapse_indexer import SynapseIndexer  # noqa
+from .synapse_indexer import PointIndexer, SynapseIndexer  # noqa

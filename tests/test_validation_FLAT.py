@@ -54,5 +54,6 @@ def test_validation_FLAT():
     # Check if SI_data and flat_data are the same
     assert np.array_equal(si_ids, flat_ids)
 
+
 if __name__ == "__main__":
     test_validation_FLAT()
