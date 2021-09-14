@@ -6,6 +6,7 @@ if [ $# -eq 0 ]; then
     exit 1
 fi
 
+module purge
 module load unstable python
 
 #check if the virtualenv exists
