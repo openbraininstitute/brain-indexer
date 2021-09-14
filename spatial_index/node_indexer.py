@@ -113,3 +113,8 @@ class NodeMorphIndexer(ChunckedProcessingMixin, MorphIndex):
             gid += 1
             rotopoints = self.rototranslate(morph, pos, rot)
             self.process_cell(gid, morph, rotopoints, pos)
+
+    @classmethod
+    def load_dump(cls, filename):
+        """Load the index from a dump file"""
+        return MorphIndex(filename)

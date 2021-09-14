@@ -15,12 +15,6 @@ CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-2k"
 CIRCUIT_FILE = CIRCUIT_2K + "/circuit.mvd3"
 MORPH_FILE = CIRCUIT_2K + "/morphologies/ascii"
 
-# Parallel execution currently commented out since not tested yet
-# start = timer()
-# indexer = circuit_indexer.main_parallel(MORPH_FILE, CIRCUIT_FILE)
-# end = timer()
-# print(end - start)
-
 
 def do_query_serial(min_corner, max_corner):
     indexer = node_indexer.NodeMorphIndexer(MORPH_FILE, CIRCUIT_FILE)

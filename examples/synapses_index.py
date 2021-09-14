@@ -1,6 +1,10 @@
 #!/bin/env python
-# This file is part of SpatialIndex, the new-gen spatial indexer for BBP
-# Copyright Blue Brain Project 2020-2021. All rights reserved
+"""
+    Blue Brain Project - Spatial-Index
+
+    A small example script on how to load circuits,
+    index them and perform some queries
+"""
 
 from spatial_index import SynapseIndexer
 from libsonata import Selection
@@ -35,5 +39,5 @@ if __name__ == "__main__":
         EDGE_FILE = sys.argv[1]
     if not os.path.exists(EDGE_FILE):
         print("EDGE file is not available:", EDGE_FILE)
-        sys.exit()
+        sys.exit(1)
     example_syn_index()
