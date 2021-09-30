@@ -23,9 +23,9 @@ INDEX_FILENAME = "example_segment_index.spi"
 def build_segment_index():
     print("Creating circuit index...")
     indexer = NodeMorphIndexer(MORPH_FILE, NODE_FILE)
-    indexer.process_range((700, 50))  # 50 cells
+    indexer.process_range((700, 750))  # 50 cells
     # indexer.process_all()  # Warning: Might exhaust memory
-    print("Saving to disk")
+    print("Index contains", len(indexer), "elements. Saving to disk")
     indexer.dump(INDEX_FILENAME)
     return indexer
 

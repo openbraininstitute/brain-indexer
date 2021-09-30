@@ -6,7 +6,7 @@ import logging
 import numpy
 
 from . import _spatial_index
-from .util import ChunckedProcessingMixin, split_range
+from .util import ChunckedProcessingMixin, gen_ranges
 
 
 class PointIndexer(_spatial_index.SphereIndex):
@@ -43,8 +43,7 @@ class SynapseIndexer(ChunckedProcessingMixin, _spatial_index.SphereIndex):
         return len(self._selection.ranges)
 
     def process_range(self, range_):
-        first, count = range_
-        selection = libsonata.Selection(self._selection.ranges[first:first + count])
+        selection = libsonata.Selection(self._selection.ranges[slice(*range_)])
         syn_ids = selection.flatten()
         synapse_centers = numpy.dstack((
             self.edges.get_attribute("afferent_center_x", selection),
@@ -112,7 +111,7 @@ class SynapseIndexer(ChunckedProcessingMixin, _spatial_index.SphereIndex):
         for first, last in selection.ranges:
             count = last - first
             if count > cls.MAX_SYN_COUNT_RANGE:
-                new_ranges.extend(list(split_range(last, cls.MAX_SYN_COUNT_RANGE, first)))
+                new_ranges.extend(list(gen_ranges(last, cls.MAX_SYN_COUNT_RANGE, first)))
             else:
                 new_ranges.append((first, last))
         return libsonata.Selection(new_ranges)

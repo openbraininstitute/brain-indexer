@@ -63,16 +63,8 @@ def _process_range_increment(cls, ctor_args, part):
     indexer.process_range(part)
 
 
-def gen_ranges(limit, blocklen, low_i=0):
-    for high_i in range(low_i + blocklen, limit, blocklen):
-        yield low_i, high_i - low_i
-        low_i = high_i
-    if low_i < limit:
-        yield low_i, limit - low_i
-
-
-def split_range(limit, step, low=0):
-    for high in range(low + step, limit, step):
+def gen_ranges(limit, blocklen, low=0):
+    for high in range(low + blocklen, limit, blocklen):
         yield low, high
         low = high
     if low < limit:

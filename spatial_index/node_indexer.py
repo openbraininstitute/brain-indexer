@@ -60,7 +60,7 @@ class NodeMorphIndexer(ChunckedProcessingMixin, MorphIndex):
         super().__init__()
         self.morph_lib = MorphologyLib(morphology_dir)
         self.mvd: mvdtool.MVD3.File = mvdtool.open(mvd_file)
-        self._gids = range(0, len(self.mvd)) if gids is None else gids
+        self._gids = range(0, len(self.mvd)) if gids is None else np.sort(gids)
         logging.info("Index count: %d cells", len(self._gids))
 
     def n_elements_to_import(self):
@@ -88,21 +88,21 @@ class NodeMorphIndexer(ChunckedProcessingMixin, MorphIndex):
             gid, points, morph.radius, morph.branch_offsets[:-1], False
         )
 
-    def process_range(self, range_=()):
+    def process_range(self, range_=(None,)):
         """Process a range of cells.
 
-        :param: range_ (offset, count), or () [all]
+        :param: range_ (start, end, [step]), or (None,) [all]
         """
-        if self._gids is None:
-            # No need to translate to gids since ranges are valid gids
-            index_args = range_
-            cur_gids = itertools.count(range_[0] if range_ else 0)
+        slice_ = slice(*range_)
+        cur_gids = self._gids[slice_]
+        actual_indices = slice_.indices(len(self._gids))
+        assert actual_indices[2] > 0, "Step cannot be negative"
+        # gid vec is sorted. check if range is contiguous
+        if cur_gids and cur_gids[0] + len(cur_gids) == cur_gids[-1] + 1:
+            index_args = (cur_gids[0], len(cur_gids))
         else:
-            # Translate the current range to indexable gids
-            cur_gids = self._gids
-            if range_:
-                cur_gids = self._gids[slice(range_[0], range_[0] + range_[1])]
-            index_args = (cur_gids,)
+            index_args = (np.array(cur_gids),)  # numpy can init from a range obj
+
         mvd = self.mvd
         morph_names = mvd.morphologies(*index_args)
         positions = mvd.positions(*index_args)
