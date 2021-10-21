@@ -102,5 +102,5 @@ And then fetching the necessary information directly from the structure you just
 More examples
 --------------
 
-In the `_examples` folder there are some more examples on how to use Spatial Index. Please check them out.
+In the `examples` folder there are some more examples on how to use Spatial Index. Please check them out.
 Also some interesting snippets on how to use a specific function can be found in the various python files found in the `tests` folder.

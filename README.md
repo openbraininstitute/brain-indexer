@@ -35,7 +35,7 @@ Install using pip:
 
 ## Examples
 
-Some examples on how to use Spatial Index are available in the `_benchmarking` folder:   
+Some examples on how to use Spatial Index are available in the `examples` folder:   
 - `example_query.py` shows how to load a set of geometries, index them and query them using the Spatial Index APIs;
 - `example_synapses.py` shows how to load synapses from a EDGE file, index them and query them using the Spatial Index APIs.  
 
