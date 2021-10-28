@@ -28,7 +28,7 @@ class PointIndexer(_spatial_index.SphereIndex):
         super().__init__(synapse_centers, None, synapse_ids)
 
 
-class SynapseIndexer(ChunckedProcessingMixin, _spatial_index.SphereIndex):
+class SynapseIndexer(ChunckedProcessingMixin, _spatial_index.SynapseIndex):
 
     # Chunks are 1 Sonata range (of 100k synapses)
     N_ELEMENTS_CHUNK = 1  # override from ChunckedProcessingMixin
@@ -45,17 +45,18 @@ class SynapseIndexer(ChunckedProcessingMixin, _spatial_index.SphereIndex):
     def process_range(self, range_):
         selection = libsonata.Selection(self._selection.ranges[slice(*range_)])
         syn_ids = selection.flatten()
+        gids = self.edges.target_nodes(selection)
         synapse_centers = numpy.dstack((
             self.edges.get_attribute("afferent_center_x", selection),
             self.edges.get_attribute("afferent_center_y", selection),
             self.edges.get_attribute("afferent_center_z", selection)
         ))
-        self.add_points(synapse_centers, syn_ids)
+        self.add_synapses(syn_ids, gids, synapse_centers)
 
     @classmethod
     def load_dump(cls, filename):
         """Load the index from a dump file"""
-        return _spatial_index.SphereIndex(filename)
+        return _spatial_index.SynapseIndex(filename)
 
     @classmethod
     def from_sonata_selection(cls, sonata_edges, selection):

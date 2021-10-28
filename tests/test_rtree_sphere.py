@@ -1,4 +1,5 @@
 import numpy as np
+from spatial_index import MorphIndex
 from spatial_index import SphereIndex as IndexClass
 
 
@@ -94,6 +95,7 @@ def test_intersection_all():
                           [0.5 * np.sqrt(2), -0.5 * np.sqrt(2), 0.]], dtype=np.float32)
     radii = np.random.uniform(low=0.5, high=1.0, size=len(centroids)).astype(np.float32)
 
+    # When IndexClass is a MorphIndex then init with centroids will create somas
     t = IndexClass(centroids, radii)
 
     centroid = np.array([0., 0., 0.], dtype=np.float32)
@@ -101,16 +103,16 @@ def test_intersection_all():
 
     idx = t.find_intersecting(centroid, radius)
     objs = t.find_intersecting_objs(centroid, radius)
+    expected_result = np.arange(3, dtype=np.uintp)
 
     if len(idx.dtype) > 1:
         idx = idx['gid']  # Records
-
-    expected_result = np.array([0, 1, 2], dtype=np.uintp)
+    assert np.all(idx == expected_result), (idx, expected_result, centroids, radii)
 
     # New API: retrieve object references
-    assert np.all(idx == expected_result), (idx, expected_result, centroids, radii)
-    for obj, exp_gid in zip(objs, expected_result):
-        assert obj.gid == exp_gid
+    use_gid_field = IndexClass is MorphIndex  # MorphIndex raw ids are meaningless
+    for obj, exp_id in zip(objs, expected_result):
+        assert (obj.gid if use_gid_field else obj.id) == exp_id
 
 
 def test_intersection_random():
@@ -170,10 +172,11 @@ def test_intersection_window():
     assert np.all(idx == expected_result), (idx, expected_result)
     assert np.allclose(pos, expected_pos)
 
-    # NEW API
-    for sphere in t.find_intersecting_window_objs(min_corner, max_corner):
-        i = expected_result.index(sphere.gid)  # asserts gid is in the list
-        assert np.allclose(sphere.centroid, expected_pos[i])
+    use_gid_field = IndexClass is MorphIndex  # MorphIndex raw ids are meaningless
+    for obj in t.find_intersecting_window_objs(min_corner, max_corner):
+        id_ = obj.gid if use_gid_field else obj.id
+        i = expected_result.index(id_)  # asserts gid is in the list
+        assert np.allclose(obj.centroid, expected_pos[i])
 
 
 def test_bulk_spheres_points_add():

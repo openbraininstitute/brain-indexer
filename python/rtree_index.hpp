@@ -13,7 +13,7 @@ namespace py_bindings {
 ///
 
 // We provide bindings to spatial indexes of spheres since they'r space efficient
-inline void createSphereBindings(py::module& m) {
+inline void create_Sphere_bindings(py::module& m) {
     using Class = IndexedSphere;
     py::class_<Class>(m, "IndexedSphere")
         .def_property_readonly("centroid", [](Class& obj) {
@@ -24,12 +24,12 @@ inline void createSphereBindings(py::module& m) {
         .def_property_readonly("ids", [](Class& obj) {
                 return std::make_tuple(long(obj.id));
             },
-            "Return the tuple of ids, i.e. (gid, section_id, segment_id)"
+            "Return the id as a tuple (same API as other indexed objects)"
         )
-        .def_property_readonly("gid", [](Class& obj) {
+        .def_property_readonly("id", [](Class& obj) {
                 return long(obj.id);
             },
-            "Returns the gid of the indexed morphology part"
+            "Returns the id of the indexed geometry"
         )
     ;
 }
@@ -280,6 +280,16 @@ inline py::class_<si::IndexTree<T>> create_IndexTree_bindings(py::module& m,
         )"
     )
 
+    .def("count_intersecting",
+         [](Class& obj, const array_t& min_corner, const array_t& max_corner) {
+             return obj.count_intersecting(si::Box3D{mk_point(min_corner),
+                                                     mk_point(max_corner)});
+         },
+         R"(
+         Count objects intersecting the given Box3D
+         )"
+    )
+
     .def("find_nearest",
         [](Class& obj, const array_t& point, const int k_neighbors) {
             const auto& vec = obj.find_nearest(mk_point(point), k_neighbors);
@@ -304,6 +314,72 @@ inline py::class_<si::IndexTree<T>> create_IndexTree_bindings(py::module& m,
     .def("__len__", &Class::size);
 }
 
+
+///
+/// 1.1 - Synapse index
+///
+
+inline void create_Synapse_bindings(py::module& m) {
+    using Class = Synapse;
+    py::class_<Class>(m, "Synapse")
+        .def_property_readonly("centroid", [](Class& obj) {
+                return py::array(3, reinterpret_cast<const si::CoordType*>(&obj.get_centroid()));
+            },
+            "The position of the synapse"
+        )
+        .def_property_readonly("ids", [](Class& obj) {
+                return std::make_tuple(long(obj.id), long(obj.gid()));
+            },
+            "The Synapse ids as a tuple (id, gid)"
+        )
+        .def_property_readonly("id", [](Class& obj) {
+                return long(obj.id);
+            },
+            "The Synapse id"
+        )
+        .def_property_readonly("gid",
+            &Class::gid,
+            "The Neuron id (gid) the synapse belongs to"
+        )
+    ;
+}
+
+using SynapseIndexTree = si::IndexTree<Synapse>;
+
+/// Bindings to index si::IndexTree<MorphoEntry>
+inline void create_SynapseIndex_bindings(py::module& m, const char* class_name) {
+    using Class = SynapseIndexTree;
+
+    create_IndexTree_bindings<si::Synapse>(m, class_name)
+
+    .def("add_synapses",
+        [](Class& obj, const array_ids& syn_ids, const array_ids& gids, const array_t& points) {
+            const auto syn_ids_ = syn_ids.template unchecked<1>();
+            const auto gids_ = gids.template unchecked<1>();
+            const auto points_ = convert_input(points);
+            auto soa = si::util::make_soa_reader<Synapse>(syn_ids_, gids_, points_);
+            obj.insert(soa.begin(), soa.end());
+        },
+        R"(
+        Builds a synapse index.
+        These indices maintain the gids as well to enable computing aggregated counts.
+        )"
+    )
+
+    .def("count_intersecting_agg_gid",
+        [](Class& obj, const array_t& min_corner, const array_t& max_corner) {
+            return obj.count_intersecting_agg_gid(
+                si::Box3D{mk_point(min_corner), mk_point(max_corner)}
+            );
+        },
+        R"(
+        Finds the points inside a given window and aggregated them by gid
+
+        Args:
+            min_corner, max_corner(float32) : min/max corners of the query window
+        )"
+    );
+}
 
 
 ///

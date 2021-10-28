@@ -29,7 +29,7 @@ def test_syn_index():
 
     # Way #1 - Get the ids, then query the edge file for ANY data
     points_in_region = index.find_intersecting_window([200, 200, 480], [300, 300, 520])
-    print("Found N points:", len(points_in_region))
+    print("Found N synapses:", len(points_in_region))
     assert len(ds) > len(points_in_region) > 0
 
     z_coords = index.edges.get_attribute("afferent_center_z", Selection(points_in_region))
@@ -43,7 +43,19 @@ def test_syn_index():
         pos = obj.centroid
         assert 480 < pos[2] < 520
         if i % 20 == 0:
-            print("Sample synapse id:", obj.gid, "Position", obj.centroid)
+            print("Sample synapse id:", obj.id, "Position", obj.centroid)
+
+    # Test counting / aggregation
+    total_in_region = index.count_intersecting([200, 200, 480], [300, 300, 520])
+    assert len(points_in_region) == total_in_region
+
+    aggregated = index.count_intersecting_agg_gid([200, 200, 480], [300, 300, 520])
+    print("Synapses belong to {} neurons".format(len(aggregated)))
+    assert len(aggregated) == 20
+    assert aggregated[351] == 2
+    assert aggregated[159] == 1
+    assert aggregated[473] == 4
+    assert total_in_region == sum(aggregated.values())
 
 
 if __name__ == "__main__":

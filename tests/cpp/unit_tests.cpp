@@ -18,6 +18,7 @@ using namespace spatial_index;
 
 const Point3D centers[]{{0., 0., 0.}, {10., 0., 0.}, {20., 0., 0.}};
 const CoordType radius[] = {2., 2.5, 4.};
+const identifier_t gids[] = {1, 2, 2};
 
 // for Cylinders
 const Point3D centers2[]{{0., 5., 0.}, {10., 5., 0.}, {20., 5., 0.}};
@@ -91,6 +92,24 @@ BOOST_AUTO_TEST_CASE(IndexedSphereTree) {
     IndexTree<IndexedSphere> rtree_loaded("sphere_index");
     BOOST_CHECK(rtree.all_ids() == rtree_loaded.all_ids());
 
+}
+
+
+BOOST_AUTO_TEST_CASE(SynapseTree) {
+    auto synapses = util::make_vec<Synapse>(N_ITEMS, util::identity<>(), gids, centers);
+    IndexTree<Synapse> rtree(synapses);
+
+    auto n_elems_within = rtree.count_intersecting(Box3D{{-1., -1., -1.}, {11., 1., 1.}});
+    BOOST_CHECK_EQUAL(n_elems_within, 2);
+
+    auto aggregated_per_gid = rtree.count_intersecting_agg_gid(Box3D{{-1., -1., -1.}, {11., 1., 1.}});
+    BOOST_CHECK(aggregated_per_gid[1] == 1);
+    BOOST_CHECK(aggregated_per_gid[2] == 1);
+
+    auto aggregated_per_gid_round2 =
+            rtree.count_intersecting_agg_gid(Box3D{{-1., -1., -1.}, {21., 1., 1.}});
+    BOOST_CHECK(aggregated_per_gid_round2[1] == 1);
+    BOOST_CHECK(aggregated_per_gid_round2[2] == 2);
 }
 
 

@@ -4,6 +4,7 @@
 #error "SpatialIndex requires definition BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL"
 #endif
 #include <functional>
+#include <unordered_map>
 
 #include <boost/serialization/nvp.hpp>
 #include <boost/serialization/serialization.hpp>
@@ -51,9 +52,6 @@ struct iter_ids_getter;
 /// \brief result iterator to collect gids and segment ids
 struct iter_gid_segm_getter;
 
-/// \brief result iterator to collect positions
-struct iter_pos_getter;
-
 
 /**
  * \brief ShapeId adds an 'id' field to the underlying struct
@@ -65,6 +63,30 @@ struct ShapeId {
 
     inline bool operator==(const ShapeId& rhs) const noexcept {
         return id == rhs.id;
+    }
+};
+
+
+/**
+ * \brief A synapse extends IndexedShape in concept, adding gid field for ease of aggregating
+ */
+struct SynapseId : public ShapeId {
+    identifier_t gid_;
+
+    inline SynapseId() = default;
+
+    inline SynapseId(const identifier_t& syn_id, const identifier_t& gid = 0) noexcept
+        : ShapeId{syn_id}
+        , gid_(gid)
+    {}
+
+    inline SynapseId(std::tuple<const identifier_t&, const identifier_t&> ids) noexcept
+        : ShapeId{std::get<0>(ids)}
+        , gid_(std::get<1>(ids))
+    {}
+
+    inline identifier_t gid() const noexcept {
+        return gid_;
     }
 };
 
@@ -139,6 +161,17 @@ struct IndexedShape : public IndexT, public ShapeT {
 
 };
 
+
+class Synapse : public IndexedShape<Sphere, SynapseId> {
+    using super = IndexedShape<Sphere, SynapseId>;
+  public:
+    // bring contructors
+    using super::IndexedShape;
+
+    inline Synapse(identifier_t id, identifier_t gid, Point3D const& point) noexcept
+        : super(std::tie(id, gid), point, .0f)
+    {}
+};
 
 
 class Soma: public IndexedShape<Sphere, MorphPartId> {
@@ -223,7 +256,7 @@ public:
     template <typename ShapeT>
     inline decltype(auto) find_intersecting(const ShapeT& shape) const;
 
-        /**
+    /**
      * \brief Gets the pos of the intersecting objects
      * \returns The object pos, depending on the default pos getter
      */
@@ -247,6 +280,15 @@ public:
     /// \brief Checks whether a given shape intersects any object in the tree
     template <typename ShapeT>
     inline bool is_intersecting(const ShapeT& shape) const;
+
+    /// \brief Counts objects intersecting the given region deliminted by the shape
+    template <typename ShapeT>
+    inline size_t count_intersecting(const ShapeT& shape) const;
+
+    /// \brief Counts objects intersecting the given region deliminted by the shape
+    template <typename ShapeT>
+    inline std::unordered_map<identifier_t, size_t>
+        count_intersecting_agg_gid(const ShapeT& shape) const;
 
     /// \brief onstructor to rebuild from binary data file
     // Note: One must override char* and string since there is a template<T> constructor
@@ -274,6 +316,7 @@ public:
 
   private:
     typedef bgi::rtree<T, A> super;
+
 };
 
 

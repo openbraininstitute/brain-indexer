@@ -7,6 +7,7 @@
 
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
+#include <boost/function_output_iterator.hpp>
 
 #include "output_iterators.hpp"
 
@@ -31,6 +32,20 @@ bool geometry_intersects(const T& geom1, const boost::variant<VarT...>& geom2) {
 }
 
 
+template <typename T>
+inline Point3D get_centroid(const T& geometry) {
+    return geometry.get_centroid();
+}
+
+template <typename... VariantT>
+inline Point3D get_centroid(const boost::variant<VariantT...>& mixed_geometry) {
+    return boost::apply_visitor(
+        [](const auto& geom) { return geom.get_centroid(); },
+        mixed_geometry
+    );
+}
+
+
 /////////////////////////////////////////
 // class IndexTree
 /////////////////////////////////////////
@@ -51,7 +66,6 @@ inline void IndexTree<T, A>::find_intersecting(const Box3D& shape, const OutputI
     this->query(bgi::intersects(shape), iter);
 }
 
-
 template <typename T, typename A>
 template <typename ShapeT>
 inline decltype(auto) IndexTree<T, A>::find_intersecting(const ShapeT& shape) const {
@@ -65,7 +79,12 @@ template <typename T, typename A>
 template <typename ShapeT>
 inline decltype(auto) IndexTree<T, A>::find_intersecting_pos(const ShapeT& shape) const {
     std::vector<Point3D> points;
-    find_intersecting(shape, iter_pos_getter(points));
+    auto point_accu = boost::make_function_output_iterator(
+        [&points](const auto& item) {
+            points.push_back(get_centroid(item));
+        }
+    );
+    this->query(bgi::intersects(shape), point_accu);
     return points;
 }
 
@@ -91,6 +110,32 @@ inline bool IndexTree<T, A>::is_intersecting(const ShapeT& shape) const {
         }
     }
     return false;
+}
+
+
+template <typename T, typename A>
+template <typename ShapeT>
+inline size_t IndexTree<T, A>::count_intersecting(const ShapeT& shape) const {
+    size_t cardinality = 0; // number of matches in set
+    auto counter = boost::make_function_output_iterator(
+        [&cardinality](const auto&) { ++cardinality; }
+    );
+    this->query(bgi::intersects(shape), counter);
+    return cardinality;
+}
+
+template <typename T, typename A>
+template <typename ShapeT>
+inline std::unordered_map<identifier_t, size_t>
+IndexTree<T, A>::count_intersecting_agg_gid(const ShapeT& shape) const {
+    std::unordered_map<identifier_t, size_t> counts;
+    auto counter = boost::make_function_output_iterator(
+        [&counts](const auto& elem) {
+            counts[elem.gid()] += 1;
+        }
+    );
+    this->query(bgi::intersects(shape), counter);
+    return counts;
 }
 
 
@@ -259,6 +304,7 @@ struct indexable_with_bounding_box {
 template<> struct indexable<Sphere> : public indexable_with_bounding_box<Sphere> {};
 template<> struct indexable<Cylinder> : public indexable_with_bounding_box<Cylinder> {};
 template<> struct indexable<IndexedSphere> : public indexable_with_bounding_box<IndexedSphere> {};
+template<> struct indexable<Synapse> : public indexable_with_bounding_box<Synapse> {};
 template<> struct indexable<Soma> : public indexable_with_bounding_box<Soma> {};
 template<> struct indexable<Segment> : public indexable_with_bounding_box<Segment> {};
 

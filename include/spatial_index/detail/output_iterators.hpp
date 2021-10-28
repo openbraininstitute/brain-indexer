@@ -23,8 +23,8 @@ struct iter_append_only {
 };
 
 
-template <typename S>
-inline identifier_t get_id_from(IndexedShape<S, ShapeId> const& obj) {
+template <typename S, typename IdType>
+inline identifier_t get_id_from(IndexedShape<S, IdType> const& obj) {
     return obj.id;
 }
 
@@ -36,21 +36,6 @@ inline identifier_t get_id_from(IndexedShape<S, MorphPartId> const& obj) {
 template <typename... S>
 inline identifier_t get_id_from(boost::variant<S...> const& obj) {
     return boost::apply_visitor([](const auto& t) { return t.gid(); }, obj);
-}
-
-template <typename S>
-inline Point3D get_pos_from(IndexedShape<S, ShapeId> const& obj) {
-    return obj.get_centroid();
-}
-
-template <typename S>
-inline Point3D get_pos_from(IndexedShape<S, MorphPartId> const& obj) {
-    return obj.get_centroid();
-}
-
-template <typename... S>
-inline Point3D get_pos_from(boost::variant<S...> const& obj) {
-    return boost::apply_visitor([](const auto& t) { return t.get_centroid(); }, obj);
 }
 
 
@@ -132,23 +117,6 @@ struct iter_gid_segm_getter: public detail::iter_append_only<iter_gid_segm_gette
 
   private:
     std::vector<gid_segm_t>& output_;
-};
-
-struct iter_pos_getter: public detail::iter_append_only<iter_pos_getter> {
-    using value_type = Point3D;
-
-    iter_pos_getter(std::vector<Point3D>& output)
-        : output_(output) {}
-
-    template <typename T>
-    inline iter_pos_getter& operator=(const T& result_entry) {
-        output_.push_back(detail::get_pos_from(result_entry));
-        return *this;
-    }
-
-  private:
-    // Keep a ref to modify the original vec
-    std::vector<Point3D>& output_;
 };
 
 }  // namespace spatial_index

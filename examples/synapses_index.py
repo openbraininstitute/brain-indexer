@@ -31,7 +31,7 @@ def example_syn_index():
     objs_in_region = index.find_intersecting_window_objs([200, 200, 480], [300, 300, 520])
     for i, obj in enumerate(objs_in_region):
         if i % 20 == 0:
-            print("Sample synapse id:", obj.gid, "Position", obj.centroid)
+            print("Sample synapse id:", obj.id, "Position", obj.centroid)
 
 
 if __name__ == "__main__":
