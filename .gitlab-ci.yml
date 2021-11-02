@@ -11,21 +11,20 @@ include:
 test-py37:
   extends: .tox-template
   variables:
-    TOXENV: py37, flake8
+    TOXENV: flake8, py37
     EXTRA_MODULES:
       unstable:cmake
       unstable:gcc
       unstable:boost/1.70.0
 
 # Always add the manual option to create sdist/wheel or upload
-build-sdist:
-  extends: build-package
+build-package:
   rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"'
     - when: manual
       allow_failure: true
 
-wheel:
-  extends: build-wheels
+build-wheels:
   tags: [kubernetes]
   variables:
     KUBERNETES_MEMORY_LIMIT: 5Gi    # memory overrides
@@ -36,10 +35,12 @@ wheel:
       export BOOST_LIBRARYDIR="/usr/lib64/boost169"
     TEST_RUN_TOX: "false"  # MVDtool doesnt have wheels
   rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"'
     - when: manual
       allow_failure: true
 
-publish-pypi:
-  extends: publish-package
+publish-package:
   rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"'
     - when: manual
+      allow_failure: true
