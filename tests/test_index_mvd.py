@@ -85,7 +85,7 @@ def test_serial_exec():
         nptest.assert_allclose(obj.centroid, point_built_from_mvd, atol=0.5)
 
 
-def test_parallel_exec():
+def _test_parallel_exec():
     # Load all 1000 neurons
     # Note parallel load requires a version of hdf5 with parallel support
     NodeMorphIndexer.create_parallel(MORPHOLOGY_FILES[1], FILETEST, num_cpus=4)
@@ -94,4 +94,4 @@ def test_parallel_exec():
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     test_serial_exec()
-    test_parallel_exec()
+    _test_parallel_exec()

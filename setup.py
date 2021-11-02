@@ -148,11 +148,11 @@ def setup_package():
             "mvdtool>=2.4.1",
             "docopt",
         ],
-        tests_require=["flake8", "pytest", "morphio", "h5py", ],
+        tests_require=["pytest", "h5py", ],
         setup_requires=maybe_docs + maybe_test_runner,
-        dependency_links=[
-            "https://bbpteam.epfl.ch/repository/devpi/simple/docs_internal_upload"
-        ]
+        # dependency_links=[
+        #     "https://bbpteam.epfl.ch/repository/devpi/simple/docs_internal_upload"
+        # ]
     )
 
 
