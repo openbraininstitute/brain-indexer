@@ -28,7 +28,7 @@ struct Sphere {
 
     inline bool intersects(Sphere const& other) const {
         CoordType radii_sum = radius + other.radius;
-        return (radii_sum * radii_sum) > Point3Dx(centroid).dist_sq(other.centroid);
+        return (radii_sum * radii_sum) >= Point3Dx(centroid).dist_sq(other.centroid);
     }
 
     inline bool intersects(Cylinder const& c) const;

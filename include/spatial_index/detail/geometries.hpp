@@ -98,19 +98,19 @@ inline bool Sphere::intersects(Cylinder const& c) const {
     Point3Dx w = Point3Dx(centroid) - c.p2;
     CoordType v_norm = v.norm();
     CoordType max_proj = std::max(std::abs(proj), std::abs(w.dot(v))) / v_norm;
-    return max_proj < v_norm + radius;
+    return max_proj <= v_norm + radius;
 }
 
 
 inline bool Sphere::contains(Point3D const& p) const {
     const auto dist_sq = (Point3Dx(p) - centroid).norm_sq();
-    return dist_sq < radius * radius;
+    return dist_sq <= radius * radius;
 }
 
 
 inline bool Cylinder::intersects(Cylinder const& c) const {
     CoordType min_dist = detail::distance_segment_segment(p1, p2, c.p1, c.p2);
-    return min_dist < radius + c.radius;
+    return min_dist <= radius + c.radius;
 }
 
 
@@ -128,7 +128,7 @@ inline bool Cylinder::contains(Point3D const& p) const {
     // outside radius?
     // three sides triangle: projection on axis, p1_ptest and distance to axis
     const auto dist_sq = p1_ptest.norm_sq() - (dot_prod * dot_prod / axis_len_sq);
-    return dist_sq < radius * radius;
+    return dist_sq <= radius * radius;
 }
 
 
