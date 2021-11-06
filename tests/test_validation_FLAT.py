@@ -11,8 +11,10 @@ from spatial_index import NodeMorphIndexer
 try:
     import pytest
     pytest_skipif = pytest.mark.skipif
+    pytest_long = pytest.mark.long
 except ImportError:
     pytest_skipif = lambda *x, **kw: lambda y: y  # noqa
+    pytest_long = lambda x: x  # noqa
 
 # Loading some small circuits and morphology files on BB5
 CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-2k"
@@ -21,7 +23,7 @@ MORPH_FILE = CIRCUIT_2K + "/morphologies/ascii"
 
 
 def do_query_serial(min_corner, max_corner):
-    indexer = NodeMorphIndexer.create(MORPH_FILE, CIRCUIT_FILE)
+    indexer = NodeMorphIndexer.from_mvd_file(MORPH_FILE, CIRCUIT_FILE)
     idx = indexer.find_intersecting_window(min_corner, max_corner)
     indexer.find_intersecting_window_pos(min_corner, max_corner)
     indexer.find_intersecting_window_objs(min_corner, max_corner)
@@ -30,6 +32,7 @@ def do_query_serial(min_corner, max_corner):
 
 @pytest_skipif(not os.path.exists(CIRCUIT_FILE),
                reason="Circuit file not available")
+@pytest_long
 def test_validation_FLAT():
     # Defining first and second corner for box query
     min_corner = np.array([-50, -50, -50], dtype=np.float32)

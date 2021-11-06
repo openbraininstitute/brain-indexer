@@ -10,6 +10,12 @@ import numpy.testing as nptest
 from spatial_index.node_indexer import NodeMorphIndexer
 import morphio
 import quaternion as npq
+import libsonata
+try:
+    import pytest
+    pytest_skipif = pytest.mark.skipif
+except ImportError:
+    pytest_skipif = lambda *x, **kw: lambda y: y  # noqa
 
 
 _CURDIR = os.path.dirname(__file__)
@@ -91,7 +97,42 @@ def _test_parallel_exec():
     NodeMorphIndexer.create_parallel(MORPHOLOGY_FILES[1], FILETEST, num_cpus=4)
 
 
+class Test2Info:
+    MORPHOLOGY_DIR = os.path.join(_CURDIR, "data/ascii_sonata")
+    SONATA_NODES = os.path.join(_CURDIR, "data/nodes.h5")
+
+
+@pytest_skipif(not os.path.exists(Test2Info.SONATA_NODES),
+               reason="Circuit file not available")
+def test_sonata_index():
+    index = NodeMorphIndexer.from_sonata_file(
+        Test2Info.MORPHOLOGY_DIR, Test2Info.SONATA_NODES, "All", range(700, 800)
+    )
+    assert len(index) == 588961
+    points_in_region = index.find_intersecting_window([200, 200, 480], [300, 300, 520])
+    assert len(points_in_region) == 28
+    obj_in_region = index.find_intersecting_window_objs([0, 0, 0], [10, 10, 10])
+    assert len(obj_in_region) == 2
+    for obj in obj_in_region:
+        assert -1 <= obj.centroid[0] <= 11
+
+
+@pytest_skipif(not os.path.exists(Test2Info.SONATA_NODES),
+               reason="Circuit file not available")
+def test_sonata_selection():
+    selection = libsonata.Selection([4, 8, 15, 16, 23, 42])
+    index = NodeMorphIndexer.from_sonata_selection(
+        Test2Info.MORPHOLOGY_DIR, Test2Info.SONATA_NODES, "All", selection
+    )
+    assert len(index) == 25618
+    obj_in_region = index.find_intersecting_window_objs([15, 900, 15], [20, 1900, 20])
+    assert len(obj_in_region) == 21
+    for obj in obj_in_region:
+        assert 13 <= obj.centroid[0] <= 22
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     test_serial_exec()
+    test_sonata_index()
     _test_parallel_exec()

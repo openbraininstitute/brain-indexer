@@ -2,7 +2,7 @@ import logging
 from abc import abstractmethod
 
 
-class ChunckedProcessingMixin:
+class ChunkedProcessingMixin:
 
     N_ELEMENTS_CHUNK = 100
 

@@ -6,7 +6,7 @@ import logging
 import numpy
 
 from . import _spatial_index
-from .util import ChunckedProcessingMixin, gen_ranges
+from .util import ChunkedProcessingMixin, gen_ranges
 
 
 class PointIndexer(_spatial_index.SphereIndex):
@@ -28,10 +28,10 @@ class PointIndexer(_spatial_index.SphereIndex):
         super().__init__(synapse_centers, None, synapse_ids)
 
 
-class SynapseIndexer(ChunckedProcessingMixin, _spatial_index.SynapseIndex):
+class SynapseIndexer(ChunkedProcessingMixin, _spatial_index.SynapseIndex):
 
     # Chunks are 1 Sonata range (of 100k synapses)
-    N_ELEMENTS_CHUNK = 1  # override from ChunckedProcessingMixin
+    N_ELEMENTS_CHUNK = 1  # override from ChunkedProcessingMixin
     MAX_SYN_COUNT_RANGE = 100_000
 
     def __init__(self, sonata_edges, selection):
@@ -62,9 +62,7 @@ class SynapseIndexer(ChunckedProcessingMixin, _spatial_index.SynapseIndex):
     def from_sonata_selection(cls, sonata_edges, selection):
         """ Builds the synapse index from a generic Sonata selection object
         """
-        index = cls(sonata_edges, selection)
-        index.process_all()
-        return index
+        return cls.create(sonata_edges, selection)
 
     @classmethod
     def from_sonata_tgids(cls, sonata_edges, target_gids=None):
@@ -77,14 +75,12 @@ class SynapseIndexer(ChunckedProcessingMixin, _spatial_index.SynapseIndex):
         return cls.from_sonata_selection(sonata_edges, selection)
 
     @classmethod
-    def from_sonata_file(cls, edge_filename,
-                         population_name="default",
-                         target_gids=None):
+    def from_sonata_file(cls, edge_filename, population_name, target_gids=None):
         """ Creates a synapse index from a sonata edge file and population.
 
         Args:
             edge_filename: The Sonata edges filename
-            population_name: The name of the population. Default: 'default'
+            population_name: The name of the population
             target_gids: A list/array of target gids to index. Default: None
                 Warn: None will index all synapses, please mind memory limits
 

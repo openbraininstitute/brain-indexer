@@ -20,7 +20,7 @@ import numpy as np
 import quaternion as npq
 
 from ._spatial_index import MorphIndex
-from .util import ChunckedProcessingMixin
+from .util import ChunkedProcessingMixin
 
 morphio.set_ignored_warning(morphio.Warning.only_child)
 MorphInfo = namedtuple("MorphInfo", "soma, points, radius, branch_offsets")
@@ -54,13 +54,14 @@ class MorphologyLib:
         return self._morphologies.get(morph_name) or self._load(morph_name)
 
 
-class NodeMorphIndexer(ChunckedProcessingMixin, MorphIndex):
+class NodeMorphIndexer(ChunkedProcessingMixin, MorphIndex):
 
-    def __init__(self, morphology_dir, mvd_file, gids=None):
+    def __init__(self, morphology_dir, nodes_file, population="", gids=None):
         super().__init__()
         self.morph_lib = MorphologyLib(morphology_dir)
-        self.mvd: mvdtool.MVD3.File = mvdtool.open(mvd_file)
-        self._gids = range(0, len(self.mvd)) if gids is None else np.sort(gids)
+        self.mvd: mvdtool.MVD3.File = mvdtool.open(nodes_file, population)
+        self._gids = range(0, len(self.mvd)) if gids is None else \
+            np.sort(np.array(gids, dtype=int))
         logging.info("Index count: %d cells", len(self._gids))
 
     def n_elements_to_import(self):
@@ -98,7 +99,7 @@ class NodeMorphIndexer(ChunckedProcessingMixin, MorphIndex):
         actual_indices = slice_.indices(len(self._gids))
         assert actual_indices[2] > 0, "Step cannot be negative"
         # gid vec is sorted. check if range is contiguous
-        if cur_gids and cur_gids[0] + len(cur_gids) == cur_gids[-1] + 1:
+        if len(cur_gids) and cur_gids[0] + len(cur_gids) == cur_gids[-1] + 1:
             index_args = (cur_gids[0], len(cur_gids))
         else:
             index_args = (np.array(cur_gids),)  # numpy can init from a range obj
@@ -113,6 +114,32 @@ class NodeMorphIndexer(ChunckedProcessingMixin, MorphIndex):
             gid += 1
             rotopoints = self.rototranslate(morph, pos, rot)
             self.process_cell(gid, morph, rotopoints, pos)
+
+    @classmethod
+    def from_mvd_file(cls, morphology_dir, node_filename, target_gids=None):
+        """ Build a synpase index from an mvd file
+        """
+        return cls.create(morphology_dir, node_filename, "", target_gids)
+
+    @classmethod
+    def from_sonata_selection(cls, morphology_dir, node_filename, pop_name, selection):
+        """ Builds the synapse index from a generic Sonata selection object
+        """
+        return cls.create(morphology_dir, node_filename, pop_name, selection.flatten())
+
+    @classmethod
+    def from_sonata_file(cls, morphology_dir, node_filename, pop_name, target_gids=None):
+        """ Creates a node index from a sonata node file.
+
+        Args:
+            node_filename: The SONATA node filename
+            morphology_dir: The directory containing the morphology files
+            pop_name: The name of the population
+            target_gids: A list/array of target gids to index. Default: None
+                Warn: None will index all synapses, please mind memory limits
+
+        """
+        return cls.create(morphology_dir, node_filename, pop_name, target_gids)
 
     @classmethod
     def load_dump(cls, filename):
