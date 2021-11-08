@@ -8,6 +8,34 @@ include:
   - project: nse/ci
     file: /ci/jobs/publish-package.yml
 
+test-cpp-unit:
+  stage: test
+  tags:
+    - bb5_map
+  variables:
+    EXTRA_MODULES:
+      unstable:cmake
+      unstable:gcc
+      unstable:boost/1.70.0
+  before_script:
+    - !reference [.bb5, clean-env]
+    - !reference [.bb5, load-extra-modules]
+  script:
+    - cmake -S . -B build
+    - cmake --build build -j2
+    - cd build && ctest -E Python
+
+test-spack:
+  stage: test
+  tags:
+    - bb5_map
+  before_script:
+    - !reference [.bb5, clean-env]
+  script:
+    - module load unstable git
+    - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@bbpgitlab.epfl.ch".insteadOf git@bbpgitlab.epfl.ch
+    - bash scripts/ci_spack_test.sh
+
 test-py37:
   extends: .tox-template
   variables:
@@ -17,6 +45,7 @@ test-py37:
       unstable:gcc
       unstable:boost/1.70.0
 
+# The following stages are overrides. Dont rename
 # Always add the manual option to create sdist/wheel or upload
 build-package:
   rules:
