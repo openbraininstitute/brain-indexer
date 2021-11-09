@@ -36,10 +36,10 @@ test-spack:
     - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@bbpgitlab.epfl.ch".insteadOf git@bbpgitlab.epfl.ch
     - bash scripts/ci_spack_test.sh
 
-test-py37:
+test-bb5-py38:
   extends: .tox-template
   variables:
-    TOXENV: flake8, py37
+    TOXENV: flake8, py38  # boost depends on py38
     EXTRA_MODULES:
       unstable:cmake
       unstable:gcc

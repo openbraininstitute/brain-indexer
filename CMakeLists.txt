@@ -66,7 +66,7 @@ target_compile_definitions(SpatialIndex INTERFACE "-DBOOST_GEOMETRY_INDEX_DETAIL
 # Py-bindings with PyBind11
 #
 if(SI_PYTHON_BINDINGS)
-    find_package(Python COMPONENTS Interpreter Development REQUIRED)
+    find_package(PythonInterp REQUIRED)
     add_subdirectory(3rdparty/pybind11)
     add_subdirectory(python)
 endif()
