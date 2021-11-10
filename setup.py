@@ -3,7 +3,6 @@ import re
 import sys
 import subprocess
 from distutils.version import LooseVersion
-from setuptools import Command
 from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext
 
@@ -75,86 +74,35 @@ class CMakeBuild(build_ext):
         raise RuntimeError("Project requires CMake >=3.5.0")
 
 
-class Docs(Command):
-    description = "Generate & optionally upload documentation to docs server"
-    user_options = [("upload", None, "Upload to BBP internal docs server")]
-    finalize_options = lambda self: None  # noqa
-
-    def initialize_options(self):
-        self.upload = False
-
-    def run(self):
-        self._create_metadata_file()
-        self.reinitialize_command('build_ext', inplace=1)
-        self.run_command('build_ext')
-        self.run_command('build_sphinx')  # requires metadata file
-        if self.upload:
-            self._upload()
-
-    def _create_metadata_file(self):
-        import textwrap
-        import time
-        md = self.distribution.metadata
-        with open("docs/metadata.md", "w") as mdf:
-            mdf.write(textwrap.dedent(f"""\
-                ---
-                name: {md.name}
-                version: {md.version}
-                description: {md.description}
-                homepage: {md.url}
-                license: {md.license}
-                maintainers: {md.author}
-                repository: {md.project_urls.get("Source", '')}
-                issuesurl: {md.project_urls.get("Tracker", '')}
-                contributors: {md.maintainer}
-                updated: {time.strftime("%d/%m/%Y")}
-                ---
-                """))
-
-    def _upload(self):
-        from docs_internal_upload import docs_internal_upload
-        print("Uploading....")
-        docs_internal_upload("docs/_build/html", metadata_path="docs/metadata.md")
-
-
-def setup_package():
-    # sphinx-bluebrain-theme depends on a specific sphinx version. Let it choose
-    docs_require = ["sphinx-bluebrain-theme", "docs_internal_upload", "m2r2"]
-    maybe_docs = docs_require if "docs" in sys.argv else []
-    maybe_test_runner = ["pytest-runner"] if "test" in sys.argv else []
-
-    setup(
-        name='spatial-index',
-        version=__version__,
-        packages=["spatial_index"],
-        ext_modules=[CMakeExtension(
-            'spatial_index._spatial_index',
-            cmake_opts=[
-                '-DSI_UNIT_TESTS=OFF',
-                '-DSI_VERSION=' + __version__
-            ]
-        )],
-        entry_points=dict(console_scripts=[
-            'spatial-index-nodes=spatial_index.commands:spatial_index_nodes',
-            'spatial-index-circuit=spatial_index.commands:spatial_index_circuit',
-        ]),
-        cmdclass=dict(build_ext=CMakeBuild, docs=Docs),
-        include_package_data=True,
-        install_requires=[
-            "numpy>=1.13.1",
-            "numpy-quaternion",
-            "libsonata",
-            "morphio",
-            "mvdtool>=2.4.1",
-            "docopt",
-        ],
-        tests_require=["pytest", "h5py", ],
-        setup_requires=maybe_docs + maybe_test_runner,
-        # dependency_links=[
-        #     "https://bbpteam.epfl.ch/repository/devpi/simple/docs_internal_upload"
-        # ]
-    )
+package_info = dict(
+    name="spatial-index",
+    version=__version__,
+    packages=["spatial_index"],
+    ext_modules=[CMakeExtension(
+        'spatial_index._spatial_index',
+        cmake_opts=[
+            '-DSI_UNIT_TESTS=OFF',
+            '-DSI_VERSION=' + __version__
+        ]
+    )],
+    entry_points=dict(console_scripts=[
+        'spatial-index-nodes=spatial_index.commands:spatial_index_nodes',
+        'spatial-index-circuit=spatial_index.commands:spatial_index_circuit',
+    ]),
+    cmdclass=dict(build_ext=CMakeBuild),
+    include_package_data=True,
+    install_requires=[
+        "numpy>=1.13.1",
+        "numpy-quaternion",
+        "libsonata",
+        "morphio",
+        "mvdtool>=2.4.1",
+        "docopt",
+    ],
+    tests_require=["pytest", "h5py", ],
+    setup_requires=(["pytest-runner"] if "test" in sys.argv else [])
+)
 
 
 if __name__ == "__main__":
-    setup_package()
+    setup(**package_info)

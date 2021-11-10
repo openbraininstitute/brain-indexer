@@ -7,6 +7,21 @@ include:
     file: /ci/jobs/build-wheels.yml
   - project: nse/ci
     file: /ci/jobs/publish-package.yml
+  - project: nse/ci
+    file: /ci/jobs/docs.yml
+  - project: nse/ci
+    file: /ci/jobs/publish-docs.yml
+
+workflow:
+  rules:
+    # Rules taken from official docs to avoid duplicated pipelines
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE == "push"
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS'
+      when: never
+    - if: '$CI_COMMIT_BRANCH'
+    - if: '$CI_COMMIT_TAG'
 
 test-cpp-unit:
   stage: test
@@ -49,9 +64,7 @@ test-bb5-py38:
 # Always add the manual option to create sdist/wheel or upload
 build-package:
   rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"'
-    - when: manual
-      allow_failure: true
+    - when: always
 
 build-wheels:
   tags: [kubernetes]
@@ -65,11 +78,34 @@ build-wheels:
     TEST_RUN_TOX: "false"  # MVDtool doesnt have wheels
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"'
+    - if: $CI_COMMIT_TAG
     - when: manual
       allow_failure: true
 
 publish-package:
   rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"'
+    - if: $CI_COMMIT_TAG
+    - when: manual
+      allow_failure: true
+
+docs:
+  variables:
+    TOXENV: docs
+    EXTRA_MODULES:
+      unstable:cmake
+      unstable:gcc
+      unstable:boost/1.70.0
+  artifacts:
+    paths:
+      - "${PYTHON_PROJECT_DIR-.}/docs/_build/"
+
+publish-docs:
+  variables:
+    SYS_PACKAGES: openssh-clients
+    PIP_PACKAGES: docs_internal_upload
+  script:
+    - docs-internal-upload --docs-path docs/_build
+  rules:
+    - if: $CI_COMMIT_TAG
     - when: manual
       allow_failure: true
