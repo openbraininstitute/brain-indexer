@@ -9,12 +9,16 @@ It provides a high level Python API for indexes of (1) low-level spherical geome
 ## How to install
 
 It is advisable to install Spatial Index in a Python virtualenv.
-In order to install Spatial Index on BB5, a script is supplied that performs all the operations necessary to install a Virtual Environment. The script is available in the `scripts` folder.
-Soon we will be adding it to an online python index, for `pip install`, please stay tuned.
 
-## How to use the install script on BB5
+You use `pip install --index https://bbpteam.epfl.ch/repository/devpi/simple spatial_index` to install Spatial Index after you created and activated your virtualenv.
 
-Download the `install_spatial_index.sh` script and run it as follows:  
+Alternatively, to create a Virtual Environment and install Spatial Index, a script is supplied that performs all the operations necessary to create a Virtual Environment and install Spatial Index. The script is available in the `scripts` folder (more info in the following section).
+
+## How to use Spatial Index on BB5
+
+Spatial Index is now integrated in Blue Brain Spack, therefore on BB5 you can load it as a module using the command: `module load unstable spatial-index`.
+
+Alternatively use the `install_spatial_index.sh` script in the `scripts` folder and run it as follows:  
 `./install_spatial_index.sh <name of the virtualenv>`  
   
 (If there's already a virtualenv with the same name, the creation of a new one will be skipped and Spatial Index will be installed in the existing one.)   
@@ -36,8 +40,9 @@ Install using pip:
 ## Examples
 
 Some examples on how to use Spatial Index are available in the `examples` folder:   
-- `example_query.py` shows how to load a set of geometries, index them and query them using the Spatial Index APIs;
-- `example_synapses.py` shows how to load synapses from a EDGE file, index them and query them using the Spatial Index APIs.  
+- `segment_index.py` shows how to load a set of geometries, index them and query them using the Spatial Index APIs;
+- `segment_index_sonata.py` shows how to load a set of geometries, perform a selection using SONATA, index and query them using the Spatial Index APIs;
+- `synapse_index.py` shows how to load synapses from a EDGE file, index them and query them using the Spatial Index APIs.  
 
 Also, the `tests` folder contains some tests that double also as examples on how to use Spatial Index.
 
