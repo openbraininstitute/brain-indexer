@@ -1,16 +1,12 @@
 include:
   - project: nse/ci
-    file: /ci/lib/tox-bb5.yml
-  - project: nse/ci
-    file: /ci/jobs/build-package.yml
-  - project: nse/ci
-    file: /ci/jobs/build-wheels.yml
-  - project: nse/ci
-    file: /ci/jobs/publish-package.yml
-  - project: nse/ci
-    file: /ci/jobs/docs.yml
-  - project: nse/ci
-    file: /ci/jobs/publish-docs.yml
+    file:
+      - /ci/lib/tox-bb5.yml
+      - /ci/jobs/build-package.yml
+      - /ci/jobs/build-wheels.yml
+      - /ci/jobs/publish-package.yml
+      - /ci/jobs/docs.yml
+      - /ci/jobs/publish-docs.yml
 
 workflow:
   rules:
@@ -22,6 +18,9 @@ workflow:
       when: never
     - if: '$CI_COMMIT_BRANCH'
     - if: '$CI_COMMIT_TAG'
+
+variables:
+  GIT_CLEAN_FLAGS: -ffdx  # clean it all pls
 
 test-cpp-unit:
   stage: test
