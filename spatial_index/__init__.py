@@ -8,6 +8,7 @@ try:
 except Exception:
     __version__ = 'devel'
 
-from ._spatial_index import *  # NOQA
+from . import _spatial_index as core  # noqa
+from ._spatial_index import *  # noqa
 from .node_indexer import NodeMorphIndexer  # noqa
 from .synapse_indexer import PointIndexer, SynapseIndexer  # noqa

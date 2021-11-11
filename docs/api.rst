@@ -1,12 +1,68 @@
+========================
 Spatial Index Python API
 ========================
 
+
+High-Level Indexing API
+=======================
+
 .. automodule:: spatial_index
 
-   .. autoclass:: SphereIndex
-      :members:
-      :inherited-members:
+NodeMorphIndexer
+----------------
+.. autoclass:: NodeMorphIndexer
+   :members:
+   :inherited-members:
 
-   .. autoclass:: MorphIndex
-      :members:
-      :inherited-members:
+SynapseIndexer
+--------------
+.. autoclass:: SynapseIndexer
+   :members:
+   :inherited-members:
+
+PointIndexer
+------------
+.. autoclass:: PointIndexer
+   :members:
+   :inherited-members:
+
+
+Core Index API
+==============
+
+.. automodule:: spatial_index.core
+
+SphereIndex
+-----------
+.. autoclass:: SphereIndex
+   :members:
+   :inherited-members:
+
+MorphIndex
+----------
+.. autoclass:: MorphIndex
+   :members:
+   :inherited-members:
+
+SynapseIndex
+------------
+.. autoclass:: SynapseIndex
+   :members:
+   :inherited-members:
+
+
+Core IndexGrid API
+==================
+
+SphereGrid
+----------
+.. autoclass:: SphereGrid
+   :members:
+   :inherited-members:
+
+MorphGrid
+---------
+.. autoclass:: MorphGrid
+   :members:
+   :inherited-members:
+

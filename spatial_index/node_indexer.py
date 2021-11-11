@@ -81,6 +81,8 @@ class NodeMorphIndexer(ChunkedProcessingMixin, MorphIndex):
         return points
 
     def process_cell(self, gid, morph, points, position):
+        """ Process (index) a single cell
+        """
         morph = self.morph_lib.get(morph)
         soma_center, soma_rad = morph.soma
         soma_center += position
@@ -90,7 +92,7 @@ class NodeMorphIndexer(ChunkedProcessingMixin, MorphIndex):
         )
 
     def process_range(self, range_=(None,)):
-        """Process a range of cells.
+        """ Process a range of cells.
 
         :param: range_ (start, end, [step]), or (None,) [all]
         """

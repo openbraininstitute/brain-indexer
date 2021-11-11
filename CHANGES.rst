@@ -2,6 +2,23 @@ Change Log
 ==========
 
 
+Version 0.4.x
+-------------
+**November 2021**
+
+**Features**
+  * Support for SONATA Selections for NodeMorphIndexer
+  * Add API to support counting elements and aggregate synapses by GID
+  * Chunked Synapse indexer feat progress monitor
+  * More flexible ranges: python-style (start, end, [step])
+
+**Improvements**
+  * New CI (Gitlab): tests, wheels & docs, fix tox, drop custom setup.py docs
+  * Building and distributing wheels
+  * Added more examples and benchmarking scripts
+  * Added new classes to documentation API
+
+
 Version 0.3.0
 -------------
 **August 2021**
