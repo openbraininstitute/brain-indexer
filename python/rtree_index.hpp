@@ -391,6 +391,15 @@ inline void create_SynapseIndex_bindings(py::module& m, const char* class_name) 
 void create_MorphoEntry_bindings(py::module& m) {
 
     using Class = MorphoEntry;
+    
+    struct EndpointsVisitor: boost::static_visitor<const point_t*> {
+        inline const point_t* operator()(const Segment& seg) const {
+            return &seg.p1;
+        }
+        inline const point_t* operator()(const Soma&) const {
+            return nullptr;
+        }
+    };
 
     py::class_<Class>(m, "MorphoEntry")
         .def_property_readonly("centroid", [](Class& obj) {
@@ -401,6 +410,16 @@ void create_MorphoEntry_bindings(py::module& m) {
                 return py::array(3, &p3d.get<0>());
             },
             "Returns the centroid of the morphology parts as a Numpy array"
+        )
+        .def_property_readonly("endpoints",
+            [](Class& obj) -> py::object {
+                auto ptr = boost::apply_visitor(EndpointsVisitor(), obj);
+                if (ptr == nullptr) {
+                    return py::none();
+                }
+                return py::array({2, 3}, &ptr[0].get<0>());
+            },
+            "Returns the endpoints of the morphology parts as a Numpy array"
         )
         .def_property_readonly("ids", [](Class& obj) {
                 return boost::apply_visitor([](const auto& g){

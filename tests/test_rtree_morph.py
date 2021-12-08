@@ -122,6 +122,25 @@ def test_add_neuron_without_soma_and_toString():
     assert str_result == str_expect
 
 
+def test_endpoints_retrieval():
+    points = [
+        [1, 3, 5],
+        [2, 4, 6],
+        [2, 4, 6],
+        [10, 10, 10]
+    ]
+    radius = [3, 2, 2, 1]
+    offsets = [0, 2]
+    min_corner = [-50, 0, 0]
+    max_corner = [0, 50, 50]
+    rtree = MorphIndex()
+    rtree.add_neuron(1, points, radius, offsets)
+    array_expect = np.array([[1, 3, 5], [2, 4, 6]])
+    idx = rtree.find_intersecting_window_objs(min_corner, max_corner)
+    assert idx[0].endpoints is None
+    np.testing.assert_allclose(idx[1].endpoints, array_expect)
+
+
 if __name__ == "__main__":
     test_rtree_sphere.run_tests()
 
@@ -136,3 +155,6 @@ if __name__ == "__main__":
 
     test_add_neuron_without_soma_and_toString()
     print("[PASSED] MTest test_add_neuron_without_soma")
+
+    test_endpoints_retrieval()
+    print("[PASSED] MTest test_endpoints_retrieval")
