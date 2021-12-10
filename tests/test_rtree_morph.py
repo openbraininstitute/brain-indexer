@@ -7,6 +7,7 @@ import numpy as np
 from spatial_index import MorphIndex
 import os.path
 import sys
+import pytest
 
 # Add this dir to path so we can import the other tests
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
@@ -141,6 +142,38 @@ def test_endpoints_retrieval():
     np.testing.assert_allclose(idx[1].endpoints, array_expect)
 
 
+@pytest.mark.parametrize("points, radius, offsets, exc_msg",
+                         [([], [1, ], [0, ],
+                          "has_soma is True but no points provided"),
+                          ([[0, 0, 0]], [], [0, ],
+                           "Please provide the soma radius")]
+                         )
+def test_add_neuron_exc_with_soma(points, radius, offsets, exc_msg):
+    rtree = MorphIndex()
+    with pytest.raises(ValueError) as excinfo:
+        rtree.add_neuron(1, points, radius, offsets, has_soma=True)
+    assert exc_msg in str(excinfo.value)
+
+
+@pytest.mark.parametrize("points, radius, offsets, exc_msg",
+                         [([[0., 0., 0.], [0., 10., 0.]], [1, 1, ], [1, 1, 2, ],
+                          "Too many branches given the supplied points"),
+                          ([[0., 0., 0.], [0., 10., 0.]], [1, 1, ], [4, ],
+                          "At least one of the branches offset is too large"),
+                          ([[0., 0., 0.], [0., 10., 0.]], [], [0, 0, ],
+                          "Please provide a radius per segment"),
+                          ([[0., 0., 0.], [0., 10., 0.]], [1, 1, ], [],
+                          "Please provide at least one branch offset"),
+                          ([[0., 0., 0.]], [1, ], [0, ],
+                          "Please provide at least two points for segments")]
+                         )
+def test_add_neuron_exc_without_soma(points, radius, offsets, exc_msg):
+    rtree = MorphIndex()
+    with pytest.raises(ValueError) as excinfo:
+        rtree.add_neuron(1, points, radius, offsets, has_soma=False)
+    assert exc_msg in str(excinfo.value)
+
+
 if __name__ == "__main__":
     test_rtree_sphere.run_tests()
 
@@ -158,3 +191,9 @@ if __name__ == "__main__":
 
     test_endpoints_retrieval()
     print("[PASSED] MTest test_endpoints_retrieval")
+
+    test_add_neuron_exc_with_soma()
+    print("[PASSED] MTest test_add_neuron_exc_with_soma")
+
+    test_add_neuron_exc_without_soma()
+    print("[PASSED] MTest test_add_neuron_exc_without_soma")

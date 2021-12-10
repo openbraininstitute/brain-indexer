@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include "bind_common.hpp"
+#include <pybind11/eval.h>
 
 namespace bg = boost::geometry;
 
@@ -559,9 +560,52 @@ inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
             const auto& point_radii = convert_input(centroids_np, radii_np);
             // Get raw pointers to data
             const auto points = point_radii.first;
+            const auto npoints = centroids_np.shape(0);
             const auto radii = point_radii.second.data(0);
             const auto n_branches = branches_offset_np.size();
             const auto offsets = branches_offset_np.template unchecked<1>().data(0);
+
+            // Check if at least one point was provided when has_soma==True
+            if (has_soma && centroids_np.shape(0) < 1) {
+                throw py::value_error("has_soma is True but no points provided");
+            }
+
+            const unsigned n_segment_points = npoints - has_soma;
+            if (n_segment_points == 0) {
+                if (has_soma && radii_np.size() != 1) {
+                    throw py::value_error("Please provide the soma radius");
+                }
+                std::stringstream warn_cmd;
+                warn_cmd << "import logging\n"
+                         << "logging.warning('Neuron id=" << gid << " has no segments')\n";
+                py::exec(warn_cmd.str());
+            }
+            else {                                          // -- segments sanity check --
+                // Check that the number of points is two or more
+                if (n_segment_points < 2) {
+                    throw py::value_error("Please provide at least two points for segments");
+                }
+
+                if (radii_np.size() < centroids_np.shape(0) - 1) {
+                    throw py::value_error("Please provide a radius per segment");
+                }
+
+                // Check that the branches are at least one
+                if (n_branches < 1) {
+                    throw py::value_error("Please provide at least one branch offset");
+                }
+
+                // Check that the branches are less than the number of supplied points
+                if (n_branches > n_segment_points - 1) {
+                    throw py::value_error("Too many branches given the supplied points");
+                }
+
+                // Check that the max offset is less than the number of points
+                const auto max_offset = *std::max_element(offsets, offsets + n_branches);
+                if (max_offset > npoints - 2) {  // 2 To ensure the segment has a closing point
+                    throw py::value_error("At least one of the branches offset is too large");
+                }
+            }
 
             if (has_soma) {
                 // Add soma
@@ -578,7 +622,7 @@ inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
             // Last
             if (n_branches) {
                 const unsigned p_start = offsets[n_branches - 1];
-                const unsigned n_segments = unsigned(radii_np.size()) - p_start - 1;
+                const unsigned n_segments = npoints - p_start - 1;
                 add_branch(obj, gid, n_branches, n_segments, points + p_start, radii + p_start);
             }
         },
@@ -613,7 +657,7 @@ inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
 
         **Note:** There is not the concept of branching off from previous points.
         All branches start in a new point, the user can however provide a point
-        close to an exisitng point to mimick branching.
+        close to an existing point to mimick branching.
 
         Args:
             gid(int): The id of the soma

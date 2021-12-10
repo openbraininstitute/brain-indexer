@@ -29,21 +29,21 @@ inline auto convert_input(array_t const& centroids, array_t const& radii) {
     static_assert(sizeof(point_t) == 3 * sizeof(coord_t),
                   "numpy array not convertible to point3d");
     // Return value pair. only contains a pointer and reference
-    return std::make_pair(reinterpret_cast<const point_t*>(centroids.data(0, 0)),
+    return std::make_pair(reinterpret_cast<const point_t*>(centroids.data()),
                           radii.template unchecked<1>());
 }
 
 inline auto convert_input(array_t const& centroids) {
     static_assert(sizeof(point_t) == 3 * sizeof(coord_t),
                   "numpy array not convertible to point3d");
-    return reinterpret_cast<const point_t*>(centroids.data(0, 0));
+    return reinterpret_cast<const point_t*>(centroids.data());
 }
 
 inline const auto& mk_point(array_t const& point) {
     if (point.ndim() != 1 || point.size() != 3) {
         throw std::invalid_argument("Numpy array not convertible to point3d");
     }
-    return *reinterpret_cast<const point_t*>(point.data(0));
+    return *reinterpret_cast<const point_t*>(point.data());
 }
 
 
