@@ -7,6 +7,8 @@ include:
       - /ci/jobs/publish-package.yml
       - /ci/jobs/docs.yml
       - /ci/jobs/publish-docs.yml
+  - project: hpc/gitlab-pipelines
+    file: spack-build-components.gitlab-ci.yml
 
 workflow:
   rules:
@@ -19,22 +21,26 @@ workflow:
     - if: '$CI_COMMIT_BRANCH'
     - if: '$CI_COMMIT_TAG'
 
+
 test-cpp-unit:
   stage: test
   tags:
     - bb5_map
-  variables:
-    EXTRA_MODULES:
-      unstable:cmake
-      unstable:gcc
-      unstable:boost/1.70.0
   before_script:
     - !reference [.bb5, clean-env]
-    - !reference [.bb5, load-extra-modules]
   script:
+    - source ${SPACK_ROOT}/share/spack/setup-env.sh;
+    - spack load boost@1.70
+    - module load unstable cmake gcc
     - cmake -S . -B build
     - cmake --build build -j2
     - cd build && ctest -E Python
+
+
+setup_spack:
+  stage: .pre
+  extends: .spack_setup
+
 
 test-bare-ubuntu:
   stage: test
@@ -53,29 +59,38 @@ test-bare-ubuntu:
     - pip install -v -e .
     - pytest
 
+
 test-spack:
   stage: test
   tags:
     - bb5_map
+  variables:
+    PIP_PACKAGES: "pytest h5py"
   before_script:
     - !reference [.bb5, clean-env]
+    - !reference [.define-functions]
   script:
-    - module load unstable git
-    - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@bbpgitlab.epfl.ch".insteadOf git@bbpgitlab.epfl.ch
-    - bash scripts/ci_spack_test.sh
+    - source $SPACK_ROOT/share/spack/setup-env.sh
+    - spack dev-build spatial-index@develop
+    - !reference [.bb5, load-python-39]
+    - !reference [.setup-venv]
+    - spack load spatial-index@develop
+    - mv spatial_index _dont_interfere
+    - pytest
 
-test-bb5-py38:
+
+test-bb5-py39:
   extends: .tox-template
   variables:
-    TOXENV: flake8, py38  # boost depends on py38
-    EXTRA_MODULES:
-      unstable:cmake
-      unstable:gcc
-      unstable:boost/1.70.0
+    TOXENV: flake8, py39  # boost depends on py38
+    PRE_BUILD_COMMAND: |
+      source ${SPACK_ROOT}/share/spack/setup-env.sh;
+      spack load boost@1.70
 
 # The following stages are overrides. Dont rename
 # Always add the manual option to create sdist/wheel or upload
 build-package:
+  tags: []
   rules:
     - when: always
 
@@ -97,6 +112,7 @@ build-wheels:
       allow_failure: true
 
 publish-package:
+  tags: []
   rules:
     - if: $CI_COMMIT_TAG
     - when: manual
@@ -105,15 +121,15 @@ publish-package:
 docs:
   variables:
     TOXENV: docs
-    EXTRA_MODULES:
-      unstable:cmake
-      unstable:gcc
-      unstable:boost/1.70.0
+    PRE_BUILD_COMMAND: |
+      source ${SPACK_ROOT}/share/spack/setup-env.sh;
+      spack load boost@1.70
   artifacts:
     paths:
       - "${PYTHON_PROJECT_DIR-.}/docs/_build/"
 
 publish-docs:
+  tags: []
   variables:
     SYS_PACKAGES: openssh-clients
     PIP_PACKAGES: docs_internal_upload
