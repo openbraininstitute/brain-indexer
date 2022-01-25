@@ -25,7 +25,7 @@ MORPH_FILE = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-thalamus
 start_global = timer()
 start = timer()
 indexer = node_indexer.NodeMorphIndexer(MORPH_FILE, CIRCUIT_FILE)
-indexer.process_all()
+indexer.process_all(progress=True)
 end = timer()
 index_time = end - start
 

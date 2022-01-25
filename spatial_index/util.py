@@ -14,13 +14,14 @@ class ChunkedProcessingMixin:
     def process_range(self, range_):
         return NotImplemented
 
-    def process_all(self):
+    def process_all(self, progress=False):
         n_elements = self.n_elements_to_import()
         nchunks = (n_elements - 1) // self.N_ELEMENTS_CHUNK + 1
 
         for i, range_ in enumerate(gen_ranges(n_elements, self.N_ELEMENTS_CHUNK)):
             self.process_range(range_)
-            show_progress(i + 1, nchunks)
+            if progress:
+                show_progress(i + 1, nchunks)
 
     @classmethod
     def create(cls, *args):
@@ -30,7 +31,7 @@ class ChunkedProcessingMixin:
         return indexer
 
     @classmethod
-    def create_parallel(cls, *ctor_args, num_cpus=None):
+    def create_parallel(cls, *ctor_args, num_cpus=None, progress=False):
         import functools
         import os
         import multiprocessing
@@ -50,7 +51,8 @@ class ChunkedProcessingMixin:
         logging.info("Running in parallel. CPUs=" + str(num_cpus))
         with multiprocessing.Pool(num_cpus) as pool:
             for i, _ in enumerate(pool.imap_unordered(build_index, ranges)):
-                show_progress(i + 1, nchunks)
+                if progress:
+                    show_progress(i + 1, nchunks)
         return indexer  # the indexer on rank0
 
 
