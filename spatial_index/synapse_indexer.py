@@ -46,12 +46,13 @@ class SynapseIndexer(ChunkedProcessingMixin, _spatial_index.SynapseIndex):
         selection = libsonata.Selection(self._selection.ranges[slice(*range_)])
         syn_ids = selection.flatten()
         gids = self.edges.target_nodes(selection)
+        pre_gids = self.edges.source_nodes(selection)
         synapse_centers = numpy.dstack((
             self.edges.get_attribute("afferent_center_x", selection),
             self.edges.get_attribute("afferent_center_y", selection),
             self.edges.get_attribute("afferent_center_z", selection)
         ))
-        self.add_synapses(syn_ids, gids, synapse_centers)
+        self.add_synapses(syn_ids, gids, pre_gids, synapse_centers)
 
     @classmethod
     def load_dump(cls, filename):

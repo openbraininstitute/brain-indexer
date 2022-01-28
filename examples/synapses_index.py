@@ -32,6 +32,7 @@ def example_syn_index():
     for i, obj in enumerate(objs_in_region):
         if i % 20 == 0:
             print("Sample synapse id:", obj.id, "Position", obj.centroid)
+            print("Post-syn Neuron gid:", obj.gid, "pre-syn Neuron gid:", obj.pre_gid)
 
 
 if __name__ == "__main__":

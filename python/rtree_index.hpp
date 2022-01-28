@@ -340,7 +340,11 @@ inline void create_Synapse_bindings(py::module& m) {
         )
         .def_property_readonly("gid",
             &Class::gid,
-            "The Neuron id (gid) the synapse belongs to"
+            "The post-synaptic Neuron id (gid)"
+        )
+        .def_property_readonly("pre_gid",
+            &Class::pre_gid,
+            "The pre-synaptic Neuron id (gid)"
         )
     ;
 }
@@ -354,11 +358,12 @@ inline void create_SynapseIndex_bindings(py::module& m, const char* class_name) 
     create_IndexTree_bindings<si::Synapse>(m, class_name)
 
     .def("add_synapses",
-        [](Class& obj, const array_ids& syn_ids, const array_ids& gids, const array_t& points) {
+        [](Class& obj, const array_ids& syn_ids, const array_ids& gids, const array_ids& pre_gids, const array_t& points) {
             const auto syn_ids_ = syn_ids.template unchecked<1>();
             const auto gids_ = gids.template unchecked<1>();
+            const auto pre_gids_ = pre_gids.template unchecked<1>();
             const auto points_ = convert_input(points);
-            auto soa = si::util::make_soa_reader<Synapse>(syn_ids_, gids_, points_);
+            auto soa = si::util::make_soa_reader<Synapse>(syn_ids_, gids_, pre_gids_, points_);
             obj.insert(soa.begin(), soa.end());
         },
         R"(
