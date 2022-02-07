@@ -131,7 +131,7 @@ IndexTree<T, A>::count_intersecting_agg_gid(const ShapeT& shape) const {
     std::unordered_map<identifier_t, size_t> counts;
     auto counter = boost::make_function_output_iterator(
         [&counts](const auto& elem) {
-            counts[elem.gid()] += 1;
+            counts[elem.post_gid()] += 1;
         }
     );
     this->query(bgi::intersects(shape), counter);

@@ -71,25 +71,25 @@ struct ShapeId {
  * \brief A synapse extends IndexedShape in concept, adding gid field for ease of aggregating
  */
 struct SynapseId : public ShapeId {
-    identifier_t gid_;
+    identifier_t post_gid_;
     identifier_t pre_gid_;
 
     inline SynapseId() = default;
 
-    inline SynapseId(const identifier_t& syn_id, const identifier_t& gid = 0, const identifier_t pre_gid_ = 0) noexcept
+    inline SynapseId(const identifier_t& syn_id, const identifier_t& post_gid = 0, const identifier_t pre_gid = 0) noexcept
         : ShapeId{syn_id}
-        , gid_(gid)
-        , pre_gid_(pre_gid_)
+        , post_gid_(post_gid)
+        , pre_gid_(pre_gid)
     {}
 
     inline SynapseId(std::tuple<const identifier_t&, const identifier_t&, const identifier_t&> ids) noexcept
         : ShapeId{std::get<0>(ids)}
-        , gid_(std::get<1>(ids))
+        , post_gid_(std::get<1>(ids))
         , pre_gid_(std::get<2>(ids))
     {}
 
-    inline identifier_t gid() const noexcept {
-        return gid_;
+    inline identifier_t post_gid() const noexcept {
+        return post_gid_;
     }
 
     inline identifier_t pre_gid() const noexcept {
@@ -175,8 +175,8 @@ class Synapse : public IndexedShape<Sphere, SynapseId> {
     // bring contructors
     using super::IndexedShape;
 
-    inline Synapse(identifier_t id, identifier_t gid, identifier_t pre_gid, Point3D const& point) noexcept
-        : super(std::tie(id, gid, pre_gid), point, .0f)
+    inline Synapse(identifier_t id, identifier_t post_gid, identifier_t pre_gid, Point3D const& point) noexcept
+        : super(std::tie(id, post_gid, pre_gid), point, .0f)
     {}
 };
 

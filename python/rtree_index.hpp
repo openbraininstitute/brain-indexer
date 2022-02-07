@@ -329,7 +329,7 @@ inline void create_Synapse_bindings(py::module& m) {
             "The position of the synapse"
         )
         .def_property_readonly("ids", [](Class& obj) {
-                return std::make_tuple(long(obj.id), long(obj.gid()));
+                return std::make_tuple(long(obj.id), long(obj.post_gid()));
             },
             "The Synapse ids as a tuple (id, gid)"
         )
@@ -338,8 +338,8 @@ inline void create_Synapse_bindings(py::module& m) {
             },
             "The Synapse id"
         )
-        .def_property_readonly("gid",
-            &Class::gid,
+        .def_property_readonly("post_gid",
+            &Class::post_gid,
             "The post-synaptic Neuron id (gid)"
         )
         .def_property_readonly("pre_gid",
@@ -358,12 +358,12 @@ inline void create_SynapseIndex_bindings(py::module& m, const char* class_name) 
     create_IndexTree_bindings<si::Synapse>(m, class_name)
 
     .def("add_synapses",
-        [](Class& obj, const array_ids& syn_ids, const array_ids& gids, const array_ids& pre_gids, const array_t& points) {
+        [](Class& obj, const array_ids& syn_ids, const array_ids& post_gids, const array_ids& pre_gids, const array_t& points) {
             const auto syn_ids_ = syn_ids.template unchecked<1>();
-            const auto gids_ = gids.template unchecked<1>();
+            const auto post_gids_ = post_gids.template unchecked<1>();
             const auto pre_gids_ = pre_gids.template unchecked<1>();
             const auto points_ = convert_input(points);
-            auto soa = si::util::make_soa_reader<Synapse>(syn_ids_, gids_, pre_gids_, points_);
+            auto soa = si::util::make_soa_reader<Synapse>(syn_ids_, post_gids_, pre_gids_, points_);
             obj.insert(soa.begin(), soa.end());
         },
         R"(

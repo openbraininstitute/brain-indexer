@@ -18,7 +18,7 @@ using namespace spatial_index;
 
 const Point3D centers[]{{0., 0., 0.}, {10., 0., 0.}, {20., 0., 0.}};
 const CoordType radius[] = {2., 2.5, 4.};
-const identifier_t gids[] = {1, 2, 2};
+const identifier_t post_gids[] = {1, 2, 2};
 const identifier_t pre_gids[] = {0, 1, 1};
 
 // for Cylinders
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(IndexedSphereTree) {
 
 
 BOOST_AUTO_TEST_CASE(SynapseTree) {
-    auto synapses = util::make_vec<Synapse>(N_ITEMS, util::identity<>(), gids, pre_gids, centers);
+    auto synapses = util::make_vec<Synapse>(N_ITEMS, util::identity<>(), post_gids, pre_gids, centers);
     IndexTree<Synapse> rtree(synapses);
 
     auto n_elems_within = rtree.count_intersecting(Box3D{{-1., -1., -1.}, {11., 1., 1.}});
