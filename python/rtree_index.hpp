@@ -36,92 +36,13 @@ inline void create_Sphere_bindings(py::module& m) {
 }
 
 
-template <typename T, typename SomaT = T>
-inline py::class_<si::IndexTree<T>> create_IndexTree_bindings(py::module& m,
-                                                              const char* class_name) {
-    using Class = si::IndexTree<T>;
+/// Generic IndexTree bindings. It is a common base between full in-memory
+/// and disk-based memory mapped version, basically leaving ctors out
 
+template <typename T, typename SomaT = T, typename Class = si::IndexTree<T>>
+inline py::class_<Class> generic_IndexTree_bindings(py::module& m,
+                                                    const char* class_name) {
     return py::class_<Class>(m, class_name)
-    .def(py::init<>(), "Constructor of an empty SpatialIndex.")
-
-    /// Load tree dump
-    .def(py::init<const std::string&>(),
-        R"(
-        Loads a Spatial Index from a dump()'ed file on disk.
-
-        Args:
-            filename(str): The file path to read the spatial index from.
-        )"
-    )
-
-    .def(py::init([](const array_t& centroids, const array_t& radii) {
-            if (!radii.ndim()) {
-                si::util::constant<coord_t> zero_radius(0);
-                const auto points = convert_input(centroids);
-                const auto enum_ = si::util::identity<>{size_t(centroids.shape(0))};
-                auto soa = si::util::make_soa_reader<SomaT>(enum_, points, zero_radius);
-                return std::make_unique<Class>(soa.begin(), soa.end());
-            } else {
-                const auto& point_radius = convert_input(centroids, radii);
-                const auto enum_ = si::util::identity<>{size_t(radii.shape(0))};
-                auto soa = si::util::make_soa_reader<SomaT>(enum_,
-                                                         point_radius.first,
-                                                         point_radius.second);
-                return std::make_unique<Class>(soa.begin(), soa.end());
-            }
-        }),
-        py::arg("centroids"),
-        py::arg("radii").none(true),
-        R"(
-        Creates a SpatialIndex prefilled with Spheres given their centroids and radii
-        or Points (radii = None) automatically numbered.
-
-        Args:
-             centroids(np.array): A Nx3 array[float32] of the segments' end points
-             radii(np.array): An array[float32] with the segments' radii, or None
-        )"
-    )
-
-    .def(py::init([](const array_t& centroids,
-                     const array_t& radii,
-                     const array_ids& py_ids) {
-            if (!radii.ndim()) {
-                si::util::constant<coord_t> zero_radius(0);
-                const auto points = convert_input(centroids);
-                const auto ids = py_ids.template unchecked<1>();
-                auto soa = si::util::make_soa_reader<SomaT>(ids, points, zero_radius);
-                return std::make_unique<Class>(soa.begin(), soa.end());
-            } else {
-                const auto& point_radius = convert_input(centroids, radii);
-                const auto ids = py_ids.template unchecked<1>();
-                auto soa = si::util::make_soa_reader<SomaT>(ids,
-                                                            point_radius.first,
-                                                            point_radius.second);
-                return std::make_unique<Class>(soa.begin(), soa.end());
-            }
-        }),
-        py::arg("centroids"),
-        py::arg("radii").none(true),
-        py::arg("py_ids"),
-        R"(
-        Creates a SpatialIndex prefilled with spheres with explicit ids
-        or points with explicit ids and radii = None.
-
-        Args:
-            centroids(np.array): A Nx3 array[float32] of the segments' end points
-            radii(np.array): An array[float32] with the segments' radii, or None
-            py_ids(np.array): An array[int64] with the ids of the spheres
-        )"
-    )
-
-    .def("dump", &Class::dump,
-        R"(
-        Save the spatial index tree to a file on disk.
-
-        Args:
-            filename(str): The file path to write the spatial index to.
-        )"
-    )
 
     .def("insert",
         [](Class& obj, const id_t gid, const array_t& point, const coord_t radius) {
@@ -316,6 +237,135 @@ inline py::class_<si::IndexTree<T>> create_IndexTree_bindings(py::module& m,
 }
 
 
+/// Bindings for IndexTree<T>, based on generic IndexTree<T> bindings
+
+template <
+    typename T, typename SomaT = T, typename Class = si::IndexTree<T>,
+    std::enable_if_t<std::is_same<Class, si::IndexTree<T>>::value, int> = 0
+>
+inline py::class_<Class> create_IndexTree_bindings(py::module& m,
+                                                   const char* class_name) {
+    return generic_IndexTree_bindings<T, SomaT, Class>(m, class_name)
+
+    .def(py::init<>(), "Constructor of an empty SpatialIndex.")
+
+    /// Load tree dump
+    .def(py::init<const std::string&>(),
+        R"(
+        Loads a Spatial Index from a dump()'ed file on disk.
+
+        Args:
+            filename(str): The file path to read the spatial index from.
+        )"
+    )
+
+    .def(py::init([](const array_t& centroids, const array_t& radii) {
+            if (!radii.ndim()) {
+                si::util::constant<coord_t> zero_radius(0);
+                const auto points = convert_input(centroids);
+                const auto enum_ = si::util::identity<>{size_t(centroids.shape(0))};
+                auto soa = si::util::make_soa_reader<SomaT>(enum_, points, zero_radius);
+                return std::make_unique<Class>(soa.begin(), soa.end());
+            } else {
+                const auto& point_radius = convert_input(centroids, radii);
+                const auto enum_ = si::util::identity<>{size_t(radii.shape(0))};
+                auto soa = si::util::make_soa_reader<SomaT>(enum_,
+                                                         point_radius.first,
+                                                         point_radius.second);
+                return std::make_unique<Class>(soa.begin(), soa.end());
+            }
+        }),
+        py::arg("centroids"),
+        py::arg("radii").none(true),
+        R"(
+        Creates a SpatialIndex prefilled with Spheres given their centroids and radii
+        or Points (radii = None) automatically numbered.
+
+        Args:
+             centroids(np.array): A Nx3 array[float32] of the segments' end points
+             radii(np.array): An array[float32] with the segments' radii, or None
+        )"
+    )
+
+    .def(py::init([](const array_t& centroids,
+                     const array_t& radii,
+                     const array_ids& py_ids) {
+            if (!radii.ndim()) {
+                si::util::constant<coord_t> zero_radius(0);
+                const auto points = convert_input(centroids);
+                const auto ids = py_ids.template unchecked<1>();
+                auto soa = si::util::make_soa_reader<SomaT>(ids, points, zero_radius);
+                return std::make_unique<Class>(soa.begin(), soa.end());
+            } else {
+                const auto& point_radius = convert_input(centroids, radii);
+                const auto ids = py_ids.template unchecked<1>();
+                auto soa = si::util::make_soa_reader<SomaT>(ids,
+                                                            point_radius.first,
+                                                            point_radius.second);
+                return std::make_unique<Class>(soa.begin(), soa.end());
+            }
+        }),
+        py::arg("centroids"),
+        py::arg("radii").none(true),
+        py::arg("py_ids"),
+        R"(
+        Creates a SpatialIndex prefilled with spheres with explicit ids
+        or points with explicit ids and radii = None.
+
+        Args:
+            centroids(np.array): A Nx3 array[float32] of the segments' end points
+            radii(np.array): An array[float32] with the segments' radii, or None
+            py_ids(np.array): An array[int64] with the ids of the spheres
+        )"
+    )
+
+    .def("dump", &Class::dump,
+        R"(
+        Save the spatial index tree to a file on disk.
+
+        Args:
+            filename(str): The file path to write the spatial index to.
+        )"
+    );
+}
+
+
+/// Bindings for IndexTreeMemDisk<T>, based on generic IndexTree<T> bindings
+
+template <
+    typename T, typename SomaT = T, typename Class=si::IndexTree<T>,
+    std::enable_if_t<std::is_same<Class, si::IndexTreeMemDisk<T>>::value, int> = 0
+>
+inline py::class_<Class> create_IndexTree_bindings(py::module& m,
+                                                   const char* class_name) {
+    return generic_IndexTree_bindings<T, SomaT, Class>(m, class_name)
+
+    /// Build tree allocated in disk
+    .def(py::init(&Class::open_or_create),
+        R"(
+        Opens/Creates a SpatialIndex where memory is mapped to a file.
+
+        Args:
+            filename(str): The file path to read the spatial index from.
+            size_mb (int): The size of the file to allocate (avoid resizes)
+            truncate (bool): Wether to truncate the file prior to start
+            close_shrink (bool): Whether to shrink the mem mapped file to contents (experimental!)
+        )",
+        py::arg("fname"), py::arg("size_mb") = 1024,  // 1GB
+        py::arg("truncate") = false,
+        py::arg("close_shrink") = false
+    )
+
+    .def_static("open", &Class::open)
+    .def("close", &Class::close)
+
+    // Python contextmanager
+    .def("__enter__", [](Class& obj) -> Class& { return obj; })
+    .def("__exit__", [](Class& obj, const py::args&) -> void { obj.close(); })
+    ;
+}
+
+
 ///
 /// 1.1 - Synapse index
 ///
@@ -349,11 +399,9 @@ inline void create_Synapse_bindings(py::module& m) {
     ;
 }
 
-using SynapseIndexTree = si::IndexTree<Synapse>;
 
-/// Bindings to index si::IndexTree<MorphoEntry>
 inline void create_SynapseIndex_bindings(py::module& m, const char* class_name) {
-    using Class = SynapseIndexTree;
+    using Class = si::IndexTree<Synapse>;
 
     create_IndexTree_bindings<si::Synapse>(m, class_name)
 
@@ -397,7 +445,7 @@ inline void create_SynapseIndex_bindings(py::module& m, const char* class_name) 
 void create_MorphoEntry_bindings(py::module& m) {
 
     using Class = MorphoEntry;
-    
+
     struct EndpointsVisitor: boost::static_visitor<const point_t*> {
         inline const point_t* operator()(const Segment& seg) const {
             return &seg.p1;
@@ -450,14 +498,11 @@ void create_MorphoEntry_bindings(py::module& m) {
             "Returns the segment_id of the indexed morphology part"
         )
     ;
-
 }
 
 
-using MorphIndexTree = si::IndexTree<MorphoEntry>;
-
-
 /// Aux function to insert all segments of a branch
+template <typename MorphIndexTree>
 inline static void add_branch(MorphIndexTree& obj,
                               const id_t neuron_id,
                               unsigned section_id,
@@ -472,10 +517,11 @@ inline static void add_branch(MorphIndexTree& obj,
 
 
 /// Bindings to index si::IndexTree<MorphoEntry>
+template <typename Class = si::IndexTree<MorphoEntry>>
 inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
-    using Class = MorphIndexTree;
 
-    create_IndexTree_bindings<si::MorphoEntry, si::Soma>(m, class_name)
+    create_IndexTree_bindings<MorphoEntry, si::Soma, Class>(m, class_name)
+
     .def("insert",
         [](Class& obj, const id_t gid, const unsigned section_id, const unsigned segment_id,
                        const array_t& p1, const array_t& p2, const coord_t radius) {
@@ -674,6 +720,7 @@ inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
         )"
     );
 }
+
 
 }  // namespace py_bindings
 }  // namespace spatial_index

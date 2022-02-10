@@ -142,12 +142,10 @@ def test_endpoints_retrieval():
     np.testing.assert_allclose(idx[1].endpoints, array_expect)
 
 
-@pytest.mark.parametrize("points, radius, offsets, exc_msg",
-                         [([], [1, ], [0, ],
-                          "has_soma is True but no points provided"),
-                          ([[0, 0, 0]], [], [0, ],
-                           "Please provide the soma radius")]
-                         )
+@pytest.mark.parametrize("points, radius, offsets, exc_msg", (
+    ([], [1], [0], "has_soma is True but no points provided"),
+    ([[0, 0, 0]], [], [0], "Please provide the soma radius")
+))
 def test_add_neuron_exc_with_soma(points, radius, offsets, exc_msg):
     rtree = MorphIndex()
     with pytest.raises(ValueError) as excinfo:
@@ -191,9 +189,3 @@ if __name__ == "__main__":
 
     test_endpoints_retrieval()
     print("[PASSED] MTest test_endpoints_retrieval")
-
-    test_add_neuron_exc_with_soma()
-    print("[PASSED] MTest test_add_neuron_exc_with_soma")
-
-    test_add_neuron_exc_without_soma()
-    print("[PASSED] MTest test_add_neuron_exc_without_soma")

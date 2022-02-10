@@ -2,14 +2,13 @@
 # Copyright Blue Brain Project 2020-2021. All rights reserved
 
 import libsonata
-import logging
 import numpy
 
-from . import _spatial_index
+from . import _spatial_index as core
 from .util import ChunkedProcessingMixin, gen_ranges
 
 
-class PointIndexer(_spatial_index.SphereIndex):
+class PointIndexer(core.SphereIndex):
     """
     A Synapse spatial index, based on synapse centers
     """
@@ -28,13 +27,14 @@ class PointIndexer(_spatial_index.SphereIndex):
         super().__init__(synapse_centers, None, synapse_ids)
 
 
-class SynapseIndexer(ChunkedProcessingMixin, _spatial_index.SynapseIndex):
+class SynapseIndexer(ChunkedProcessingMixin):
 
     # Chunks are 1 Sonata range (of 100k synapses)
     N_ELEMENTS_CHUNK = 1  # override from ChunkedProcessingMixin
     MAX_SYN_COUNT_RANGE = 100_000
 
     def __init__(self, sonata_edges, selection):
+        self.index = core.SynapseIndex()
         self.edges = sonata_edges
         self._selection = self.normalize_selection(selection)
         super().__init__()
@@ -52,31 +52,32 @@ class SynapseIndexer(ChunkedProcessingMixin, _spatial_index.SynapseIndex):
             self.edges.get_attribute("afferent_center_y", selection),
             self.edges.get_attribute("afferent_center_z", selection)
         ))
-        self.add_synapses(syn_ids, post_gids, pre_gids, synapse_centers)
+        self.index.add_synapses(syn_ids, post_gids, pre_gids, synapse_centers)
 
     @classmethod
     def load_dump(cls, filename):
         """Load the index from a dump file"""
-        return _spatial_index.SynapseIndex(filename)
+        return core.SynapseIndex(filename)
 
     @classmethod
-    def from_sonata_selection(cls, sonata_edges, selection):
+    def from_sonata_selection(cls, sonata_edges, selection, **kw):
         """ Builds the synapse index from a generic Sonata selection object
+        **kw args are passed verbatim to create
         """
-        return cls.create(sonata_edges, selection)
+        return cls.create(sonata_edges, selection, **kw)
 
     @classmethod
-    def from_sonata_tgids(cls, sonata_edges, target_gids=None):
+    def from_sonata_tgids(cls, sonata_edges, target_gids=None, **kw):
         """ Creates a synapse index from an edge file and a set of target gids
         """
         selection = (
             sonata_edges.afferent_edges(target_gids) if target_gids is not None
             else sonata_edges.select_all()
         )
-        return cls.from_sonata_selection(sonata_edges, selection)
+        return cls.from_sonata_selection(sonata_edges, selection, **kw)
 
     @classmethod
-    def from_sonata_file(cls, edge_filename, population_name, target_gids=None):
+    def from_sonata_file(cls, edge_filename, population_name, target_gids=None, **kw):
         """ Creates a synapse index from a sonata edge file and population.
 
         Args:
@@ -89,17 +90,7 @@ class SynapseIndexer(ChunkedProcessingMixin, _spatial_index.SynapseIndex):
         import libsonata  # local, since this is just a helper, avoid cyclec dep
         storage = libsonata.EdgeStorage(edge_filename)
         edges = storage.open_population(population_name)
-        return cls.from_sonata_tgids(edges, target_gids)
-
-    def dump(self, filename):
-        WARNING_WHEN_OVER_SIZE = 10_000_000
-        if len(self) > WARNING_WHEN_OVER_SIZE:
-            logging.warning(
-                "This is a large synapse index. Please consider using Sonata "
-                "selection to build indices on-the-fly over regions of interest since "
-                "large ones are heavy on disk, memory and intrinsically slower.")
-        logging.info("Exporting %d elements to %s...", len(self), filename)
-        super().dump(filename)
+        return cls.from_sonata_tgids(edges, target_gids, **kw)
 
     @classmethod
     def normalize_selection(cls, selection):

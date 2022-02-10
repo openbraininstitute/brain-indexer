@@ -1,7 +1,7 @@
 """
     High level command line commands
 """
-
+import logging
 from .node_indexer import NodeMorphIndexer
 from .util import docopt_get_args
 
@@ -10,16 +10,35 @@ def spatial_index_nodes(args=None):
     """spatial-index-nodes
 
     Usage:
-        spatial-index-nodes <nodes-file> <morphology-dir> [--out=<filename>]
+        spatial-index-nodes [options] <nodes-file> <morphology-dir>
         spatial-index-nodes --help
 
     Options:
         -v, --verbose            Increase verbosity level
         -o, --out=<filename>     The index output filename [default:out.spi]
+        --use-mem-map=<SIZE_MB>  Whether to use a mapped file instead [experimental]
+        --shrink-on-close        Whether to shrink the memory file upon closing the object
     """
     options = docopt_get_args(spatial_index_nodes, args)
-    index = NodeMorphIndexer.create(options["morphology_dir"], options["nodes_file"])
-    index.dump(options.get("out") or "out.spi")
+    filename = options.get("out") or "out.spi"
+    use_mem_map = options.get("use_mem_map")
+    mem_map_props = None
+
+    if use_mem_map:
+        logging.warning("Using experimental memory-mapped-file")
+        fsize = int(use_mem_map)
+        shrink = options["shrink_on_close"]
+        mem_map_props = NodeMorphIndexer.DiskMemMapProps(filename, fsize, True, shrink)
+
+    index = NodeMorphIndexer.create(
+        options["morphology_dir"],
+        options["nodes_file"],
+        mem_map_props=mem_map_props,
+        progress=True
+    )
+
+    if not mem_map_props:
+        index.dump(filename)
 
 
 def spatial_index_circuit(args=None):

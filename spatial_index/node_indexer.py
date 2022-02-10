@@ -19,7 +19,7 @@ import mvdtool
 import numpy as np
 import quaternion as npq
 
-from ._spatial_index import MorphIndex
+from ._spatial_index import MorphIndex, MorphIndexMemDisk
 from .util import ChunkedProcessingMixin
 
 morphio.set_ignored_warning(morphio.Warning.only_child)
@@ -54,12 +54,47 @@ class MorphologyLib:
         return self._morphologies.get(morph_name) or self._load(morph_name)
 
 
-class NodeMorphIndexer(ChunkedProcessingMixin, MorphIndex):
+class NodeMorphIndexer(ChunkedProcessingMixin):
+    """A NodeMorphIndexer is a helper class to create Spatial Indices (RTree)
+    from a node file (mvd or Sonata) and a morphology library.
+    When the index is expected to NOT FIT IN MEMORY it can alternatively be set up
+    to use MorphIndexMemDisk, according to `disk_mem_map` ctor argument.
 
-    def __init__(self, morphology_dir, nodes_file, population="", gids=None):
-        super().__init__()
+    After indexing (ranges of) cells, the user can access the current spatial
+    index at the `index` property
+
+    Factories are provided to create & retrieve an index directly from mvd or Sonata
+    """
+
+    class DiskMemMapProps:
+        def __init__(self, map_file, file_size=1024, truncate=False, close_shrink=False):
+            self.memdisk_file = map_file
+            self.file_size = file_size
+            self.truncate = truncate
+            self.shrink = close_shrink
+
+        @property
+        def args(self):
+            return self.memdisk_file, self.file_size, self.truncate, self.shrink
+
+    def __init__(self, morphology_dir, nodes_file, population="", gids=None,
+                 mem_map_props: DiskMemMapProps = None):
+        """Initializes a node index builder
+
+        Args:
+            morphology_dir (str): The file/directory where morphologies reside
+            nodes_file (str): The Sonata/mvd nodes file
+            population (str, optional): The nodes population. Defaults to "" (default).
+            gids ([type], optional): A selection of gids to index. Defaults to None (All)
+            mem_map_props (DiskMemMapProps, optional): In provided, specifies properties
+                of the memory-mapped-file backing this struct [experimental!]
+        """
+        if mem_map_props:
+            self.index = MorphIndexMemDisk(*mem_map_props.args)
+        else:
+            self.index = MorphIndex()
         self.morph_lib = MorphologyLib(morphology_dir)
-        self.mvd: mvdtool.MVD3.File = mvdtool.open(nodes_file, population)
+        self.mvd = mvdtool.open(nodes_file, population)
         self._gids = range(0, len(self.mvd)) if gids is None else \
             np.sort(np.array(gids, dtype=int))
         logging.info("Index count: %d cells", len(self._gids))
@@ -86,8 +121,8 @@ class NodeMorphIndexer(ChunkedProcessingMixin, MorphIndex):
         morph = self.morph_lib.get(morph)
         soma_center, soma_rad = morph.soma
         soma_center += position
-        self.add_soma(gid, soma_center, soma_rad)
-        self.add_neuron(
+        self.index.add_soma(gid, soma_center, soma_rad)
+        self.index.add_neuron(
             gid, points, morph.radius, morph.branch_offsets[:-1], False
         )
 
@@ -118,19 +153,22 @@ class NodeMorphIndexer(ChunkedProcessingMixin, MorphIndex):
             self.process_cell(gid, morph, rotopoints, pos)
 
     @classmethod
-    def from_mvd_file(cls, morphology_dir, node_filename, target_gids=None):
-        """ Build a synpase index from an mvd file
-        """
-        return cls.create(morphology_dir, node_filename, "", target_gids)
+    def from_mvd_file(cls, morphology_dir, node_filename, target_gids=None,
+                      disk_mem_map: DiskMemMapProps = None, **kw):
+        """ Build a synpase index from an mvd file"""
+        return cls.create(morphology_dir, node_filename, "", target_gids,
+                          disk_mem_map, **kw)
 
     @classmethod
-    def from_sonata_selection(cls, morphology_dir, node_filename, pop_name, selection):
-        """ Builds the synapse index from a generic Sonata selection object
-        """
-        return cls.create(morphology_dir, node_filename, pop_name, selection.flatten())
+    def from_sonata_selection(cls, morphology_dir, node_filename, pop_name, selection,
+                              disk_mem_map: DiskMemMapProps = None, **kw):
+        """ Builds the synapse index from a generic Sonata selection object"""
+        return cls.create(morphology_dir, node_filename, pop_name, selection.flatten(),
+                          disk_mem_map, **kw)
 
     @classmethod
-    def from_sonata_file(cls, morphology_dir, node_filename, pop_name, target_gids=None):
+    def from_sonata_file(cls, morphology_dir, node_filename, pop_name, target_gids=None,
+                         disk_mem_map: DiskMemMapProps = None, **kw):
         """ Creates a node index from a sonata node file.
 
         Args:
@@ -141,9 +179,15 @@ class NodeMorphIndexer(ChunkedProcessingMixin, MorphIndex):
                 Warn: None will index all synapses, please mind memory limits
 
         """
-        return cls.create(morphology_dir, node_filename, pop_name, target_gids)
+        return cls.create(morphology_dir, node_filename, pop_name, target_gids,
+                          disk_mem_map, **kw)
 
     @classmethod
     def load_dump(cls, filename):
         """Load the index from a dump file"""
         return MorphIndex(filename)
+
+    @classmethod
+    def load_disk_mem_map(cls, filename):
+        """Load the index from a dump file"""
+        return MorphIndexMemDisk.open(filename)

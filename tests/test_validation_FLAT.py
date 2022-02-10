@@ -7,6 +7,7 @@
 
 import numpy as np
 import os
+import sys
 from spatial_index import NodeMorphIndexer
 try:
     import pytest
@@ -22,11 +23,26 @@ CIRCUIT_FILE = CIRCUIT_2K + "/circuit.mvd3"
 MORPH_FILE = CIRCUIT_2K + "/morphologies/ascii"
 
 
+class Options:
+    use_mem_mapped_file = False
+
+
 def do_query_serial(min_corner, max_corner):
-    indexer = NodeMorphIndexer.from_mvd_file(MORPH_FILE, CIRCUIT_FILE)
-    idx = indexer.find_intersecting_window(min_corner, max_corner)
-    indexer.find_intersecting_window_pos(min_corner, max_corner)
-    indexer.find_intersecting_window_objs(min_corner, max_corner)
+    if Options.use_mem_mapped_file:
+        logging.info("Using mem-mapped")
+        memmap_props = NodeMorphIndexer.DiskMemMapProps(
+            "mapfile.bin",
+            4000,   # ~4GB
+            True    # Truncate
+        )
+    else:
+        memmap_props = None
+    index = NodeMorphIndexer.from_mvd_file(MORPH_FILE, CIRCUIT_FILE,
+                                           disk_mem_map=memmap_props,
+                                           progress=True)
+    idx = index.find_intersecting_window(min_corner, max_corner)
+    index.find_intersecting_window_pos(min_corner, max_corner)
+    index.find_intersecting_window_objs(min_corner, max_corner)
     return idx
 
 
@@ -59,4 +75,8 @@ def test_validation_FLAT():
 
 
 if __name__ == "__main__":
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+    if len(sys.argv) > 1 and sys.argv[1] == '--mem-file':
+        Options.use_mem_mapped_file = True
     test_validation_FLAT()

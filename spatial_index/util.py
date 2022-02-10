@@ -16,19 +16,16 @@ class ChunkedProcessingMixin:
 
     def process_all(self, progress=False):
         n_elements = self.n_elements_to_import()
-        nchunks = (n_elements - 1) // self.N_ELEMENTS_CHUNK + 1
-
-        for i, range_ in enumerate(gen_ranges(n_elements, self.N_ELEMENTS_CHUNK)):
+        make_ranges = ranges_with_progress if progress else gen_ranges
+        for range_ in make_ranges(n_elements, self.N_ELEMENTS_CHUNK):
             self.process_range(range_)
-            if progress:
-                show_progress(i + 1, nchunks)
 
     @classmethod
-    def create(cls, *args):
+    def create(cls, *args, progress=False, return_indexer=False, **kw):
         """Interactively create, with some progress"""
-        indexer = cls(*args)
-        indexer.process_all()
-        return indexer
+        indexer = cls(*args, **kw)
+        indexer.process_all(progress)
+        return indexer if return_indexer else indexer.index
 
     @classmethod
     def create_parallel(cls, *ctor_args, num_cpus=None, progress=False):
@@ -73,6 +70,14 @@ def gen_ranges(limit, blocklen, low=0):
         yield low, limit
 
 
+def ranges_with_progress(limit, blocklen, low=0):
+    nchunks = (limit - low - 1) // blocklen + 1
+    show_progress(0, nchunks)
+    for i, range_ in enumerate(gen_ranges(limit, blocklen, low)):
+        yield range_
+        show_progress(i + 1, nchunks)
+
+
 def docopt_get_args(func, extra_args=None):
     """Get all CLI  args via docopt
     """
@@ -94,7 +99,7 @@ def show_progress(iteration, total, prefix='Progress:', decimals=1, length=80, f
     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
-    print(f'\r{prefix} |{bar}| {percent}% ', end="   ")
+    print(f'\r{prefix} |{bar}| {percent}% ', end="   ", flush=True)
     # Print New Line on Complete
     if iteration == total:
         print()

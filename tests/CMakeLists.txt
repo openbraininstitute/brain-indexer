@@ -11,6 +11,12 @@ function(SI_UNIT_TEST test_src)
     endif()
 endfunction()
 
+function(SI_CPP_EXAMPLE test_src)
+    add_executable(${test_src} cpp/examples/${test_src}.cpp)
+    target_link_libraries(${test_src} SpatialIndex)
+    add_test(NAME ${test_src} COMMAND ${test_src})
+endfunction()
+
 
 si_unit_test("test_input_iters")
 si_unit_test("unit_tests")
@@ -22,11 +28,8 @@ if(SI_BENCHMARKS)
 endif()
 
 
-# Base example uses serialization
-set(BUILD_BASENAME "test_clean")
-add_executable(${BUILD_BASENAME} cpp/examples/${BUILD_BASENAME}.cpp)
-target_link_libraries(${BUILD_BASENAME} SpatialIndex)
-add_test(NAME ${BUILD_BASENAME} COMMAND ${BUILD_BASENAME})
+si_cpp_example("test_clean")
+si_cpp_example("disk_mem_tree")
 
 
 # Python tests

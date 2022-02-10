@@ -4,7 +4,7 @@
     Test indexing circuits, from mvd and morphology libraries
 """
 import logging
-import os.path
+import os
 
 import numpy.testing as nptest
 from spatial_index.node_indexer import NodeMorphIndexer
@@ -69,16 +69,17 @@ def test_morph_loading():
 
 
 def test_serial_exec():
-    index = NodeMorphIndexer(MORPHOLOGY_FILES[1], FILETEST)
-    index.process_range((0, 1))  # Process first neuron
+    node_indexer = NodeMorphIndexer(MORPHOLOGY_FILES[1], FILETEST)
+    node_indexer.process_range((0, 1))  # Process first neuron
+    index = node_indexer.index
     assert len(index) > 1700
     objs_in_region = index.find_intersecting_window_objs([100, 50, 100], [200, 100, 200])
     assert len(objs_in_region) == 23
 
     m = _3DMorphology(
         morphio.Morphology(MORPHOLOGY_FILES[1]),
-        index.mvd.rotations(0)[0],
-        index.mvd.positions(0)[0],
+        node_indexer.mvd.rotations(0)[0],
+        node_indexer.mvd.positions(0)[0],
     )
     _, _, final_section_pts = m.compute_final_points()
 
@@ -91,10 +92,18 @@ def test_serial_exec():
         nptest.assert_allclose(obj.centroid, point_built_from_mvd, atol=0.5)
 
 
-def _test_parallel_exec():
-    # Load all 1000 neurons
-    # Note parallel load requires a version of hdf5 with parallel support
-    NodeMorphIndexer.create_parallel(MORPHOLOGY_FILES[1], FILETEST, num_cpus=4)
+def test_memory_mapped_file_morph_index():
+    MEM_MAP_FILE = "rtree_image.bin"
+    mem_map_props = NodeMorphIndexer.DiskMemMapProps(MEM_MAP_FILE, 1, True, True)
+    node_indexer = NodeMorphIndexer(MORPHOLOGY_FILES[1], FILETEST,
+                                    mem_map_props=mem_map_props)
+    node_indexer.process_range((0, 1))
+    index = node_indexer.index
+    assert len(index) > 1700
+    index.close()  # explicit close, useful when we got the index object from the indexer
+
+    with NodeMorphIndexer.load_disk_mem_map(MEM_MAP_FILE) as index2:
+        assert len(index2) > 1700, len(index2)
 
 
 class Test2Info:
@@ -135,4 +144,4 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     test_serial_exec()
     test_sonata_index()
-    _test_parallel_exec()
+    test_memory_mapped_file_morph_index()

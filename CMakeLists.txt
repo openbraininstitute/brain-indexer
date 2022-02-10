@@ -44,6 +44,7 @@ if(SI_UNIT_TESTS)
     endif()
 endif()
 find_package(Boost 1.59.0 REQUIRED COMPONENTS ${BOOST_REQ_COMPONENTS})
+find_package(Threads REQUIRED QUIET)
 
 
 #
@@ -58,6 +59,7 @@ target_link_libraries(SpatialIndex
     Boost::boost
     Boost::serialization
     Boost::filesystem
+    Threads::Threads
 )
 target_compile_definitions(SpatialIndex INTERFACE "-DBOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL")
 

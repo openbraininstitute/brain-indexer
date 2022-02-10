@@ -20,7 +20,9 @@ EDGE_FILE = os.path.join(_CURDIR, "data", "edges_2k.h5")
 @pytest_skipif(not os.path.exists(EDGE_FILE),
                reason="Edge file not available")
 def test_syn_index():
-    index = SynapseIndexer.from_sonata_file(EDGE_FILE, "All")
+    indexer = SynapseIndexer.from_sonata_file(EDGE_FILE, "All", progress=True,
+                                              return_indexer=True)
+    index = indexer.index
     print("Index size:", len(index))
 
     f = h5py.File(EDGE_FILE, 'r')
@@ -32,7 +34,8 @@ def test_syn_index():
     print("Found N synapses:", len(points_in_region))
     assert len(ds) > len(points_in_region) > 0
 
-    z_coords = index.edges.get_attribute("afferent_center_z", Selection(points_in_region))
+    z_coords = indexer.edges.get_attribute("afferent_center_z",
+                                           Selection(points_in_region))
     for z in z_coords:
         assert 480 < z < 520
 
