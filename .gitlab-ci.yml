@@ -86,6 +86,8 @@ test-bb5-py39:
     PRE_BUILD_COMMAND: |
       source ${SPACK_ROOT}/share/spack/setup-env.sh;
       spack load boost@1.70
+    EXTRA_MODULES:
+      unstable:gcc
 
 # The following stages are overrides. Dont rename
 # Always add the manual option to create sdist/wheel or upload
@@ -124,6 +126,8 @@ docs:
     PRE_BUILD_COMMAND: |
       source ${SPACK_ROOT}/share/spack/setup-env.sh;
       spack load boost@1.70
+    EXTRA_MODULES:
+      unstable:gcc
   artifacts:
     paths:
       - "${PYTHON_PROJECT_DIR-.}/docs/_build/"
