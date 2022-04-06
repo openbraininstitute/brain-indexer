@@ -4,7 +4,7 @@ Introduction
 Design
 ------
 
-Spatial Index was designed with efficiency in mind. It was developed on top of the Boost Geometry.Index libraries, renown for their excellent performance.
+SpatialIndex allows to create indexes and perform volumetric queries with efficiency in mind. It was developed on top of the Boost Geometry.Index libraries, renown for their excellent performance.
 
 SpatialIndex specializes to several core geometries, namely spheres and cylinders, and derivates: indexed spheres/segments and "unions" of them (variant). These objects are directly stored in the tree structure and have respective bounding boxes created on the fly. As such some CPU cycles were traded for substantial memory savings, aiming at near-billion indexed geometries per cluster node.
 
@@ -98,6 +98,47 @@ Otherwise one can query directly from the index:
     objs_in_region = index.find_intersecting_window_objs([200, 200, 480], [300, 300, 520])
 
 And then fetching the necessary information directly from the structure you just created.
+
+Memory mapped files (experimental)
+----------------------------------
+
+**Keep in mind that the "memory mapped file" is still an experimental feature and therefore could lead to unexpected/untested results.
+Plese contact the HPC team or the developers of SpatialIndex if you have any questions.**
+
+SpatialIndex can also use memory mapped files to index very large circuits without the risk of triggering Out Of Memory errors.
+Please use fast filesystems, preferably on SSD/NVME, and avoid slow distributed filesystems like GPFS that would make the process extremely slow.
+On BB5 you can request for a NVME node using:
+
+.. code-block:: bash
+
+    salloc -p prod -C nvme ...
+
+Then, in order to use memory mapped files, you need to use the `--use-mem-map=SIZE_OF_MAPPED_FILE` parameter in the `spatial-index-nodes` CLI utility:
+
+.. code-block:: bash
+
+    spatial-index-nodes --use-mem-map=SIZE_IN_MB NODES_FILE MORPHOLOGY -o OUTPUT_FILE
+
+You can get more information on the syntax by running `spatial-index-nodes` with the `--help` parameter:
+
+.. code-block:: bash
+
+    $ spatial-index-nodes --help
+    Usage:
+        spatial-index-nodes [options] <nodes-file> <morphology-dir>
+        spatial-index-nodes --help
+
+    Options:
+        -v, --verbose            Increase verbosity level
+        -o, --out=<filename>     The index output filename [default:out.spi]
+        --use-mem-map=<SIZE_MB>  Whether to use a mapped file instead [experimental]
+        --shrink-on-close        Whether to shrink the memory file upon closing the object
+
+One can also use the normal :class:`spatial_index.NodeMorphIndexer` Python class to generate a memory mapped index in a program/script. Please refer to the specific class :class:`spatial_index.NodeMorphIndexer` documentation for more details.
+
+You can find some examples on how to use the memory mapped indexer in the `examples/` directory, specifically in the `memory_map_index.py` file and `memory_map_index.sh` files.
+
+"""
 
 More examples
 --------------

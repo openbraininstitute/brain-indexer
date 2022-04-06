@@ -29,9 +29,7 @@ test-cpp-unit:
   before_script:
     - !reference [.bb5, clean-env]
   script:
-    - source ${SPACK_ROOT}/share/spack/setup-env.sh;
-    - spack load boost@1.70
-    - module load unstable cmake gcc
+    - module load unstable cmake gcc boost
     - cmake -S . -B build
     - cmake --build build -j2
     - cd build && ctest -E Python
@@ -74,7 +72,7 @@ test-spack:
     - spack dev-build spatial-index@develop
     - !reference [.bb5, load-python-39]
     - !reference [.setup-venv]
-    - spack load spatial-index@develop
+    - spack load --first spatial-index@develop # quick fix since spack installation doesn't clean up properly between pipeline runs
     - mv spatial_index _dont_interfere
     - pytest
 
@@ -84,8 +82,7 @@ test-bb5-py39:
   variables:
     TOXENV: flake8, py39  # boost depends on py38
     PRE_BUILD_COMMAND: |
-      source ${SPACK_ROOT}/share/spack/setup-env.sh;
-      spack load boost@1.70
+      module load unstable boost
     EXTRA_MODULES:
       unstable:gcc
 
@@ -124,8 +121,7 @@ docs:
   variables:
     TOXENV: docs
     PRE_BUILD_COMMAND: |
-      source ${SPACK_ROOT}/share/spack/setup-env.sh;
-      spack load boost@1.70
+      module load unstable boost
     EXTRA_MODULES:
       unstable:gcc
   artifacts:
