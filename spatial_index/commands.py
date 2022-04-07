@@ -3,7 +3,7 @@
 """
 import logging
 from .node_indexer import NodeMorphIndexer
-from .util import docopt_get_args
+from .util import check_free_space, docopt_get_args, get_file_path
 
 
 def spatial_index_nodes(args=None):
@@ -27,6 +27,10 @@ def spatial_index_nodes(args=None):
     if use_mem_map:
         logging.warning("Using experimental memory-mapped-file")
         fsize = int(use_mem_map)
+        if not check_free_space(fsize * 1048576, get_file_path(filename)):
+            print("Not enough free space to create a memory-mapped file of size",
+                  fsize, "MB!")
+            return 1
         shrink = options["shrink_on_close"]
         mem_map_props = NodeMorphIndexer.DiskMemMapProps(filename, fsize, True, shrink)
 

@@ -1,4 +1,5 @@
 import logging
+import os
 from abc import abstractmethod
 
 
@@ -103,3 +104,19 @@ def show_progress(iteration, total, prefix='Progress:', decimals=1, length=80, f
     # Print New Line on Complete
     if iteration == total:
         print()
+
+
+def check_free_space(size, path):
+    """
+    Check if there's enough free space on the drive where the
+    memory mapped file is allocated. Size is in bytes.
+    """
+    st = os.statvfs(path)
+    return st.f_bavail * st.f_frsize >= size
+
+
+def get_file_path(path):
+    folder = os.path.dirname(path)
+    if folder == "":
+        folder = "."
+    return folder
