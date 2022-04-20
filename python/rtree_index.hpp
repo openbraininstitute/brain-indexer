@@ -39,10 +39,15 @@ inline void create_Sphere_bindings(py::module& m) {
 /// Generic IndexTree bindings. It is a common base between full in-memory
 /// and disk-based memory mapped version, basically leaving ctors out
 
-template <typename T, typename SomaT = T, typename Class = si::IndexTree<T>>
+template <
+    typename T,
+    typename SomaT = T,
+    typename Class = si::IndexTree<T>,
+    typename HolderT = std::unique_ptr<Class>
+>
 inline py::class_<Class> generic_IndexTree_bindings(py::module& m,
                                                     const char* class_name) {
-    return py::class_<Class>(m, class_name)
+    return py::class_<Class, HolderT>(m, class_name)
 
     .def("insert",
         [](Class& obj, const id_t gid, const array_t& point, const coord_t radius) {
@@ -240,7 +245,9 @@ inline py::class_<Class> generic_IndexTree_bindings(py::module& m,
 /// Bindings for IndexTree<T>, based on generic IndexTree<T> bindings
 
 template <
-    typename T, typename SomaT = T, typename Class = si::IndexTree<T>,
+    typename T,
+    typename SomaT = T,
+    typename Class = si::IndexTree<T>,
     std::enable_if_t<std::is_same<Class, si::IndexTree<T>>::value, int> = 0
 >
 inline py::class_<Class> create_IndexTree_bindings(py::module& m,
@@ -333,35 +340,35 @@ inline py::class_<Class> create_IndexTree_bindings(py::module& m,
 /// Bindings for IndexTreeMemDisk<T>, based on generic IndexTree<T> bindings
 
 template <
-    typename T, typename SomaT = T, typename Class=si::IndexTree<T>,
-    std::enable_if_t<std::is_same<Class, si::IndexTreeMemDisk<T>>::value, int> = 0
+    typename T,
+    typename SomaT = T,
+    typename Class = si::IndexTree<T>,
+    std::enable_if_t<std::is_same<Class, si::MemDiskRtree<T>>::value, int> = 0
 >
-inline py::class_<Class> create_IndexTree_bindings(py::module& m,
-                                                   const char* class_name) {
-    return generic_IndexTree_bindings<T, SomaT, Class>(m, class_name)
+inline py::class_<Class> create_IndexTree_bindings(py::module& m, const char* class_name) {
+    using MemDiskManager = si::MemDiskPtr<Class>;
+
+    return generic_IndexTree_bindings<T, SomaT, Class, MemDiskManager>(m, class_name)
+    .def_static("open", &MemDiskManager::open,
+        py::return_value_policy::take_ownership,
+        "Opens a SpatialIndex from a memory mapped file."
+    )
 
     /// Build tree allocated in disk
-    .def(py::init(&Class::open_or_create),
+    .def_static("create", &MemDiskManager::create,
+        py::return_value_policy::take_ownership,
         R"(
-        Opens/Creates a SpatialIndex where memory is mapped to a file.
+        Creates a SpatialIndex where memory is mapped to a file.
 
         Args:
             filename(str): The file path to read the spatial index from.
             size_mb (int): The size of the file to allocate (avoid resizes)
-            truncate (bool): Wether to truncate the file prior to start
             close_shrink (bool): Whether to shrink the mem mapped file to contents (experimental!)
         )",
-        py::arg("fname"), py::arg("size_mb") = 1024,  // 1GB
-        py::arg("truncate") = false,
+        py::arg("fname"),
+        py::arg("size_mb") = 1024,  // 1GB
         py::arg("close_shrink") = false
     )
-
-    .def_static("open", &Class::open)
-    .def("close", &Class::close)
-
-    // Python contextmanager
-    .def("__enter__", [](Class& obj) -> Class& { return obj; })
-    .def("__exit__", [](Class& obj, const py::args&) -> void { obj.close(); })
     ;
 }
 

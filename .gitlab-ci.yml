@@ -21,6 +21,9 @@ workflow:
     - if: '$CI_COMMIT_BRANCH'
     - if: '$CI_COMMIT_TAG'
 
+variables:
+  bb5_partition: prod_small
+
 
 test-cpp-unit:
   stage: test
@@ -69,10 +72,11 @@ test-spack:
     - !reference [.define-functions]
   script:
     - source $SPACK_ROOT/share/spack/setup-env.sh
+    - module load unstable git
     - spack dev-build spatial-index@develop
     - !reference [.bb5, load-python-39]
     - !reference [.setup-venv]
-    - spack load --first spatial-index@develop # quick fix since spack installation doesn't clean up properly between pipeline runs
+    - spack load --first spatial-index@develop  # quick fix since spack installation doesn't clean up properly between pipeline runs
     - mv spatial_index _dont_interfere
     - pytest
 

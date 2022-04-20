@@ -246,8 +246,8 @@ class IndexTree: public IndexTreeBaseT<T, A> {
     using super = IndexTreeBaseT<T, A>;
 
   public:
+    using value_type = T;
     using cref_t = std::reference_wrapper<const T>;
-
     using super::rtree::rtree;  // super ctors
 
     inline IndexTree() = default;
@@ -359,51 +359,63 @@ template <typename T>
 using MemDiskAllocator = bip::allocator<T, bip::managed_mapped_file::segment_manager>;
 
 template <typename T>
-class IndexTreeMemDisk: public IndexTree<T, MemDiskAllocator<T>> {
+using MemDiskRtree = IndexTree<T, MemDiskAllocator<T>>;
+
+/// \brief Class that manages a MemDiskRtree in a managed mapped file
+/// Can be used as a holder type for pybind11 so it handles the mapped file itself
+template <typename T>
+class MemDiskPtr {
 
   public:
-    using super = IndexTree<T, MemDiskAllocator<T>>;
-    using super::IndexTree::IndexTree;
+    using value_type = T;
 
-    /// Enable move ctor and assignment operator. Copy not allowed.
-    IndexTreeMemDisk(IndexTreeMemDisk&&) = default;
-    IndexTreeMemDisk& operator=(IndexTreeMemDisk&&) = default;
+    // Req for holder type
+    T* get() const noexcept { return tree_; }
+    T* operator->() const noexcept { return get(); }
 
-    /// \brief The factory for IndexTreeMemDisk objects.
+    /// Enable move ctor and assignment operator
+    MemDiskPtr(MemDiskPtr&&) = default;
+    MemDiskPtr& operator=(MemDiskPtr&&) = default;
+
+
+    /// \brief The factory for a MemDiskRtree object fully living in a memory mapped file.
     ///
     /// IndexTreeMemDisk are special objects which hold the managed_mapped_file
     ///    used as memory for its rtree superclass. Therefore we must initialize
     ///    in advance.
     /// \param fname The filename to store the rtree memory
     /// \param size_mb The initial capacity, in MegaBytes
-    /// \param truncate If true will delete and create a new mapped file
     /// \param close_shrink If true will shrink the mem file to contents
-    inline static IndexTreeMemDisk open_or_create(const std::string& filename,
-                                                  size_t size_mb = 1024,
-                                                  bool truncate = false,
-                                                  bool close_shrink = false);
+    static MemDiskPtr<T> create(const std::string& filename,
+                                size_t size_mb,
+                                bool close_shrink);
 
-    /// \brief Opens an rtree object from a managed-mapped-file for Reading
-    /// \Note: Avoid modifying existing objects since they might not have free space left
-    inline static IndexTreeMemDisk open(const std::string& filename);
+    /// \brief Opens a MemDiskRtree from a memory mapped file for reading
+    static MemDiskPtr<T> open(const std::string& filename);
 
     /// \brief Flush and close the current object.
     /// \note The object is not usable after this function
     inline void close();
 
-    ~IndexTreeMemDisk() {
+    ~MemDiskPtr() {
         close();  // Ensure object is sync'ed back to mem-file
     }
 
-  protected:
-    inline IndexTreeMemDisk(const std::string& fname,
-                            std::unique_ptr<bip::managed_mapped_file>&& mapped_file,
-                            bool close_shrink = false);
+    /// Ctor from a raw ptr (wont manage the mapped file)
+    MemDiskPtr(T* t) : mapped_file_(), tree_(t) { }  // for pybind11
 
-    std::string filename_;
-    std::unique_ptr<bip::managed_mapped_file> mapped_file_;  // Keep in heap so it wont move
-    bool close_shrink_;
+  protected:
+    inline MemDiskPtr(std::unique_ptr<bip::managed_mapped_file>&& mapped_file,
+                      const std::string& close_shrink_fname="");
+
+    std::unique_ptr<bip::managed_mapped_file> mapped_file_;
+    std::string close_shrink_fname_;
+    T* tree_;  // raw pointer since destruction is not desired
 };
+
+
+template <typename T>
+using IndexTreeMemDisk = MemDiskPtr<MemDiskRtree<T>>;
 
 
 }  // namespace spatial_index

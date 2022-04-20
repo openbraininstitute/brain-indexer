@@ -67,15 +67,14 @@ class NodeMorphIndexer(ChunkedProcessingMixin):
     """
 
     class DiskMemMapProps:
-        def __init__(self, map_file, file_size=1024, truncate=False, close_shrink=False):
+        def __init__(self, map_file, file_size=1024, close_shrink=False):
             self.memdisk_file = map_file
             self.file_size = file_size
-            self.truncate = truncate
             self.shrink = close_shrink
 
         @property
         def args(self):
-            return self.memdisk_file, self.file_size, self.truncate, self.shrink
+            return self.memdisk_file, self.file_size, self.shrink
 
     def __init__(self, morphology_dir, nodes_file, population="", gids=None,
                  mem_map_props: DiskMemMapProps = None):
@@ -90,7 +89,7 @@ class NodeMorphIndexer(ChunkedProcessingMixin):
                 of the memory-mapped-file backing this struct [experimental!]
         """
         if mem_map_props:
-            self.index = MorphIndexMemDisk(*mem_map_props.args)
+            self.index = MorphIndexMemDisk.create(*mem_map_props.args)
         else:
             self.index = MorphIndex()
         self.morph_lib = MorphologyLib(morphology_dir)

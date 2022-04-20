@@ -32,7 +32,7 @@ def spatial_index_nodes(args=None):
                   fsize, "MB!")
             return 1
         shrink = options["shrink_on_close"]
-        mem_map_props = NodeMorphIndexer.DiskMemMapProps(filename, fsize, True, shrink)
+        mem_map_props = NodeMorphIndexer.DiskMemMapProps(filename, fsize, shrink)
 
     index = NodeMorphIndexer.create(
         options["morphology_dir"],

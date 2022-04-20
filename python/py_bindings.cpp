@@ -15,6 +15,7 @@ using MorphGridT = si::MorphSpatialGrid<SI_GRID_VOXEL_LENGTH>;
 
 }}  // namespace spatial_index::py_bindings
 
+PYBIND11_DECLARE_HOLDER_TYPE(T, si::MemDiskPtr<T>);
 
 PYBIND11_MODULE(_spatial_index, m) {
     PYBIND11_NUMPY_DTYPE(si::gid_segm_t, gid, section_id, segment_id);  // struct as numpy dtype
@@ -28,7 +29,7 @@ PYBIND11_MODULE(_spatial_index, m) {
     si_python::create_MorphIndex_bindings(m, "MorphIndex");
 
     // Experimental memory from mem-mapped file
-    using MorphIndexTreeMemDisk = si::IndexTreeMemDisk<si::MorphoEntry>;
+    using MorphIndexTreeMemDisk = si::MemDiskRtree<si::MorphoEntry>;
     si_python::create_MorphIndex_bindings<MorphIndexTreeMemDisk>(m, "MorphIndexMemDisk");
 
     si_python::create_IndexedShapeGrid_bindings<si_python::SphereGridT>(m, "SphereGrid");
