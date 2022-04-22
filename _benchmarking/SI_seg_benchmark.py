@@ -24,7 +24,7 @@ MORPH_FILE = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-thalamus
 #Serial Execution timing
 start_global = timer()
 start = timer()
-indexer = node_indexer.NodeMorphIndexer(MORPH_FILE, CIRCUIT_FILE)
+indexer = node_indexer.MorphIndexBuilder(MORPH_FILE, CIRCUIT_FILE)
 indexer.process_all(progress=True)
 end = timer()
 index_time = end - start

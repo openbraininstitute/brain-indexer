@@ -8,9 +8,9 @@ High-Level Indexing API
 
 .. automodule:: spatial_index
 
-NodeMorphIndexer
+MorphIndexBuilder
 ----------------
-.. autoclass:: NodeMorphIndexer
+.. autoclass:: MorphIndexBuilder
    :members:
    :inherited-members:
 

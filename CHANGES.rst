@@ -2,6 +2,20 @@ Change Log
 ==========
 
 
+Version 0.5.x
+-------------
+**April 2022**
+  
+**Features**  
+  * Out-of-core support for node indexing
+  * Support for pre and post synaptic gids
+
+**Improvements**
+  * Renamed NodeMorphIndexer to MorphIndexBuilder for clarity
+  * Introduced free space check for memory mapped files
+  * Improved documentation
+
+
 Version 0.4.x
 -------------
 **November 2021**

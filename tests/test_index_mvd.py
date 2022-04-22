@@ -7,7 +7,7 @@ import logging
 import os
 
 import numpy.testing as nptest
-from spatial_index.node_indexer import NodeMorphIndexer
+from spatial_index.node_indexer import MorphIndexBuilder
 import morphio
 import quaternion as npq
 import libsonata
@@ -69,7 +69,7 @@ def test_morph_loading():
 
 
 def test_serial_exec():
-    node_indexer = NodeMorphIndexer(MORPHOLOGY_FILES[1], FILETEST)
+    node_indexer = MorphIndexBuilder(MORPHOLOGY_FILES[1], FILETEST)
     node_indexer.process_range((0, 1))  # Process first neuron
     index = node_indexer.index
     assert len(index) > 1700
@@ -94,14 +94,14 @@ def test_serial_exec():
 
 def test_memory_mapped_file_morph_index():
     MEM_MAP_FILE = "rtree_image.bin"
-    mem_map_props = NodeMorphIndexer.DiskMemMapProps(MEM_MAP_FILE, 1, True)
-    node_indexer = NodeMorphIndexer(MORPHOLOGY_FILES[1], FILETEST,
-                                    mem_map_props=mem_map_props)
+    mem_map_props = MorphIndexBuilder.DiskMemMapProps(MEM_MAP_FILE, 1, True)
+    node_indexer = MorphIndexBuilder(MORPHOLOGY_FILES[1], FILETEST,
+                                     mem_map_props=mem_map_props)
     node_indexer.process_range((0, 1))
     index = node_indexer.index
     assert len(index) > 1700
     # We can share the mem file file
-    index2 = NodeMorphIndexer.load_disk_mem_map(MEM_MAP_FILE)
+    index2 = MorphIndexBuilder.load_disk_mem_map(MEM_MAP_FILE)
     assert len(index2) > 1700, len(index2)
 
 
@@ -113,7 +113,7 @@ class Test2Info:
 @pytest_skipif(not os.path.exists(Test2Info.SONATA_NODES),
                reason="Circuit file not available")
 def test_sonata_index():
-    index = NodeMorphIndexer.from_sonata_file(
+    index = MorphIndexBuilder.from_sonata_file(
         Test2Info.MORPHOLOGY_DIR, Test2Info.SONATA_NODES, "All", range(700, 800)
     )
     assert len(index) == 588961
@@ -129,7 +129,7 @@ def test_sonata_index():
                reason="Circuit file not available")
 def test_sonata_selection():
     selection = libsonata.Selection([4, 8, 15, 16, 23, 42])
-    index = NodeMorphIndexer.from_sonata_selection(
+    index = MorphIndexBuilder.from_sonata_selection(
         Test2Info.MORPHOLOGY_DIR, Test2Info.SONATA_NODES, "All", selection
     )
     assert len(index) == 25618

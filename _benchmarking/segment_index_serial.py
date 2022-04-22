@@ -17,7 +17,7 @@ MORPH_FILE = CIRCUIT_2K + "/morphologies/ascii"
 
 
 def do_query_serial(min_corner, max_corner):
-    indexer = node_indexer.NodeMorphIndexer(MORPH_FILE, CIRCUIT_FILE)
+    indexer = node_indexer.MorphIndexBuilder(MORPH_FILE, CIRCUIT_FILE)
     indexer.process_range((700, 100))
     idx = indexer.find_intersecting_window(min_corner, max_corner)
     assert len(idx) > 0

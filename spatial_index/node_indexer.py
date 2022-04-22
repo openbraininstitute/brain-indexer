@@ -54,8 +54,8 @@ class MorphologyLib:
         return self._morphologies.get(morph_name) or self._load(morph_name)
 
 
-class NodeMorphIndexer(ChunkedProcessingMixin):
-    """A NodeMorphIndexer is a helper class to create Spatial Indices (RTree)
+class MorphIndexBuilder(ChunkedProcessingMixin):
+    """A MorphIndexBuilder is a helper class to create Spatial Indices (RTree)
     from a node file (mvd or Sonata) and a morphology library.
     When the index is expected to NOT FIT IN MEMORY it can alternatively be set up
     to use MorphIndexMemDisk, according to `disk_mem_map` ctor argument.

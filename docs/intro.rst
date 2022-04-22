@@ -48,12 +48,12 @@ The constructor accepts all the components (gids, points, and radii) as individu
     radius = np.ones(3, dtype=np.float32)
     index = SphereIndex(centroids, radius, ids)
 
-You can also build the segment index using `NodeMorphIndexer` specifying the morphology and circuit file to load and then starting the processing via the `process_range` method.
+You can also build the segment index using `MorphIndexBuilder` specifying the morphology and circuit file to load and then starting the processing via the `process_range` method.
 
 .. code-block:: python
 
-    from spatial_index import node_indexer
-    indexer = node_indexer.NodeMorphIndexer(MORPH_FILE, CIRCUIT_FILE)
+    from spatial_index import MorphIndexBuilder
+    indexer = MorphIndexBuilder(MORPH_FILE, CIRCUIT_FILE)
     indexer.process_range(()) ## process all nodes
 
 **Note:** *By using a constructor which initializes the index to some data, internally the "pack" algorithm is used. This results in optimal tree balance and faster queries.*
@@ -81,21 +81,21 @@ In this case SynapseIndexer is the appropriate class to use:
 
     from spatial_index import SynapseIndexer
     from libsonata import Selection
-    index = SynapseIndexer.from_sonata_file(EDGE_FILE, "All")
+    indexer = SynapseIndexer.from_sonata_file(EDGE_FILE, "All", return_indexer=True)
 
 Then one can query the synapses index by getting the gids first and then querying the edge file for the synapse data.
 Keep in mind that the resulting objects only have two properties: gid and centroid.
 
 .. code-block:: python
 
-    points_in_region = index.find_intersecting_window([200, 200, 480], [300, 300, 520])
-    z_coords = index.edges.get_attribute("afferent_center_z", Selection(points_in_region))
+    points_in_region = indexer.index.find_intersecting_window([200, 200, 480], [300, 300, 520])
+    z_coords = indexer.edges.get_attribute("afferent_center_z", Selection(points_in_region))
 
 Otherwise one can query directly from the index:
 
 .. code-block:: python
 
-    objs_in_region = index.find_intersecting_window_objs([200, 200, 480], [300, 300, 520])
+    objs_in_region = indexer.index.find_intersecting_window_objs([200, 200, 480], [300, 300, 520])
 
 And then fetching the necessary information directly from the structure you just created.
 
@@ -134,7 +134,7 @@ You can get more information on the syntax by running `spatial-index-nodes` with
         --use-mem-map=<SIZE_MB>  Whether to use a mapped file instead [experimental]
         --shrink-on-close        Whether to shrink the memory file upon closing the object
 
-One can also use the normal :class:`spatial_index.NodeMorphIndexer` Python class to generate a memory mapped index in a program/script. Please refer to the specific class :class:`spatial_index.NodeMorphIndexer` documentation for more details.
+One can also use the normal :class:`spatial_index.MorphIndexBuilder` Python class to generate a memory mapped index in a program/script. Please refer to the specific class :class:`spatial_index.MorphIndexBuilder` documentation for more details.
 
 You can find some examples on how to use the memory mapped indexer in the `examples/` directory, specifically in the `memory_map_index.py` file and `memory_map_index.sh` files.
 

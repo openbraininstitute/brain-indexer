@@ -2,7 +2,7 @@
     High level command line commands
 """
 import logging
-from .node_indexer import NodeMorphIndexer
+from .node_indexer import MorphIndexBuilder
 from .util import check_free_space, docopt_get_args, get_file_path
 
 
@@ -32,9 +32,9 @@ def spatial_index_nodes(args=None):
                   fsize, "MB!")
             return 1
         shrink = options["shrink_on_close"]
-        mem_map_props = NodeMorphIndexer.DiskMemMapProps(filename, fsize, shrink)
+        mem_map_props = MorphIndexBuilder.DiskMemMapProps(filename, fsize, shrink)
 
-    index = NodeMorphIndexer.create(
+    index = MorphIndexBuilder.create(
         options["morphology_dir"],
         options["nodes_file"],
         mem_map_props=mem_map_props,
@@ -79,7 +79,7 @@ def spatial_index_circuit(args=None):
         cells = _get_circuit_cells(circuit, target)
         print("Indexing", target, "containing", len(cells), "cells")
 
-    index = NodeMorphIndexer.create(morphology_dir, nodes_file, cells)
+    index = MorphIndexBuilder.create(morphology_dir, nodes_file, cells)
     index.dump(options.get("out") or "out.spi")
 
 

@@ -6,7 +6,7 @@
     perform spatial queries using memory mapped files
 """
 
-from spatial_index import NodeMorphIndexer
+from spatial_index import MorphIndexBuilder
 
 # Pre-made index locations
 PRE_MADE_INDEX_2K = "/gpfs/bbp.cscs.ch/project/proj16/bellotta/memory_map"
@@ -19,7 +19,7 @@ MORPH_FILE = CIRCUIT_2K + "/morphologies/ascii"
 
 # Loading pre-made index that you can
 # create using the spatial-index-nodes command
-index_pre = NodeMorphIndexer.load_disk_mem_map(PRE_MADE_INDEX_FILE)
+index_pre = MorphIndexBuilder.load_disk_mem_map(PRE_MADE_INDEX_FILE)
 
 # Perform queries normally
 min_corner = [0, 0, 0]
@@ -38,11 +38,11 @@ print("Pre-Made Index - Number of elements within window:", len(ids))
 # please contact the HPC team or the main developers of Spatial Index.
 
 # Specify the index output filename, size and shrink on close
-mem_map_props = NodeMorphIndexer.DiskMemMapProps("mem_map.bin", 2048, True, True)
+mem_map_props = MorphIndexBuilder.DiskMemMapProps("mem_map.bin", 2048, True, True)
 
-# Then crate a NodeMorphIndexer object specifying
+# Then create a MorphIndexBuilder object specifying
 # the path to the morphology directory and the nodes file
-index = NodeMorphIndexer.create(
+index = MorphIndexBuilder.create(
     MORPH_FILE,
     NODE_FILE,
     mem_map_props=mem_map_props,

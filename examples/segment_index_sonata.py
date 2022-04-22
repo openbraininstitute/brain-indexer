@@ -9,7 +9,7 @@
 import os
 import sys
 import libsonata
-from spatial_index import NodeMorphIndexer
+from spatial_index import MorphIndexBuilder
 
 
 # Loading some small circuits and morphology files on BB5
@@ -21,7 +21,7 @@ MORPH_FILE = CIRCUIT_1K + "/morphologies/ascii"
 def example_sonata_index():
     # Create a new indexer and load the nodes and morphologies
     # directly from the SONATA file
-    index = NodeMorphIndexer.from_sonata_file(NODES_FILE, MORPH_FILE, "All")
+    index = MorphIndexBuilder.from_sonata_file(MORPH_FILE, NODES_FILE, "All")
     print("Index size:", len(index))
 
     # Way #1 - Get the ids, then query the node file for ANY data
@@ -39,8 +39,8 @@ def example_sonata_index():
     # and then query it using the usual methods
     selection = libsonata.Selection(
         values=[4, 8, 15, 16, 23, 42])
-    index_selection = NodeMorphIndexer.from_sonata_selection(
-        NODES_FILE, MORPH_FILE, "All", selection)
+    index_selection = MorphIndexBuilder.from_sonata_selection(
+        MORPH_FILE, NODES_FILE, "All", selection)
     print("Index size:", len(index_selection))
     inds = index_selection.find_intersecting_window_objs([15, 900, 15], [20, 1900, 20])
     print("Found N objects:", len(inds))

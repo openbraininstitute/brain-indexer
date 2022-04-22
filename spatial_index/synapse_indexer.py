@@ -85,6 +85,8 @@ class SynapseIndexer(ChunkedProcessingMixin):
             population_name: The name of the population
             target_gids: A list/array of target gids to index. Default: None
                 Warn: None will index all synapses, please mind memory limits
+            return_indexer: If True, returns the full indexer object
+                (inherited from ChunkedProcessingMixin)
 
         """
         import libsonata  # local, since this is just a helper, avoid cyclec dep
