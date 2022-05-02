@@ -68,6 +68,14 @@ struct ShapeId {
     inline bool operator==(const ShapeId& rhs) const noexcept {
         return id == rhs.id;
     }
+
+  protected:
+    friend class boost::serialization::access;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int /* version*/) {
+        ar & this->id;
+    }
 };
 
 
@@ -98,6 +106,16 @@ struct SynapseId : public ShapeId {
 
     inline identifier_t pre_gid() const noexcept {
         return pre_gid_;
+    }
+
+  protected:
+    friend class boost::serialization::access;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int /* version*/) {
+        ar & this->id;
+        ar & post_gid_;
+        ar & pre_gid_;
     }
 };
 
@@ -165,8 +183,8 @@ struct IndexedShape : public IndexT, public ShapeT {
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int /* version*/) {
-        ar& this->id;
-        ar& boost::serialization::base_object<ShapeT>(*this);
+        ar & boost::serialization::base_object<IndexT>(*this);
+        ar & boost::serialization::base_object<ShapeT>(*this);
     }
 };
 

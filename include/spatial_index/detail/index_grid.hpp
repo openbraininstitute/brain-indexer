@@ -46,7 +46,7 @@ inline auto SpatialGrid<T, VoxelLen>::voxels() const {
 template <typename T, int VoxelLen>
 template <class Archive>
 inline void SpatialGrid<T, VoxelLen>::serialize(Archive& ar, const unsigned int) {
-    ar& grid_;
+    ar & grid_;
 }
 
 

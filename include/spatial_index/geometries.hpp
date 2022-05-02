@@ -48,8 +48,8 @@ struct Sphere {
 
     template <class Archive>
     inline void serialize(Archive& ar, const unsigned int /*version*/) {
-        ar& centroid;
-        ar& radius;
+        ar & centroid;
+        ar & radius;
     }
 };
 
@@ -107,9 +107,9 @@ struct Cylinder {
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int /*version*/) {
-        ar& p1;
-        ar& p2;
-        ar& radius;
+        ar & p1;
+        ar & p2;
+        ar & radius;
     }
 };
 

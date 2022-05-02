@@ -51,6 +51,28 @@ def test_synapse_query_aggregate():
     assert aggregated_2[4] == 1
 
 
+def test_synapse_save_restore():
+    rtree = SynapseIndex()
+    rtree.add_synapses(ids, post_gids, pre_gids, points)
+
+    rtree.dump("test_syntree.save")
+    del rtree
+    t2 = SynapseIndex("test_syntree.save")
+
+    q_window = ([-1., -1., -1.], [1., 1., 1.])
+    e_ids, e_tgids, e_sgids = (0, 1, 2, 6), (1, 1, 2, 4), (0, 0, 1, 3)
+
+    objs = t2.find_intersecting_window_objs(*q_window)
+    objs.sort(key=lambda x: x.id)
+    assert len(objs) == 4
+
+    for obj, id_, post_gid, pre_gid in zip(objs, e_ids, e_tgids, e_sgids):
+        assert obj.id == id_ and obj.post_gid == post_gid and obj.pre_gid == pre_gid, \
+            (obj.id, obj.post_gid, obj.pre_gid, "!=", id_, post_gid, pre_gid)
+
+
 if __name__ == "__main__":
     test_synapse_query_aggregate()
     print("Test aggregated_per_gid PASSED!")
+    test_synapse_save_restore()
+    print("Test save-restore PASSED!")
