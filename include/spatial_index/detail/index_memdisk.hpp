@@ -2,6 +2,15 @@
 
 namespace spatial_index {
 
+namespace detail {
+
+struct file_versioning {
+    const unsigned struct_version = SPATIAL_INDEX_STRUCT_VERSION;
+    const unsigned boost_version = BOOST_VERSION;
+};
+
+} // namespace detail
+
 
 template <typename T>
 MemDiskPtr<T> MemDiskPtr<T>::create(const std::string& filename,
@@ -15,6 +24,7 @@ MemDiskPtr<T> MemDiskPtr<T>::create(const std::string& filename,
     auto mapped_file = std::make_unique<bip::managed_mapped_file>(bip::open_or_create,
                                                                   filename.c_str(),
                                                                   size_mb * 1024 * 1024);
+    mapped_file->construct<detail::file_versioning>(".version")();
     return MemDiskPtr(std::move(mapped_file), close_shrink? filename : "");
 }
 
@@ -22,6 +32,21 @@ MemDiskPtr<T> MemDiskPtr<T>::create(const std::string& filename,
 template <typename T>
 MemDiskPtr<T> MemDiskPtr<T>::open(const std::string& filename) {
     auto mapped_file = std::make_unique<bip::managed_mapped_file>(bip::open_only, filename.c_str());
+    auto versions = mapped_file->find<detail::file_versioning>(".version").first;
+
+    if (versions->struct_version != SPATIAL_INDEX_STRUCT_VERSION) {
+        throw std::runtime_error(
+            (boost::format("Memory mapped file structs mismatch. Expected: %d, Given: %d")
+                % SPATIAL_INDEX_STRUCT_VERSION
+                % versions->struct_version
+            ).str()
+        );
+    }
+    if (versions->boost_version != BOOST_VERSION) {
+        std::cerr << "[Warning] Boost versions mismatch! Expected: " << BOOST_VERSION
+                 << " Created with: " << versions->boost_version << '\n'
+                 << " -> To ensure compatibility load a Spatial Index built with the same Boost.\n";
+    }
     return MemDiskPtr(std::move(mapped_file));
 }
 

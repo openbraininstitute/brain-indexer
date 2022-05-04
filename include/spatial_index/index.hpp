@@ -14,12 +14,14 @@
 #include <boost/serialization/variant.hpp>
 
 #include <boost/interprocess/managed_mapped_file.hpp>
-
 #include <boost/geometry/index/rtree.hpp>
 #include <boost/variant.hpp>
 
-
 #include "geometries.hpp"
+
+/// Bump the top-level structure version when serialized data structures change
+#define SPATIAL_INDEX_STRUCT_VERSION 1
+
 #define N_SEGMENT_BITS 10
 #define N_SECTION_BITS 14
 #define N_TOTAL_BITS (N_SEGMENT_BITS + N_SECTION_BITS)
@@ -182,7 +184,11 @@ struct IndexedShape : public IndexT, public ShapeT {
     friend class boost::serialization::access;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int /* version*/) {
+    void serialize(Archive& ar, const unsigned int version) {
+        // Classes are versioned to SPATIAL_INDEX_STRUCT_VERSION (see detail/index.hpp)
+        // If new fields are introduced please handle them conditionally
+        assert (version <= SPATIAL_INDEX_STRUCT_VERSION &&
+            "File format is in a future format. Please update Spatial Index.");
         ar & boost::serialization::base_object<IndexT>(*this);
         ar & boost::serialization::base_object<ShapeT>(*this);
     }
@@ -342,7 +348,7 @@ class IndexTree: public IndexTreeBaseT<T, A> {
     inline std::unordered_map<identifier_t, size_t>
         count_intersecting_agg_gid(const ShapeT& shape) const;
 
-    /// \brief onstructor to rebuild from binary data file
+    /// \brief Constructor to rebuild from binary data file
     // Note: One must override char* and string since there is a template<T> constructor
     inline explicit IndexTree(const std::string& filename);
     inline explicit IndexTree(const char* dump_file)

@@ -8,6 +8,7 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/function_output_iterator.hpp>
+#include <boost/serialization/version.hpp>
 
 #include "output_iterators.hpp"
 
@@ -323,4 +324,18 @@ struct indexable<boost::variant<VariantArgs...>> {
 
 }  // namespace index
 }  // namespace geometry
+}  // namespace boost
+
+
+// Version structures for serialization. We follow a global numbering
+namespace boost {
+namespace serialization {
+
+template <typename T, typename A>
+struct version<spatial_index::IndexTree<T, A>>
+{
+    BOOST_STATIC_CONSTANT(unsigned int, value = SPATIAL_INDEX_STRUCT_VERSION);
+};
+
+}  // namespace serialization
 }  // namespace boost

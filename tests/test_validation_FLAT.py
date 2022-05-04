@@ -32,13 +32,15 @@ def do_query_serial(min_corner, max_corner):
         logging.info("Using mem-mapped")
         memmap_props = MorphIndexBuilder.DiskMemMapProps(
             "mapfile.bin",
-            4000,   # ~4GB
+            1000,   # ~1GB
             True    # Truncate
         )
     else:
         memmap_props = None
+
     index = MorphIndexBuilder.from_mvd_file(MORPH_FILE, CIRCUIT_FILE,
                                             disk_mem_map=memmap_props,
+                                            target_gids=range(700, 1200),
                                             progress=True)
     idx = index.find_intersecting_window(min_corner, max_corner)
     index.find_intersecting_window_pos(min_corner, max_corner)
