@@ -31,7 +31,6 @@ class ChunkedProcessingMixin:
     @classmethod
     def create_parallel(cls, *ctor_args, num_cpus=None, progress=False):
         import functools
-        import os
         import multiprocessing
         if num_cpus is None:
             num_cpus_env = os.environ.get("SLURM_TASKS_PER_NODE")
@@ -115,8 +114,18 @@ def check_free_space(size, path):
     return st.f_bavail * st.f_frsize >= size
 
 
-def get_file_path(path):
-    folder = os.path.dirname(path)
-    if folder == "":
-        folder = "."
-    return folder
+def get_dirname(path):
+    return os.path.dirname(path) or "."
+
+
+class DiskMemMapProps:
+    """A class to configure memory-mapped files as the backend for spatial indices."""
+
+    def __init__(self, map_file, file_size=1024, close_shrink=False):
+        self.memdisk_file = map_file
+        self.file_size = file_size
+        self.shrink = close_shrink
+
+    @property
+    def args(self):
+        return self.memdisk_file, self.file_size, self.shrink

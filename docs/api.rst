@@ -14,9 +14,9 @@ MorphIndexBuilder
    :members:
    :inherited-members:
 
-SynapseIndexer
+SynapseIndexBuilder
 --------------
-.. autoclass:: SynapseIndexer
+.. autoclass:: SynapseIndexBuilder
    :members:
    :inherited-members:
 

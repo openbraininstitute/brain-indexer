@@ -10,7 +10,7 @@ from spatial_index import MorphIndexBuilder
 
 # Pre-made index locations
 PRE_MADE_INDEX_2K = "/gpfs/bbp.cscs.ch/project/proj16/bellotta/memory_map"
-PRE_MADE_INDEX_FILE = PRE_MADE_INDEX_2K + "/mem_map.bin"
+PRE_MADE_INDEX_FILE = PRE_MADE_INDEX_2K + "/segment_index.bin"
 
 # Test node and morph file locations
 CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-2k"

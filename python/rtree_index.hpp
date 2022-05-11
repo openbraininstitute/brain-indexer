@@ -407,10 +407,10 @@ inline void create_Synapse_bindings(py::module& m) {
 }
 
 
+template <typename Class = si::IndexTree<si::Synapse>>
 inline void create_SynapseIndex_bindings(py::module& m, const char* class_name) {
-    using Class = si::IndexTree<Synapse>;
-
-    create_IndexTree_bindings<si::Synapse>(m, class_name)
+    using value_type = typename Class::value_type;
+    create_IndexTree_bindings<value_type, value_type, Class>(m, class_name)
 
     .def("add_synapses",
         [](Class& obj, const array_ids& syn_ids, const array_ids& post_gids, const array_ids& pre_gids, const array_t& points) {

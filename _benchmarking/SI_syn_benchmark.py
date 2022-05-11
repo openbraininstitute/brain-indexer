@@ -1,4 +1,4 @@
-from spatial_index import SynapseIndexer
+from spatial_index import SynapseIndexBuilder
 from timeit import default_timer as timer
 from libsonata import Selection
 from random import uniform
@@ -20,9 +20,9 @@ print ("SYNAPSE INDEX BENCHMARKING IN PROGRESS... PLEASE WAIT!")
 start_global = timer()
 start = timer()
 
-#index = SynapseIndexer.from_sonata_file(EDGE_FILE, "All")
-#index = SynapseIndexer.from_sonata_file(EDGE_FILE, "hippocampus_neurons__hippocampus_neurons__chemical")
-index = SynapseIndexer.from_sonata_file(EDGE_FILE, "default")
+#index = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, "All")
+#index = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, "hippocampus_neurons__hippocampus_neurons__chemical")
+index = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, "default")
 
 end = timer()
 index_time = end - start

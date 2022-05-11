@@ -11,4 +11,4 @@ except Exception:
 from . import _spatial_index as core  # noqa
 from ._spatial_index import *  # noqa
 from .node_indexer import MorphIndexBuilder  # noqa
-from .synapse_indexer import PointIndexer, SynapseIndexer  # noqa
+from .synapse_indexer import PointIndex, SynapseIndexBuilder  # noqa

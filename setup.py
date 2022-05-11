@@ -87,6 +87,7 @@ package_info = dict(
     )],
     entry_points=dict(console_scripts=[
         'spatial-index-nodes=spatial_index.commands:spatial_index_nodes',
+        'spatial-index-synapses=spatial_index.commands:spatial_index_synapses',
         'spatial-index-circuit=spatial_index.commands:spatial_index_circuit',
     ]),
     cmdclass=dict(build_ext=CMakeBuild),

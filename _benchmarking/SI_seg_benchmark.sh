@@ -20,5 +20,6 @@ module load unstable spatial-index
 
 #for i in $(seq 1 1 10)
 #do
+# dplace can be useful to pin the process to a core during benchmarks
 dplace python ./SI_seg_benchmark.py >> output_seg_SI.out 2>> time_seg_SI.csv
 #done

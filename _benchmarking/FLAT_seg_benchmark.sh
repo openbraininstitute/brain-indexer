@@ -15,7 +15,8 @@
 # Configure to use all the memory
 #SBATCH --mem=0
 
-#SDKGenerator needs LD_PRELOAD to find libnuma.so
+# SDKGenerator needs LD_PRELOAD to find libnuma.so
+# dplace can be useful to pin the process to a core during benchmarks
 DPLACE='env LD_PRELOAD=/usr/lib64/libnuma.so dplace' 
 
 #Load old nix modules

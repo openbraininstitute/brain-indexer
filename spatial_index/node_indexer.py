@@ -20,7 +20,7 @@ import numpy as np
 import quaternion as npq
 
 from ._spatial_index import MorphIndex, MorphIndexMemDisk
-from .util import ChunkedProcessingMixin
+from .util import ChunkedProcessingMixin, DiskMemMapProps
 
 morphio.set_ignored_warning(morphio.Warning.only_child)
 MorphInfo = namedtuple("MorphInfo", "soma, points, radius, branch_offsets")
@@ -66,15 +66,7 @@ class MorphIndexBuilder(ChunkedProcessingMixin):
     Factories are provided to create & retrieve an index directly from mvd or Sonata
     """
 
-    class DiskMemMapProps:
-        def __init__(self, map_file, file_size=1024, close_shrink=False):
-            self.memdisk_file = map_file
-            self.file_size = file_size
-            self.shrink = close_shrink
-
-        @property
-        def args(self):
-            return self.memdisk_file, self.file_size, self.shrink
+    DiskMemMapProps = DiskMemMapProps  # shortcut
 
     def __init__(self, morphology_dir, nodes_file, population="", gids=None,
                  mem_map_props: DiskMemMapProps = None):

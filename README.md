@@ -42,7 +42,9 @@ Install using pip:
 Some examples on how to use Spatial Index are available in the `examples` folder:   
 - `segment_index.py` shows how to load a set of geometries, index them and query them using the Spatial Index APIs;
 - `segment_index_sonata.py` shows how to load a set of geometries, perform a selection using SONATA, index and query them using the Spatial Index APIs;
-- `synapse_index.py` shows how to load synapses from a EDGE file, index them and query them using the Spatial Index APIs.  
+- `synapse_index.py` shows how to load synapses from a EDGE file, index them and query them using the Spatial Index APIs.
+- `memory_map_index_seg.py` and `memory_map_index_seg.sh` provide some examples on how to use memory mapped files to index segments with an index that wouldn't fit in memory.
+- `memory_map_index_syn.py` and `memory_map_index_syn.sh` provide some examples on how to use memory mapped files to index synapses with an index that wouldn't fit in memory.
 
 Also, the `tests` folder contains some tests that double also as examples on how to use Spatial Index.
 

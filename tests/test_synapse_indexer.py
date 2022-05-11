@@ -6,7 +6,7 @@ import h5py
 import os.path
 import sys
 from libsonata import Selection
-from spatial_index import SynapseIndexer
+from spatial_index import SynapseIndexBuilder
 try:
     import pytest
     pytest_skipif = pytest.mark.skipif
@@ -20,8 +20,11 @@ EDGE_FILE = os.path.join(_CURDIR, "data", "edges_2k.h5")
 @pytest_skipif(not os.path.exists(EDGE_FILE),
                reason="Edge file not available")
 def test_syn_index():
-    indexer = SynapseIndexer.from_sonata_file(EDGE_FILE, "All", progress=True,
-                                              return_indexer=True)
+    indexer = SynapseIndexBuilder.from_sonata_file(
+        EDGE_FILE, "All",
+        progress=True,
+        return_indexer=True
+    )
     index = indexer.index
     print("Index size:", len(index))
 

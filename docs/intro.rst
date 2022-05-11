@@ -75,13 +75,13 @@ Indexing Edge files
 -------------------
 
 Another common example is to create a spatial index of synapses imported from a sonata file.
-In this case SynapseIndexer is the appropriate class to use:
+In this case SynapseIndexBuilder is the appropriate class to use:
 
 .. code-block:: python
 
-    from spatial_index import SynapseIndexer
+    from spatial_index import SynapseIndexBuilder
     from libsonata import Selection
-    indexer = SynapseIndexer.from_sonata_file(EDGE_FILE, "All", return_indexer=True)
+    indexer = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, "All", return_indexer=True)
 
 Then one can query the synapses index by getting the gids first and then querying the edge file for the synapse data.
 Keep in mind that the resulting objects only have two properties: gid and centroid.
@@ -100,20 +100,24 @@ Otherwise one can query directly from the index:
 And then fetching the necessary information directly from the structure you just created.
 
 Memory mapped files (experimental)
-----------------------------------
+==================================
 
 **Keep in mind that the "memory mapped file" is still an experimental feature and therefore could lead to unexpected/untested results.
 Plese contact the HPC team or the developers of SpatialIndex if you have any questions.**
 
 SpatialIndex can also use memory mapped files to index very large circuits without the risk of triggering Out Of Memory errors.
-Please use fast filesystems, preferably on SSD/NVME, and avoid slow distributed filesystems like GPFS that would make the process extremely slow.
+Memory mapped files are available for both segment and synapse indexing.
+Please use a fast filesystems, preferably on SSD/NVME, and avoid slow distributed filesystems like GPFS that would make the process extremely slow.
 On BB5 you can request for a NVME node using:
 
 .. code-block:: bash
 
     salloc -p prod -C nvme ...
 
-Then, in order to use memory mapped files, you need to use the `--use-mem-map=SIZE_OF_MAPPED_FILE` parameter in the `spatial-index-nodes` CLI utility:
+Memory mapped files for segment indexing
+----------------------------------------
+
+In order to use memory mapped files for segment indexing, you need to use the `--use-mem-map=SIZE_OF_MAPPED_FILE` parameter in the `spatial-index-nodes` CLI utility:
 
 .. code-block:: bash
 
@@ -137,6 +141,32 @@ You can get more information on the syntax by running `spatial-index-nodes` with
 One can also use the normal :class:`spatial_index.MorphIndexBuilder` Python class to generate a memory mapped index in a program/script. Please refer to the specific class :class:`spatial_index.MorphIndexBuilder` documentation for more details.
 
 You can find some examples on how to use the memory mapped indexer in the `examples/` directory, specifically in the `memory_map_index.py` file and `memory_map_index.sh` files.
+
+Memory mapped files for synapse indexing
+----------------------------------------
+
+To use memory mapped files for synapse indexing you can use the `--use-mem-map=SIZE_OF_MAPPED_FILE` parameter in the `spatial-index-synapses` CLI utility:
+
+.. code-block:: bash
+
+    spatial-index-synapses --use-mem-map=SIZE_IN_MB EDGES_FILE POPULATION -o OUTPUT_FILE
+
+You can get more information on the syntax by running `spatial-index-synapses` with the `--help` parameter:
+
+.. code-block:: bash
+
+    $ spatial-index-synapses --help
+    Usage:
+        spatial-index-synapses [options] <edges_file> [<population>]
+        spatial-index-synapses --help
+
+    Options:
+        -v, --verbose            Increase verbosity level
+        -o, --out=<filename>     The index output filename [default: out.spi]
+        --use-mem-map=<SIZE_MB>  Whether to use a mapped file instead [experimental]
+        --shrink-on-close        Whether to shrink the memory file upon closing the object
+
+Otherwise you can also use the normal :class:`spatial_index.SynapseIndexBuilder` Python class to generate a memory mapped index in a program/script. Please refer to the specific class :class:`spatial_index.SynapseIndexBuilder` documentation for more details.
 
 """
 

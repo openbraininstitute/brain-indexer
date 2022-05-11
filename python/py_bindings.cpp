@@ -31,6 +31,8 @@ PYBIND11_MODULE(_spatial_index, m) {
     // Experimental memory from mem-mapped file
     using MorphIndexTreeMemDisk = si::MemDiskRtree<si::MorphoEntry>;
     si_python::create_MorphIndex_bindings<MorphIndexTreeMemDisk>(m, "MorphIndexMemDisk");
+    using SynIndexMemDisk = si::MemDiskRtree<si::Synapse>;
+    si_python::create_SynapseIndex_bindings<SynIndexMemDisk>(m, "SynapseIndexMemDisk");
 
     si_python::create_IndexedShapeGrid_bindings<si_python::SphereGridT>(m, "SphereGrid");
     si_python::create_SpatialGrid_bindings<si_python::MorphGridT>(m, "MorphGrid");

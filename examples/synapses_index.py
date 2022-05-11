@@ -6,7 +6,7 @@
     index them and perform some queries
 """
 
-from spatial_index import SynapseIndexer
+from spatial_index import SynapseIndexBuilder
 from libsonata import Selection
 
 import os.path
@@ -18,7 +18,7 @@ EDGE_FILE = os.path.join(_CURDIR, os.pardir, "tests", "data", "edges_2k.h5")
 
 def example_syn_index():
     # Creating a synapse indexer by using the `return_indexer=True` flag
-    indexer = SynapseIndexer.from_sonata_file(EDGE_FILE, "All", return_indexer=True)
+    indexer = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, "All", return_indexer=True)
     print("Index size:", len(indexer.index))
 
     # Way #1 - Get the ids, then query the edge file for ANY data
