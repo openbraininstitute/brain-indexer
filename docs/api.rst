@@ -9,20 +9,20 @@ High-Level Indexing API
 .. automodule:: spatial_index
 
 MorphIndexBuilder
-----------------
+-----------------
 .. autoclass:: MorphIndexBuilder
    :members:
    :inherited-members:
 
 SynapseIndexBuilder
---------------
+-------------------
 .. autoclass:: SynapseIndexBuilder
    :members:
    :inherited-members:
 
-PointIndexer
-------------
-.. autoclass:: PointIndexer
+PointIndex
+----------
+.. autoclass:: PointIndex
    :members:
    :inherited-members:
 

@@ -22,6 +22,7 @@ from fileinput import FileInput
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
+    'sphinxcontrib.programoutput',
     'm2r2',
 ]
 

@@ -99,6 +99,30 @@ Otherwise one can query directly from the index:
 
 And then fetching the necessary information directly from the structure you just created.
 
+Command Line Interface
+======================
+
+There are three executables
+
+* ``spatial-index-circuit`` is convenient for indexing both segments and synpses
+  when the circuit is defined in a SONATA circuit configuration file. Therefore,
+  if you already have a circuit config files, this is the right command to use.
+
+    .. command-output:: spatial-index-circuit --help
+  
+
+* ``spatial-index-nodes`` is convenient for indexing segments if one wants to
+  specify the paths of the input files directly.
+
+    .. command-output:: spatial-index-nodes --help
+
+
+* ``spatial-index-synapses`` like ``spatial-index-nodes`` but for synapses.
+
+    .. command-output:: spatial-index-synapses --help
+
+
+
 Memory mapped files (experimental)
 ==================================
 
@@ -122,21 +146,7 @@ In order to use memory mapped files for segment indexing, you need to use the `-
 .. code-block:: bash
 
     spatial-index-nodes --use-mem-map=SIZE_IN_MB NODES_FILE MORPHOLOGY -o OUTPUT_FILE
-
-You can get more information on the syntax by running `spatial-index-nodes` with the `--help` parameter:
-
-.. code-block:: bash
-
-    $ spatial-index-nodes --help
-    Usage:
-        spatial-index-nodes [options] <nodes-file> <morphology-dir>
-        spatial-index-nodes --help
-
-    Options:
-        -v, --verbose            Increase verbosity level
-        -o, --out=<filename>     The index output filename [default:out.spi]
-        --use-mem-map=<SIZE_MB>  Whether to use a mapped file instead [experimental]
-        --shrink-on-close        Whether to shrink the memory file upon closing the object
+    spatial-index-circuit segments --use-mem-map=SIZE_IN_MB SONATA_CIRCUIT_CONFIG -o OUTPUT_FILE
 
 One can also use the normal :class:`spatial_index.MorphIndexBuilder` Python class to generate a memory mapped index in a program/script. Please refer to the specific class :class:`spatial_index.MorphIndexBuilder` documentation for more details.
 
@@ -150,28 +160,14 @@ To use memory mapped files for synapse indexing you can use the `--use-mem-map=S
 .. code-block:: bash
 
     spatial-index-synapses --use-mem-map=SIZE_IN_MB EDGES_FILE POPULATION -o OUTPUT_FILE
-
-You can get more information on the syntax by running `spatial-index-synapses` with the `--help` parameter:
-
-.. code-block:: bash
-
-    $ spatial-index-synapses --help
-    Usage:
-        spatial-index-synapses [options] <edges_file> [<population>]
-        spatial-index-synapses --help
-
-    Options:
-        -v, --verbose            Increase verbosity level
-        -o, --out=<filename>     The index output filename [default: out.spi]
-        --use-mem-map=<SIZE_MB>  Whether to use a mapped file instead [experimental]
-        --shrink-on-close        Whether to shrink the memory file upon closing the object
+    spatial-index-circuit synapses --use-mem-map=SIZE_IN_MB SONATA_CIRCUIT_CONFIG --populations POPULATIONS,... -o OUTPUT_FILE
 
 Otherwise you can also use the normal :class:`spatial_index.SynapseIndexBuilder` Python class to generate a memory mapped index in a program/script. Please refer to the specific class :class:`spatial_index.SynapseIndexBuilder` documentation for more details.
 
 """
 
 More examples
---------------
+-------------
 
 In the `examples` folder there are some more examples on how to use Spatial Index. Please check them out.
 Also some interesting snippets on how to use a specific function can be found in the various python files found in the `tests` folder.

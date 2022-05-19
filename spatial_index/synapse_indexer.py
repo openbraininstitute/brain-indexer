@@ -65,8 +65,9 @@ class SynapseIndexBuilder(ChunkedProcessingMixin):
     @classmethod
     def from_sonata_selection(cls, sonata_edges, selection,
                               disk_mem_map: DiskMemMapProps = None, **kw):
-        """ Builds the synapse index from a generic Sonata selection object
-        **kw args are passed verbatim to create
+        """ Builds the synapse index from a generic Sonata selection object.
+
+        Any additional keyword arguments are passed on to `cls.create`.
         """
         return cls.create(sonata_edges, selection, disk_mem_map, **kw)
 
