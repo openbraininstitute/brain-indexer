@@ -258,38 +258,9 @@ template <typename T, typename A = boost::container::new_allocator<T>>
 using IndexTreeBaseT = bgi::rtree<T, bgi::linear<16, 2>, bgi::indexable<T>, bgi::equal_to<T>, A>;
 
 
-/**
- * \brief IndexTree is a Boost::rtree spatial index tree with helper methods
- *    for finding intersections and serialization.
- *
- * \note: For large arrays of raw data (vec[floats]...) consider using make_soa_reader to
- *       avoid duplicating all the data in memory. Init using IndexTree(soa.begin(), soa.end())
- */
-template <typename T, typename A = boost::container::new_allocator<T>>
-class IndexTree: public IndexTreeBaseT<T, A> {
-    using super = IndexTreeBaseT<T, A>;
-
+template <typename Derived, typename T>
+class IndexTreeMixin {
   public:
-    using value_type = T;
-    using cref_t = std::reference_wrapper<const T>;
-    using super::rtree::rtree;  // super ctors
-
-    inline IndexTree() = default;
-
-    /**
-     * \brief Constructs an IndexTree using a custom allocator.
-     *
-     * \param alloc The allocator to be used in this instance.
-     *  Particularly useful for super large indices using memory-mapped files
-     */
-    // Note: We need the following template here to create an universal reference
-    template <typename Alloc = A, std::enable_if_t<std::is_same<Alloc, A>::value, int> = 0>
-    IndexTree(Alloc&& alloc)
-        : super::rtree(bgi::linear<16, 2>(),
-                       bgi::indexable<T>(),
-                       bgi::equal_to<T>(),
-                       std::forward<Alloc>(alloc)) { }
-
     /**
      * \brief Find elements in tree intersecting the given shape.
      *
@@ -322,22 +293,11 @@ class IndexTree: public IndexTreeBaseT<T, A> {
     inline decltype(auto) find_intersecting_pos(const ShapeT& shape) const;
 
     /**
-     * \brief Finds & return objects which intersect. To be used mainly with id-less objects
-     * \returns A vector of references to tree objects
-     */
-    template <typename ShapeT>
-    inline std::vector<cref_t> find_intersecting_objs(const ShapeT& shape) const;
-
-    /**
      * \brief Gets the ids of the the nearest K objects
      * \returns The object ids, identifier_t or gid_segm_t, depending on the default id getter
      */
     template <typename ShapeT>
     inline decltype(auto) find_nearest(const ShapeT& shape, unsigned k_neighbors) const;
-
-    /// \brief Checks whether a given shape intersects any object in the tree
-    template <typename ShapeT>
-    inline bool is_intersecting(const ShapeT& shape) const;
 
     /// \brief Counts objects intersecting the given region deliminted by the shape
     template <typename ShapeT>
@@ -345,8 +305,41 @@ class IndexTree: public IndexTreeBaseT<T, A> {
 
     /// \brief Counts objects intersecting the given region deliminted by the shape
     template <typename ShapeT>
-    inline std::unordered_map<identifier_t, size_t>
-        count_intersecting_agg_gid(const ShapeT& shape) const;
+    inline std::unordered_map<identifier_t, size_t> count_intersecting_agg_gid(
+        const ShapeT& shape) const;
+};
+
+/**
+ * \brief IndexTree is a Boost::rtree spatial index tree with helper methods
+ *    for finding intersections and serialization.
+ *
+ * \note: For large arrays of raw data (vec[floats]...) consider using make_soa_reader to
+ *       avoid duplicating all the data in memory. Init using IndexTree(soa.begin(), soa.end())
+ */
+template <typename T, typename A = boost::container::new_allocator<T>>
+class IndexTree: public IndexTreeMixin<IndexTree<T, A>, T>, public IndexTreeBaseT<T, A> {
+    using super = IndexTreeBaseT<T, A>;
+
+  public:
+    using value_type = T;
+    using cref_t = std::reference_wrapper<const T>;
+    using super::rtree::rtree;  // super ctors
+
+    inline IndexTree() = default;
+
+    /**
+     * \brief Constructs an IndexTree using a custom allocator.
+     *
+     * \param alloc The allocator to be used in this instance.
+     *  Particularly useful for super large indices using memory-mapped files
+     */
+    // Note: We need the following template here to create an universal reference
+    template <typename Alloc = A, std::enable_if_t<std::is_same<Alloc, A>::value, int> = 0>
+    IndexTree(Alloc&& alloc)
+        : super::rtree(bgi::linear<16, 2>(),
+                       bgi::indexable<T>(),
+                       bgi::equal_to<T>(),
+                       std::forward<Alloc>(alloc)) { }
 
     /// \brief Constructor to rebuild from binary data file
     // Note: One must override char* and string since there is a template<T> constructor
@@ -356,6 +349,18 @@ class IndexTree: public IndexTreeBaseT<T, A> {
 
     /// \brief Output tree to binary data file
     inline void dump(const std::string& filename) const;
+
+    /// \brief Checks whether a given shape intersects any object in the tree
+    template <typename ShapeT>
+    inline bool is_intersecting(const ShapeT& shape) const;
+
+    /**
+     * \brief Finds & return objects which intersect. To be used mainly with id-less objects
+     * \returns A vector of references to tree objects
+     */
+    template <typename ShapeT>
+    inline std::vector<cref_t> find_intersecting_objs(const ShapeT& shape) const;
+
 
     /// \brief Non-overlapping placement of Shapes
     template <typename ShapeT>

@@ -35,20 +35,9 @@ inline void create_Sphere_bindings(py::module& m) {
     ;
 }
 
-
-/// Generic IndexTree bindings. It is a common base between full in-memory
-/// and disk-based memory mapped version, basically leaving ctors out
-
-template <
-    typename T,
-    typename SomaT = T,
-    typename Class = si::IndexTree<T>,
-    typename HolderT = std::unique_ptr<Class>
->
-inline py::class_<Class> generic_IndexTree_bindings(py::module& m,
-                                                    const char* class_name) {
-    return py::class_<Class, HolderT>(m, class_name)
-
+template<typename T, typename SomaT, typename Class>
+inline void add_IndexTree_insert_bindings(py::class_<Class>& c) {
+    c
     .def("insert",
         [](Class& obj, const id_t gid, const array_t& point, const coord_t radius) {
             obj.insert(SomaT{gid, mk_point(point), radius});
@@ -61,8 +50,12 @@ inline py::class_<Class> generic_IndexTree_bindings(py::module& m,
             point(array): A len-3 list or np.array[float32] with the center point
             radius(float): The radius of the sphere
         )"
-    )
+    );
+}
 
+template<typename T, typename SomaT, typename Class>
+inline void add_IndexTree_place_bindings(py::class_<Class>& c) {
+    c
     .def("place",
         [](Class& obj, const array_t& region_corners,
                        const id_t gid, const array_t& center, const coord_t rad) {
@@ -89,8 +82,12 @@ inline py::class_<Class> generic_IndexTree_bindings(py::module& m,
             center(array): A len-3 list or np.array[float32] with the center point
             radius(float): The radius of the sphere
         )"
-    )
+    );
+}
 
+template<typename T, typename SomaT, typename Class>
+inline void add_IndexTree_add_spheres_bindings(py::class_<Class>& c) {
+    c
     .def("add_spheres",
         [](Class& obj, const array_t& centroids,
                        const array_t& radii,
@@ -111,8 +108,12 @@ inline py::class_<Class> generic_IndexTree_bindings(py::module& m,
             radii(np.array): An array[float32] with the segments' radii
             py_ids(np.array): An array[int64] with the ids of the spheres
         )"
-    )
+    );
+}
 
+template<typename T, typename SomaT, typename Class>
+inline void add_IndexTree_add_points_bindings(py::class_<Class>& c) {
+    c
     .def("add_points",
         [](Class& obj, const array_t& centroids, const array_ids& py_ids) {
             si::util::constant<coord_t> zero_radius(0);
@@ -130,8 +131,12 @@ inline py::class_<Class> generic_IndexTree_bindings(py::module& m,
             centroids(np.array): A Nx3 array[float32] of the segments' end points
             py_ids(np.array): An array[int64] with the ids of the points
         )"
-    )
+    );
+}
 
+template<typename Class>
+inline void add_IndexTree_is_intersecting_bindings(py::class_<Class>& c) {
+    c
     .def("is_intersecting",
         [](Class& obj, const array_t& point, const coord_t radius) {
             return obj.is_intersecting(si::Sphere{mk_point(point), radius});
@@ -143,8 +148,12 @@ inline py::class_<Class> generic_IndexTree_bindings(py::module& m,
             point(array): A len-3 list or np.array[float32] with the center point
             radius(float): The radius of the sphere
         )"
-    )
+    );
+}
 
+template<typename Class>
+inline void add_IndexTree_find_intersecting_bindings(py::class_<Class>& c) {
+    c
     .def("find_intersecting",
         [](Class& obj, const array_t& point, const coord_t r) {
             const auto& vec = obj.find_intersecting(si::Sphere{mk_point(point), r});
@@ -157,8 +166,12 @@ inline py::class_<Class> generic_IndexTree_bindings(py::module& m,
             point(array): A len-3 list or np.array[float32] with the center point
             radius(float): The radius of the sphere
         )"
-    )
+    );
+}
 
+template<typename Class>
+inline void add_IndexTree_find_intersecting_window_bindings(py::class_<Class>& c) {
+    c
     .def("find_intersecting_window",
         [](Class& obj, const array_t& min_corner, const array_t& max_corner) {
             const auto& vec = obj.find_intersecting(si::Box3D{mk_point(min_corner),
@@ -171,8 +184,12 @@ inline py::class_<Class> generic_IndexTree_bindings(py::module& m,
         Args:
             min_corner, max_corner(float32) : min/max corners of the query window
         )"
-    )
+    );
+}
 
+template<typename Class>
+inline void add_IndexTree_find_intersecting_window_pos_bindings(py::class_<Class>& c) {
+    c
     .def("find_intersecting_window_pos",
         [](Class& obj, const array_t& min_corner, const array_t& max_corner) {
             const auto& vec = obj.find_intersecting_pos(si::Box3D{mk_point(min_corner),
@@ -186,8 +203,13 @@ inline py::class_<Class> generic_IndexTree_bindings(py::module& m,
         Args:
             min_corner, max_corner(float32) : min/max corners of the query window
         )"
-    )
+    );
+}
 
+
+template<typename Class>
+inline void add_IndexTree_find_intersecting_objs_bindings(py::class_<Class>& c) {
+    c
     .def("find_intersecting_objs",
         [](Class& obj, const array_t& centroid, const coord_t& radius) {
             return obj.find_intersecting_objs(si::Sphere{mk_point(centroid), radius});
@@ -195,8 +217,13 @@ inline py::class_<Class> generic_IndexTree_bindings(py::module& m,
         R"(
         Searches objects intersecting the given Sphere, and returns them
         )"
-    )
+    );
+}
 
+
+template<typename Class>
+inline void add_IndexTree_find_intersecting_window_objs_bindings(py::class_<Class>& c) {
+    c
     .def("find_intersecting_window_objs",
         [](Class& obj, const array_t& min_corner, const array_t& max_corner) {
             return obj.find_intersecting_objs(si::Box3D{mk_point(min_corner),
@@ -205,8 +232,12 @@ inline py::class_<Class> generic_IndexTree_bindings(py::module& m,
         R"(
         Searches objects intersecting the given Box3D, and returns them
         )"
-    )
+    );
+}
 
+template<typename Class>
+inline void add_IndexTree_count_intersecting_bindings(py::class_<Class>& c) {
+    c
     .def("count_intersecting",
          [](Class& obj, const array_t& min_corner, const array_t& max_corner) {
              return obj.count_intersecting(si::Box3D{mk_point(min_corner),
@@ -215,8 +246,12 @@ inline py::class_<Class> generic_IndexTree_bindings(py::module& m,
          R"(
          Count objects intersecting the given Box3D
          )"
-    )
+    );
+}
 
+template<typename Class>
+inline void add_IndexTree_find_nearest_bindings(py::class_<Class>& c) {
+    c
     .def("find_nearest",
         [](Class& obj, const array_t& point, const int k_neighbors) {
             const auto& vec = obj.find_nearest(mk_point(point), k_neighbors);
@@ -230,15 +265,57 @@ inline py::class_<Class> generic_IndexTree_bindings(py::module& m,
                 to search around
             k_neighbors(int): The number of neighbour shapes to return
         )"
-    )
+    );
+}
 
+template<typename Class>
+inline void add_str_for_streamable_bindings(py::class_<Class>& c) {
+    c
     .def("__str__", [](Class& obj) {
         std::stringstream strs;
         strs << obj;
         return strs.str();
-    })
+    });
+}
 
+template<typename Class>
+inline void add_len_for_size_bindings(py::class_<Class>& c) {
+    c
     .def("__len__", &Class::size);
+}
+
+/// Generic IndexTree bindings. It is a common base between full in-memory
+/// and disk-based memory mapped version, basically leaving ctors out
+
+template <
+    typename T,
+    typename SomaT = T,
+    typename Class = si::IndexTree<T>,
+    typename HolderT = std::unique_ptr<Class>
+>
+inline py::class_<Class> generic_IndexTree_bindings(py::module& m,
+                                                    const char* class_name) {
+    py::class_<Class> c = py::class_<Class, HolderT>(m, class_name);
+    add_IndexTree_place_bindings<T, SomaT, Class>(c);
+    add_IndexTree_insert_bindings<T, SomaT, Class>(c);
+    add_IndexTree_add_spheres_bindings<T, SomaT, Class>(c);
+    add_IndexTree_add_points_bindings<T, SomaT, Class>(c);
+
+    add_IndexTree_is_intersecting_bindings<Class>(c);
+    add_IndexTree_find_intersecting_bindings<Class>(c);
+    add_IndexTree_find_intersecting_window_bindings<Class>(c);
+    add_IndexTree_find_intersecting_window_pos_bindings<Class>(c);
+
+    add_IndexTree_find_intersecting_objs_bindings<Class>(c);
+    add_IndexTree_find_intersecting_window_objs_bindings<Class>(c);
+
+    add_IndexTree_count_intersecting_bindings<Class>(c);
+
+    add_IndexTree_find_nearest_bindings<Class>(c);
+    add_str_for_streamable_bindings<Class>(c);
+    add_len_for_size_bindings<Class>(c);
+
+    return c;
 }
 
 
@@ -449,7 +526,7 @@ inline void create_SynapseIndex_bindings(py::module& m, const char* class_name) 
 
 /// Bindings for Base Type si::MorphoEntry
 
-void create_MorphoEntry_bindings(py::module& m) {
+inline void create_MorphoEntry_bindings(py::module& m) {
 
     using Class = MorphoEntry;
 
@@ -522,13 +599,9 @@ inline static void add_branch(MorphIndexTree& obj,
     }
 }
 
-
-/// Bindings to index si::IndexTree<MorphoEntry>
-template <typename Class = si::IndexTree<MorphoEntry>>
-inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
-
-    create_IndexTree_bindings<MorphoEntry, si::Soma, Class>(m, class_name)
-
+template <typename Class>
+inline void add_MorphIndex_insert_bindings(py::class_<Class>& c) {
+    c
     .def("insert",
         [](Class& obj, const id_t gid, const unsigned section_id, const unsigned segment_id,
                        const array_t& p1, const array_t& p2, const coord_t radius) {
@@ -545,8 +618,12 @@ inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
             p2(array): A len-3 list or np.array[float32] with the cylinder second point
             radius(float): The radius of the cylinder
         )"
-    )
+    );
+}
 
+template <typename Class>
+inline void add_MorphIndex_place_bindings(py::class_<Class>& c) {
+    c
     .def("place",
         [](Class& obj, const array_t& region_corners,
                        const id_t gid, const unsigned section_id, const unsigned segment_id,
@@ -573,8 +650,12 @@ inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
             p2(array): A len-3 list or np.array[float32] with the cylinder second point
             radius(float): The radius of the cylinder
         )"
-    )
+    );
+}
 
+template <typename Class>
+inline void add_MorphIndex_add_branch_bindings(py::class_<Class>& c) {
+    c
     .def("add_branch",
         [](Class& obj, const id_t gid, const unsigned section_id, const array_t& centroids_np,
                        const array_t& radii_np) {
@@ -595,8 +676,12 @@ inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
             centroids_np(np.array): A Nx3 array[float32] of the segments' end points
             radii_np(np.array): An array[float32] with the segments' radii
         )"
-    )
+    );
+}
 
+template <typename Class>
+inline void add_MorphIndex_add_soma_bindings(py::class_<Class>& c) {
+    c
     .def("add_soma",
         [](Class& obj, const id_t gid, const array_t& point, const coord_t radius) {
             obj.insert(si::Soma{gid, mk_point(point), radius});
@@ -609,8 +694,12 @@ inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
             point(array): A len-3 list or np.array[float32] with the center point
             radius(float): The radius of the soma
         )"
-    )
+    );
+}
 
+template <typename Class>
+inline void add_MorphIndex_add_neuron_bindings(py::class_<Class>& c) {
+    c
     .def("add_neuron",
         [](Class& obj, const id_t gid, const array_t& centroids_np, const array_t& radii_np,
                        const array_offsets& branches_offset_np,
@@ -726,6 +815,19 @@ inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
             has_soma : include the soma point or not, default = true
         )"
     );
+}
+
+/// Bindings to index si::IndexTree<MorphoEntry>
+template <typename Class = si::IndexTree<MorphoEntry>>
+inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
+    auto c = create_IndexTree_bindings<MorphoEntry, si::Soma, Class>(m, class_name);
+
+    add_MorphIndex_insert_bindings<Class>(c);
+    add_MorphIndex_place_bindings<Class>(c);
+
+    add_MorphIndex_add_branch_bindings<Class>(c);
+    add_MorphIndex_add_neuron_bindings<Class>(c);
+    add_MorphIndex_add_soma_bindings<Class>(c);
 }
 
 

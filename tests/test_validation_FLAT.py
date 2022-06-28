@@ -48,15 +48,13 @@ def do_query_serial(min_corner, max_corner):
     return idx
 
 
-@pytest_skipif(not os.path.exists(CIRCUIT_FILE),
-               reason="Circuit file not available")
-@pytest_long
-def test_validation_FLAT():
-    # Defining first and second corner for box query
+def query_window():
     min_corner = np.array([-50, -50, -50], dtype=np.float32)
     max_corner = np.array([50, 50, 50], dtype=np.float32)
+    return min_corner, max_corner
 
-    si_ids = do_query_serial(min_corner, max_corner)
+
+def check_vs_FLAT(si_ids):
     assert len(si_ids) > 0
 
     # Import data/query_2k_v6.csv in a numpy array
@@ -74,6 +72,13 @@ def test_validation_FLAT():
 
     # Check if SI_data and flat_data are the same
     assert np.array_equal(si_ids, flat_ids)
+
+
+@pytest_skipif(not os.path.exists(CIRCUIT_FILE),
+               reason="Circuit file not available")
+@pytest_long
+def test_validation_FLAT():
+    check_vs_FLAT(do_query_serial(*query_window()))
 
 
 if __name__ == "__main__":

@@ -54,22 +54,8 @@ class MorphologyLib:
         return self._morphologies.get(morph_name) or self._load(morph_name)
 
 
-class MorphIndexBuilder(ChunkedProcessingMixin):
-    """A MorphIndexBuilder is a helper class to create Spatial Indices (RTree)
-    from a node file (mvd or Sonata) and a morphology library.
-    When the index is expected to NOT FIT IN MEMORY it can alternatively be set up
-    to use MorphIndexMemDisk, according to `disk_mem_map` ctor argument.
-
-    After indexing (ranges of) cells, the user can access the current spatial
-    index at the `index` property
-
-    Factories are provided to create & retrieve an index directly from mvd or Sonata
-    """
-
-    DiskMemMapProps = DiskMemMapProps  # shortcut
-
-    def __init__(self, morphology_dir, nodes_file, population="", gids=None,
-                 mem_map_props: DiskMemMapProps = None):
+class MorphIndexBuilderBase:
+    def __init__(self, morphology_dir, nodes_file, population="", gids=None):
         """Initializes a node index builder
 
         Args:
@@ -80,10 +66,7 @@ class MorphIndexBuilder(ChunkedProcessingMixin):
             mem_map_props (DiskMemMapProps, optional): In provided, specifies properties
                 of the memory-mapped-file backing this struct [experimental!]
         """
-        if mem_map_props:
-            self.index = MorphIndexMemDisk.create(*mem_map_props.args)
-        else:
-            self.index = MorphIndex()
+
         self.morph_lib = MorphologyLib(morphology_dir)
         self.mvd = mvdtool.open(nodes_file, population)
         self._gids = range(0, len(self.mvd)) if gids is None else \
@@ -142,6 +125,40 @@ class MorphIndexBuilder(ChunkedProcessingMixin):
             gid += 1
             rotopoints = self.rototranslate(morph, pos, rot)
             self.process_cell(gid, morph, rotopoints, pos)
+
+
+class MorphIndexBuilder(MorphIndexBuilderBase, ChunkedProcessingMixin):
+    """A MorphIndexBuilder is a helper class to create Spatial Indices (RTree)
+    from a node file (mvd or Sonata) and a morphology library.
+    When the index is expected to NOT FIT IN MEMORY it can alternatively be set up
+    to use MorphIndexMemDisk, according to `disk_mem_map` ctor argument.
+
+    After indexing (ranges of) cells, the user can access the current spatial
+    index at the `index` property
+
+    Factories are provided to create & retrieve an index directly from mvd or Sonata
+    """
+
+    DiskMemMapProps = DiskMemMapProps  # shortcut
+
+    def __init__(self, morphology_dir, nodes_file, population="", gids=None,
+                 mem_map_props: DiskMemMapProps = None):
+        """Initializes a node index builder
+
+        Args:
+            morphology_dir (str): The file/directory where morphologies reside
+            nodes_file (str): The Sonata/mvd nodes file
+            population (str, optional): The nodes population. Defaults to "" (default).
+            gids ([type], optional): A selection of gids to index. Defaults to None (All)
+            mem_map_props (DiskMemMapProps, optional): In provided, specifies properties
+                of the memory-mapped-file backing this struct [experimental!]
+        """
+        if mem_map_props:
+            self.index = MorphIndexMemDisk.create(*mem_map_props.args)
+        else:
+            self.index = MorphIndex()
+
+        super().__init__(morphology_dir, nodes_file, population, gids)
 
     @classmethod
     def from_mvd_file(cls, morphology_dir, node_filename, target_gids=None,

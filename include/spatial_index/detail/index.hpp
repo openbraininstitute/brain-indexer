@@ -7,7 +7,7 @@
 
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
-#include <boost/function_output_iterator.hpp>
+#include <boost/iterator/function_output_iterator.hpp>
 #include <boost/serialization/version.hpp>
 
 #include "output_iterators.hpp"
@@ -51,52 +51,107 @@ inline Point3D get_centroid(const boost::variant<VariantT...>& mixed_geometry) {
 // class IndexTree
 /////////////////////////////////////////
 
-template <typename T, typename A>
+template <typename Derived, typename T>
 template <typename ShapeT, typename OutputIt>
-inline void IndexTree<T, A>::find_intersecting(const ShapeT& shape, const OutputIt& iter) const {
+inline void IndexTreeMixin<Derived, T>::find_intersecting(const ShapeT& shape,
+                                                          const OutputIt& iter) const {
+
+    const auto &derived = static_cast<const Derived&>(*this);
     // Using a callback makes the query slightly faster than using qbegin()...qend()
-    auto real_intersection = [&shape](const T& v){ return geometry_intersects(shape, v); };
-    this->query(bgi::intersects(bgi::indexable<ShapeT>{}(shape))
-                    && bgi::satisfies(real_intersection),
-                iter);
+    auto real_intersection = [&shape](const auto& v){ return geometry_intersects(shape, v); };
+    derived.query(
+        bgi::intersects(bgi::indexable<ShapeT>{}(shape)) && bgi::satisfies(real_intersection),
+        iter
+    );
 }
 
-template <typename T, typename A>
+template <typename Derived, typename T>
 template <typename OutputIt>
-inline void IndexTree<T, A>::find_intersecting(const Box3D& shape, const OutputIt& iter) const {
-    this->query(bgi::intersects(shape), iter);
+inline void IndexTreeMixin<Derived, T>::find_intersecting(const Box3D& shape,
+                                                          const OutputIt& iter) const {
+    static_cast<const Derived&>(*this).query(bgi::intersects(shape), iter);
 }
 
-template <typename T, typename A>
+template <typename Derived, typename T>
 template <typename ShapeT>
-inline decltype(auto) IndexTree<T, A>::find_intersecting(const ShapeT& shape) const {
+inline decltype(auto) IndexTreeMixin<Derived, T>::find_intersecting(const ShapeT& shape) const {
     using ids_getter = typename detail::id_getter_for<T>::type;
     std::vector<typename ids_getter::value_type> ids;
     find_intersecting(shape, ids_getter(ids));
     return ids;
 }
 
-template <typename T, typename A>
+template <typename Derived, typename T>
 template <typename ShapeT>
-inline decltype(auto) IndexTree<T, A>::find_intersecting_pos(const ShapeT& shape) const {
+inline decltype(auto) IndexTreeMixin<Derived, T>::find_intersecting_pos(const ShapeT& shape) const {
+    const auto &derived = static_cast<const Derived&>(*this);
+
     std::vector<Point3D> points;
     auto point_accu = boost::make_function_output_iterator(
         [&points](const auto& item) {
             points.push_back(get_centroid(item));
         }
     );
-    this->query(bgi::intersects(shape), point_accu);
+    derived.query(bgi::intersects(shape), point_accu);
     return points;
+}
+
+template <typename Derived, typename T>
+template <typename ShapeT>
+inline size_t IndexTreeMixin<Derived, T>::count_intersecting(const ShapeT& shape) const {
+    const auto &derived = static_cast<const Derived&>(*this);
+
+    size_t cardinality = 0; // number of matches in set
+    auto counter = boost::make_function_output_iterator(
+        [&cardinality](const auto&) { ++cardinality; }
+    );
+    derived.query(bgi::intersects(shape), counter);
+    return cardinality;
+}
+
+template <typename Derived, typename T>
+template <typename ShapeT>
+inline std::unordered_map<identifier_t, size_t>
+IndexTreeMixin<Derived, T>::count_intersecting_agg_gid(const ShapeT& shape) const {
+    const auto &derived = static_cast<const Derived&>(*this);
+
+    std::unordered_map<identifier_t, size_t> counts;
+    auto counter = boost::make_function_output_iterator(
+        [&counts](const auto& elem) {
+            counts[elem.post_gid()] += 1;
+        }
+    );
+    derived.query(bgi::intersects(shape), counter);
+    return counts;
+}
+
+template <typename Derived, typename T>
+template <typename ShapeT>
+inline decltype(auto) IndexTreeMixin<Derived, T>::find_nearest(const ShapeT& shape,
+                                                               unsigned k_neighbors) const {
+    const auto& derived = static_cast<const Derived&>(*this);
+
+    using ids_getter = typename detail::id_getter_for<T>::type;
+    std::vector<typename ids_getter::value_type> ids;
+    derived.query(bgi::nearest(shape, k_neighbors), ids_getter(ids));
+    return ids;
+}
+
+
+// Serialization: Load ctor
+template <typename T, typename A>
+inline IndexTree<T, A>::IndexTree(const std::string& filename) {
+    std::ifstream ifs(filename, std::ios::binary);
+    boost::archive::binary_iarchive ia(ifs);
+    ia >> static_cast<super&>(*this);
 }
 
 
 template <typename T, typename A>
-template <typename ShapeT>
-inline std::vector<typename IndexTree<T, A>::cref_t>
-IndexTree<T, A>::find_intersecting_objs(const ShapeT& shape) const {
-    std::vector<cref_t> results;
-    find_intersecting(shape, std::back_inserter(results));
-    return results;
+inline void IndexTree<T, A>::dump(const std::string& filename) const {
+    std::ofstream ofs(filename, std::ios::binary | std::ios::trunc);
+    boost::archive::binary_oarchive oa(ofs);
+    oa << static_cast<const super&>(*this);
 }
 
 
@@ -104,8 +159,8 @@ template <typename T, typename A>
 template <typename ShapeT>
 inline bool IndexTree<T, A>::is_intersecting(const ShapeT& shape) const {
     for (auto it = this->qbegin(bgi::intersects(bgi::indexable<ShapeT>{}(shape)));
-            it != this->qend();
-            ++it) {
+         it != this->qend();
+         ++it) {
         if (geometry_intersects(shape, *it)) {
             return true;
         }
@@ -116,38 +171,11 @@ inline bool IndexTree<T, A>::is_intersecting(const ShapeT& shape) const {
 
 template <typename T, typename A>
 template <typename ShapeT>
-inline size_t IndexTree<T, A>::count_intersecting(const ShapeT& shape) const {
-    size_t cardinality = 0; // number of matches in set
-    auto counter = boost::make_function_output_iterator(
-        [&cardinality](const auto&) { ++cardinality; }
-    );
-    this->query(bgi::intersects(shape), counter);
-    return cardinality;
-}
-
-template <typename T, typename A>
-template <typename ShapeT>
-inline std::unordered_map<identifier_t, size_t>
-IndexTree<T, A>::count_intersecting_agg_gid(const ShapeT& shape) const {
-    std::unordered_map<identifier_t, size_t> counts;
-    auto counter = boost::make_function_output_iterator(
-        [&counts](const auto& elem) {
-            counts[elem.post_gid()] += 1;
-        }
-    );
-    this->query(bgi::intersects(shape), counter);
-    return counts;
-}
-
-
-template <typename T, typename A>
-template <typename ShapeT>
-inline decltype(auto)
-IndexTree<T, A>::find_nearest(const ShapeT& shape, unsigned k_neighbors) const {
-    using ids_getter = typename detail::id_getter_for<T>::type;
-    std::vector<typename ids_getter::value_type> ids;
-    this->query(bgi::nearest(shape, k_neighbors), ids_getter(ids));
-    return ids;
+inline std::vector<typename IndexTree<T, A>::cref_t> IndexTree<T, A>::find_intersecting_objs(
+    const ShapeT& shape) const {
+    std::vector<cref_t> results;
+    this->find_intersecting(shape, std::back_inserter(results));
+    return results;
 }
 
 
@@ -198,22 +226,6 @@ inline bool IndexTree<T, A>::place(const Box3D& region, ShapeT& shape) {
     }
 
     return false;
-}
-
-
-// Serialization: Load ctor
-template <typename T, typename A>
-inline IndexTree<T, A>::IndexTree(const std::string& filename) {
-    std::ifstream ifs(filename, std::ios::binary);
-    boost::archive::binary_iarchive ia(ifs);
-    ia >> static_cast<super&>(*this);
-}
-
-template <typename T, typename A>
-inline void IndexTree<T, A>::dump(const std::string& filename) const {
-    std::ofstream ofs(filename, std::ios::binary | std::ios::trunc);
-    boost::archive::binary_oarchive oa(ofs);
-    oa << static_cast<const super&>(*this);
 }
 
 
