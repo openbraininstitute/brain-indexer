@@ -54,6 +54,7 @@ struct Sphere {
 };
 
 
+
 /**
  * \brief A Cylinder represention. Base abstraction for Segments
  */
@@ -122,6 +123,8 @@ inline bool geometry_intersects(const T1& geom1, const T2& geom2) {
     return geom1.intersects(geom2);
 }
 
+inline std::ostream& operator<<(std::ostream& os, const Sphere& s);
+inline std::ostream& operator<<(std::ostream& os, const Cylinder& c);
 
 }  // namespace spatial_index
 

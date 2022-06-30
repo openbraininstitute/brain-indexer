@@ -82,25 +82,99 @@ inline CoordType distance_segment_segment(Point3D const& s1_0, Point3D const& s1
 }  // namespace detail
 
 
-inline bool Sphere::intersects(Cylinder const& c) const {
-    // First Assume infinite long cylinder
-    Point3Dx u = Point3Dx(centroid) - c.p1;
-    Point3Dx v = Point3Dx(c.p2) - c.p1;
-    CoordType proj = u.dot(v);
-    CoordType distance = std::sqrt(u.dot(u) - (proj * proj / v.dot(v)));
-    CoordType radii_sum = radius + c.radius;
+inline Point3Dx project_point_onto_line(
+        const Point3Dx &base,
+        const Point3Dx &dir,
+        const Point3Dx &x) {
 
-    if (distance > radii_sum) {
-        return false;
-    }
-    // Now, check for caps. Calculate sphere distance from it using projections
-    // They intersect if the largest is smaller than ||v|| + sphere_radius
-    Point3Dx w = Point3Dx(centroid) - c.p2;
-    CoordType v_norm = v.norm();
-    CoordType max_proj = std::max(std::abs(proj), std::abs(w.dot(v))) / v_norm;
-    return max_proj <= v_norm + radius;
+    auto dir_dot_dir = dir.dot(dir);
+    auto x_dot_dir = (x - base).dot(dir);
+
+    return base + (x_dot_dir * dir) / dir_dot_dir;
 }
 
+// TODO remove this once C++17 is available.
+CoordType clamp(CoordType x, CoordType low, CoordType high) {
+    return std::min(std::max(x, low), high);
+}
+
+/** \brief Project a point onto a segment.
+ * 
+ *  The segment consists of all points between `base` and `base + dir`.
+ */
+inline Point3Dx project_point_onto_segment(
+        const Point3Dx &base,
+        const Point3Dx &dir,
+        const Point3Dx &x) {
+
+    auto dir_dot_dir = dir.norm_sq();
+    auto x_dot_dir = (x - base).dot(dir);
+    auto x_rel = clamp(x_dot_dir / dir_dot_dir, 0.0, 1.0);
+
+    return base + x_rel * dir;
+}
+
+
+inline bool Sphere::intersects(Cylinder const& c) const {
+    // BSc Thesis:
+    //   Michael Sünkel
+    //   Collision Detection for Cylinder-Shaped Rigid Bodies
+    //   https://www10.cs.fau.de/publications/theses/2010/Suenkel_BT_2010.pdf
+
+    auto u = Point3Dx(centroid) - c.p1;
+    auto v = Point3Dx(c.p2) - c.p1;
+
+    auto v_dot_u = v.dot(u);
+    auto v_dot_v = v.norm_sq();
+
+    auto max_distance = radius + c.radius;
+    auto max_distance_sq = max_distance*max_distance;
+
+    if(CoordType(0.0) <= v_dot_u && v_dot_u <= v_dot_v) {
+        // This means we can treat it as if the cylinder had infinite width, and
+        // simply compute that the distance of the point to the line is less
+        // than the sum of the radii.
+
+        // Compute square distance from line via Pythagoras:
+        auto dist_sq = u.norm_sq() - v_dot_u * v_dot_u / v_dot_v;
+        return dist_sq <= max_distance_sq;
+    }
+
+    // To proceed we need to know which is the closer cap:
+    auto closer_cap = (v_dot_u < CoordType(0) ? c.p1 : c.p2);
+
+    // There's a quick out if the capsule and sphere don't intersect.
+
+    if((centroid - closer_cap).norm_sq() > max_distance_sq){
+        return false;
+    }
+
+    // Now we compute the projection of the center of the sphere onto the
+    // closer cap in two steps:
+    //   - first compute the segment on the cap that must contain this
+    //     point. The direction of this segment is the line that is
+    //     perpendicular to the axis of the cylinder and points at the center of
+    //     the sphere.
+    //   - project the center of the sphere onto this segment.
+    auto p = c.p1 + (v_dot_u / v_dot_v) * v;
+
+    auto d = centroid-p;
+    auto d_norm = d.norm();
+
+    // If the center of the sphere lies on the axis, then `d_norm == 0`.
+    auto centroid_to_cap
+        = d_norm < 100 * std::numeric_limits<CoordType>::epsilon()
+        ? closer_cap
+        : project_point_onto_segment(
+            closer_cap - d * (c.radius / d_norm),
+            d * (2 * c.radius / d_norm),
+            centroid
+        );
+
+    // Since we know the point on the cylinder closest to the sphere, we
+    // can simply compare the distance.
+    return (centroid - centroid_to_cap).norm_sq() <= radius*radius;
+}
 
 inline bool Sphere::contains(Point3D const& p) const {
     const auto dist_sq = (Point3Dx(p) - centroid).norm_sq();

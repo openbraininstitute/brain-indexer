@@ -1,6 +1,4 @@
-
 add_definitions("-Wextra")
-
 
 function(SI_UNIT_TEST test_src)
     add_executable(${test_src} cpp/${test_src}.cpp)
@@ -21,6 +19,8 @@ endfunction()
 si_unit_test("test_input_iters")
 si_unit_test("unit_tests")
 si_unit_test("test_grid")
+si_unit_test("test_geometry")
+si_unit_test("test_random_trees")
 
 if(SI_BENCHMARKS)
     si_unit_test("benchmarks")

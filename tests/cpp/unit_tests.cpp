@@ -1,6 +1,7 @@
 #define BOOST_TEST_MODULE SpatialIndex_UnitTests
 #include <boost/test/unit_test.hpp>
 
+#include <random>
 #include <vector>
 #include <spatial_index/index.hpp>
 #include <spatial_index/util.hpp>
