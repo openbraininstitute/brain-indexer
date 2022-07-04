@@ -176,11 +176,22 @@ inline bool Sphere::intersects(Cylinder const& c) const {
     return (centroid - centroid_to_cap).norm_sq() <= radius*radius;
 }
 
+
+inline bool Sphere::intersects(Box3Dx const& b) const {
+    // FIXME, not sharp.
+    return b.intersects(*this);
+}
+
+
 inline bool Sphere::contains(Point3D const& p) const {
     const auto dist_sq = (Point3Dx(p) - centroid).norm_sq();
     return dist_sq <= radius * radius;
 }
 
+inline bool Box3Dx::intersects(Cylinder const& c) const {
+    // FIXME, not sharp.
+    return bg::intersects(bounding_box(), c.bounding_box());
+}
 
 inline bool Cylinder::intersects(Cylinder const& c) const {
     CoordType min_dist = detail::distance_segment_segment(p1, p2, c.p1, c.p2);
@@ -211,6 +222,17 @@ inline bool Cylinder::contains(Point3D const& p) const {
 inline std::ostream& operator<<(std::ostream& os, const Sphere& s) {
     return os << "Sphere(centroid=" << s.centroid << ", "
                  "radius=" << boost::format("%.3g") % s.radius << ')';
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Box3D& b) {
+    auto min_corner = Point3D(b.min_corner());
+    auto max_corner = Point3D(b.max_corner());
+
+    return os << "Box([ " << min_corner << ", " << max_corner << "])";
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Box3Dx& b) {
+    return os << "Box3Dx(" << b.bounding_box() << ')';
 }
 
 inline std::ostream& operator<<(std::ostream& os, const Cylinder& c) {

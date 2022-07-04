@@ -172,3 +172,29 @@ BOOST_AUTO_TEST_CASE(NonOverlapPlacement) {
     BOOST_TEST(rtree.place(Box3D{{.0, .0, -2.}, {20., 5., 2.}}, toplace2));
     BOOST_CHECK(toplace2.centroid.get<0>() > toplace.centroid.get<0>());
 }
+
+BOOST_AUTO_TEST_CASE(IntegerConversion) {
+    // Too small.
+    BOOST_CHECK_THROW(util::safe_integer_cast<size_t>(-1),
+        std::bad_cast
+    );
+
+    // Too large.
+    BOOST_CHECK_THROW(
+        util::safe_integer_cast<int>(std::numeric_limits<size_t>::max()),
+        std::bad_cast
+    );
+
+    // Just right.
+    BOOST_CHECK(42 == util::safe_integer_cast<int>(42ul));
+
+#ifndef NDEBUG
+    BOOST_CHECK_THROW(util::integer_cast<int>(size_t(-1)), std::bad_cast);
+    BOOST_CHECK_THROW(util::integer_cast<size_t>(-1), std::bad_cast);
+#else
+    // In "fast mode" `interger_cast` must not check anything, and just
+    // perform the C-style cast (and over- or underflow).
+    BOOST_CHECK(util::integer_cast<int>(size_t(-1)) == -1);
+    BOOST_CHECK(util::integer_cast<size_t>(-1) == size_t(-1));
+#endif
+}

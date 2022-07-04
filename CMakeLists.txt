@@ -11,8 +11,9 @@ project(SpatialIndex VERSION ${SI_VERSION}
                      DESCRIPTION "BBP Spatial indexing tools"
                      LANGUAGES CXX)
 
-option(SI_PYTHON_BINDINGS "Build the python bindings" ON)
-option(SI_UNIT_TESTS "Build the c++ unit tests" ON)
+option(SI_MPI "Build with MPI support" ON)
+option(SI_PYTHON_BINDINGS "Build the Python bindings" ON)
+option(SI_UNIT_TESTS "Build the C++ unit tests" ON)
 option(SI_BENCHMARKS "Build benchmarks tests" OFF)
 
 
@@ -46,23 +47,32 @@ endif()
 find_package(Boost 1.59.0 REQUIRED COMPONENTS ${BOOST_REQ_COMPONENTS})
 find_package(Threads REQUIRED QUIET)
 
+if(SI_MPI)
+    find_package(MPI REQUIRED)
+endif()
 
 #
 # Target lib
 #
 set(SI_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 
-add_library(SpatialIndex INTERFACE)
-target_include_directories(SpatialIndex INTERFACE ${SI_INCLUDE_DIR})
+add_library(SpatialIndex SHARED)
+target_include_directories(SpatialIndex PUBLIC ${SI_INCLUDE_DIR})
 target_link_libraries(SpatialIndex
-  INTERFACE
+  PUBLIC
     Boost::boost
     Boost::serialization
     Boost::filesystem
     Threads::Threads
 )
-target_compile_definitions(SpatialIndex INTERFACE "-DBOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL")
+target_compile_definitions(SpatialIndex PUBLIC "-DBOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL")
 
+if(SI_MPI)
+  target_link_libraries(SpatialIndex PUBLIC MPI::MPI_CXX)
+  target_compile_definitions(SpatialIndex PUBLIC "-DSI_MPI")
+endif()
+
+add_subdirectory(src)
 
 #
 # Py-bindings with PyBind11

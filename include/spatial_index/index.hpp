@@ -238,6 +238,20 @@ class Segment: public IndexedShape<Cylinder, MorphPartId> {
 };
 
 
+class IndexedSubtreeBox : public IndexedShape<Box3Dx, ShapeId> {
+    using super = IndexedShape<Box3Dx, ShapeId>;
+
+  public:
+    using super::IndexedShape;
+
+    inline IndexedSubtreeBox(identifier_t id, Box3D const& box)
+        : super(id, Box3Dx(box)) {}
+
+    inline IndexedSubtreeBox(identifier_t id, Box3Dx const& box)
+        : super(id, box) {}
+
+};
+
 //////////////////////////////////////////////
 // High Level API
 //////////////////////////////////////////////

@@ -29,10 +29,15 @@ test-cpp-unit:
   stage: test
   tags:
     - bb5_map
+  variables:
+    bb5_constraint: cpu
+    bb5_ntasks: 4
+    bb5_cpus_per_task: 1
+
   before_script:
     - !reference [.bb5, clean-env]
   script:
-    - module load unstable cmake gcc boost
+    - module load unstable cmake gcc boost hpe-mpi py-mpi4py
     - cmake -S . -B build
     - cmake --build build -j2
     - cd build && ctest -E Python
@@ -56,7 +61,9 @@ test-bare-ubuntu:
     - ln -s /usr/bin/python3 /usr/bin/python
     - !reference [.setup-venv]
   script:
+    - apt-get update 
     - apt install -y libboost-filesystem1.71-dev libboost-serialization1.71-dev libboost-test1.71-dev
+    - apt install -y libopenmpi-dev
     - pip install -v -e .
     - pytest
 
@@ -86,7 +93,7 @@ test-bb5-py39:
   variables:
     TOXENV: flake8, py39  # boost depends on py38
     PRE_BUILD_COMMAND: |
-      module load unstable boost
+      module load unstable boost hpe-mpi py-mpi4py
     EXTRA_MODULES:
       unstable:gcc
 
@@ -125,7 +132,7 @@ docs:
   variables:
     TOXENV: docs
     PRE_BUILD_COMMAND: |
-      module load unstable boost
+      module load unstable boost hpe-mpi py-mpi4py
     EXTRA_MODULES:
       unstable:gcc
   artifacts:

@@ -320,6 +320,7 @@ template<> struct indexable<IndexedSphere> : public indexable_with_bounding_box<
 template<> struct indexable<Synapse> : public indexable_with_bounding_box<Synapse> {};
 template<> struct indexable<Soma> : public indexable_with_bounding_box<Soma> {};
 template<> struct indexable<Segment> : public indexable_with_bounding_box<Segment> {};
+template<> struct indexable<IndexedSubtreeBox> : public indexable_with_bounding_box<IndexedSubtreeBox> {};
 
 template <typename... VariantArgs>
 struct indexable<boost::variant<VariantArgs...>> {

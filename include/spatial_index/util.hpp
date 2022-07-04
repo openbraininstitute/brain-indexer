@@ -1,5 +1,8 @@
 #pragma once
 
+#include <boost/filesystem.hpp>
+#include <boost/numeric/conversion/converter.hpp>
+
 namespace spatial_index {
 
 namespace util {
@@ -76,6 +79,59 @@ class SoA;
 template <typename T, typename... Fields>
 inline auto make_soa_reader(Fields&... fields) {
     return SoA<T, Fields...>(fields...);
+}
+
+
+/** \brief Ensure that the output directory is valid.
+ * 
+ *  Either the directory already exists and is empty, or it's created now.
+ */
+inline void ensure_valid_output_directory(const std::string &output_dir) {
+    if(boost::filesystem::is_directory(output_dir)) {
+        if(!boost::filesystem::is_empty(output_dir)) {
+            throw std::runtime_error("Not an empty directory: " + output_dir);
+        }
+    }
+    else {
+        boost::filesystem::create_directories(output_dir);
+    }
+}
+
+
+/** \brief Safe conversion of integer types.
+ * 
+ *  Safe means this function will throw an exception if the conversion isn't
+ *  exact.
+ */
+template<class T, class S>
+T safe_integer_cast(S s) {
+    static_assert(std::is_integral<T>::value, "The target type must be integral.");
+    static_assert(std::is_integral<S>::value, "The source type must be integral.");
+
+    return boost::numeric::converter<T, S>::convert(s);
+}
+
+
+/** \brief Cheap, unsafe conversion of integer types.
+ * 
+ *  In production this reverts to essentially a `static_cast`. However,
+ *  when assertions are turned on as defined by `NDEBUG`, then this will
+ *  check that the integer conversion is safe.
+ * 
+ *  Note, use this in performance critical parts of the code where the
+ *  overhead of checking that the integer conversion is safe is
+ *  unacceptable. Otherwise, use `safe_integer_cast`.
+ */
+template<class T, class S>
+T integer_cast(S s) {
+    static_assert(std::is_integral<T>::value, "The target type must be integral.");
+    static_assert(std::is_integral<S>::value, "The source type must be integral.");
+
+#ifndef NDEBUG
+    return safe_integer_cast<T>(s);
+#else
+    return static_cast<T>(s);
+#endif
 }
 
 

@@ -9,6 +9,7 @@ namespace spatial_index {
 
 
 struct Cylinder;  // FWDecl
+struct Box3Dx;  // FWDecl
 
 
 /**
@@ -32,6 +33,7 @@ struct Sphere {
     }
 
     inline bool intersects(Cylinder const& c) const;
+    inline bool intersects(Box3Dx const& b) const;
 
     inline bool contains(Point3D const& p) const;
 
@@ -43,6 +45,11 @@ struct Sphere {
         return centroid;
     }
 
+    template<size_t dim>
+    inline CoordType get_centroid_coord() const noexcept {
+        return centroid.get<dim>();
+    }
+
   private:
     friend class boost::serialization::access;
 
@@ -50,6 +57,50 @@ struct Sphere {
     inline void serialize(Archive& ar, const unsigned int /*version*/) {
         ar & centroid;
         ar & radius;
+    }
+};
+
+// Poorly named.
+struct Box3Dx : public Box3D {
+    using box_type = Box3D;
+
+    using Box3D::Box3D;
+    Box3Dx(const Box3D &b) : Box3D(b) {}
+
+    inline const Box3D& bounding_box() const {
+        return static_cast<const Box3D&>(*this);
+    }
+
+    inline Point3D get_centroid() const noexcept {
+        return Point3D{
+            get_centroid_coord<0>(),
+            get_centroid_coord<1>(),
+            get_centroid_coord<2>()
+        };
+    }
+
+    template<size_t dim>
+    inline CoordType get_centroid_coord() const noexcept {
+        return (min_corner().get<dim>() + max_corner().get<dim>())/2;
+    }
+
+    inline bool intersects(Box3D const& other) const {
+        return bg::intersects(bounding_box(), other);
+    }
+
+    inline bool intersects(Sphere const& s) const {
+        // FIXME this isn't accurate, but the only usecase, allows this.
+        return bg::intersects(bounding_box(), s.bounding_box());
+    }
+
+    inline bool intersects(Cylinder const& c) const;
+
+  private:
+    friend class boost::serialization::access;
+
+    template <class Archive>
+    inline void serialize(Archive& ar, const unsigned int /*version*/) {
+        ar & static_cast<Box3D&>(*this);
     }
 };
 
@@ -88,6 +139,10 @@ struct Cylinder {
         return s.intersects(*this);  // delegate to sphere
     }
 
+    inline bool intersects(Box3Dx const& b) const {
+        return b.intersects(*this);  // delegate to EnhancedBox
+    }
+
     inline bool contains(Point3D const& p) const;
 
     inline void translate(Point3D const& vec) {
@@ -97,10 +152,15 @@ struct Cylinder {
 
     inline Point3D get_centroid() const {
         Point3D centroid;
-        centroid.set<0>((p1.get<0>()+p2.get<0>())/2);
-        centroid.set<1>((p1.get<1>()+p2.get<1>())/2);
-        centroid.set<2>((p1.get<2>()+p2.get<2>())/2);
+        centroid.set<0>(get_centroid_coord<0>());
+        centroid.set<1>(get_centroid_coord<1>());
+        centroid.set<2>(get_centroid_coord<2>());
         return centroid;
+    }
+
+    template<size_t dim>
+    inline CoordType get_centroid_coord() const noexcept {
+        return (p1.get<dim>() + p2.get<dim>()) / 2;
     }
 
   private:
