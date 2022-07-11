@@ -201,13 +201,13 @@ inline bool Cylinder::intersects(Cylinder const& c) const {
 
 inline bool Cylinder::contains(Point3D const& p) const {
     // https://www.flipcode.com/archives/Fast_Point-In-Cylinder_Test.shtml
-    const auto& cyl_axis = Point3Dx(p2) - p1;
-    const auto& p1_ptest = Point3Dx(p) - p1;
+    const auto cyl_axis = Point3Dx(p2) - p1;
+    const auto p1_ptest = Point3Dx(p) - p1;
     const auto dot_prod = p1_ptest.dot(cyl_axis);
     const auto axis_len_sq = cyl_axis.norm_sq();
 
     // Over the caps?
-    if (dot_prod < .0f || dot_prod > axis_len_sq) {
+    if (dot_prod < CoordType(0) || dot_prod > axis_len_sq) {
         return false;
     }
     // outside radius?
