@@ -187,8 +187,12 @@ struct IndexedShape : public IndexT, public ShapeT {
     void serialize(Archive& ar, const unsigned int version) {
         // Classes are versioned to SPATIAL_INDEX_STRUCT_VERSION (see detail/index.hpp)
         // If new fields are introduced please handle them conditionally
-        assert (version <= SPATIAL_INDEX_STRUCT_VERSION &&
-            "File format is in a future format. Please update Spatial Index.");
+        if(version > SPATIAL_INDEX_STRUCT_VERSION) {
+            throw std::runtime_error(
+                "File format is in a future format. Please update Spatial Index."
+            );
+        }
+
         ar & boost::serialization::base_object<IndexT>(*this);
         ar & boost::serialization::base_object<ShapeT>(*this);
     }
