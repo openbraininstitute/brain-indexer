@@ -57,9 +57,9 @@ def test_syn_index():
 
     aggregated = index.count_intersecting_agg_gid([200, 200, 480], [300, 300, 520])
     print("Synapses belong to {} neurons".format(len(aggregated)))
-    assert len(aggregated) == 20
+    assert len(aggregated) == 19
     assert aggregated[351] == 2
-    assert aggregated[159] == 1
+    assert aggregated[159] == 2
     assert aggregated[473] == 4
     assert total_in_region == sum(aggregated.values())
 
