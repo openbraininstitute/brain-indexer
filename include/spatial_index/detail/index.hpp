@@ -46,6 +46,28 @@ inline Point3D get_centroid(const boost::variant<VariantT...>& mixed_geometry) {
     );
 }
 
+// Three overloaded functions to export endpoints.
+// These are added mainly to allow export as numpy.
+// Depending on the object they can return a quiet_NaN
+// as a second endpoint if the object doesn't have an endpoint.
+// In that case the centroid will be returned as the first endpoint.
+
+inline Point3D get_endpoint(const Soma& sphere, bool first) {
+    if (first) 
+        return sphere.centroid;
+    else
+        return Point3D{std::numeric_limits<CoordType>::quiet_NaN(),
+                       std::numeric_limits<CoordType>::quiet_NaN(),
+                       std::numeric_limits<CoordType>::quiet_NaN()};
+}
+
+inline Point3D get_endpoint(const Segment& seg, bool first) {
+    if (first)
+        return seg.p1;
+    else
+        return seg.p2;
+}
+
 
 /////////////////////////////////////////
 // class IndexTree
@@ -80,6 +102,19 @@ inline decltype(auto) IndexTreeMixin<Derived, T>::find_intersecting(const ShapeT
     find_intersecting(shape, ids_getter(ids));
     return ids;
 }
+
+// Function to return payload data as a numpy arrays
+
+template <typename Derived, typename T>
+template <typename ShapeT>
+inline decltype(auto) 
+IndexTreeMixin<Derived, T>::find_intersecting_np(const ShapeT& shape) const {
+    using exp_getter = typename detail::exp_getter_for<T>::type;
+    detail::query_result result;
+    find_intersecting(shape, exp_getter(result));
+    return result;
+}
+
 
 template <typename Derived, typename T>
 template <typename ShapeT>

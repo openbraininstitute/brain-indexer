@@ -14,6 +14,18 @@ BOOST_AUTO_TEST_CASE(ClampTest) {
     BOOST_CHECK(clamp(0.42, 0.4, 0.5) == CoordType(0.42));
 }
 
+BOOST_AUTO_TEST_CASE(Point3DtoFloatConversionTest) {
+    auto points = std::vector<Point3D>{{1.0, 42.235, 96.813}, {420.874, 21.0, 25.8069}};
+    auto ptr = (CoordType*) points.data();
+
+    BOOST_REQUIRE(sizeof(Point3D) == 3*sizeof(CoordType));
+    for(size_t i = 0; i < 2; ++i) {
+        BOOST_REQUIRE(points[i].get<0>() == ptr[0 + 3*i]);
+        BOOST_REQUIRE(points[i].get<1>() == ptr[1 + 3*i]);
+        BOOST_REQUIRE(points[i].get<2>() == ptr[2 + 3*i]);
+    }
+}
+
 //////////////////////////////////////////////////////////////////
 // Project Point onto line/segment
 //////////////////////////////////////////////////////////////////

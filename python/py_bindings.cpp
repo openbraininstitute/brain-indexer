@@ -18,6 +18,12 @@ using MorphGridT = si::MorphSpatialGrid<SI_GRID_VOXEL_LENGTH>;
 PYBIND11_DECLARE_HOLDER_TYPE(T, si::MemDiskPtr<T>);
 
 PYBIND11_MODULE(_spatial_index, m) {
+
+    py::enum_<si::detail::entry_kind>(m, "EntryKind")
+    .value("SOMA", si::detail::entry_kind::SOMA)
+    .value("SEGMENT", si::detail::entry_kind::SEGMENT)
+    .value("SYNAPSE", si::detail::entry_kind::SYNAPSE);
+
     PYBIND11_NUMPY_DTYPE(si::gid_segm_t, gid, section_id, segment_id);  // struct as numpy dtype
 
     si_python::create_Sphere_bindings(m);

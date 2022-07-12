@@ -236,6 +236,41 @@ inline void add_IndexTree_find_intersecting_window_objs_bindings(py::class_<Clas
 }
 
 template<typename Class>
+inline void add_MorphIndex_find_intersecting_window_np(py::class_<Class>& c) {
+    c
+    .def("find_intersecting_window_np",
+            [](Class& obj, const array_t& min_corner, const array_t& max_corner) {
+                const auto& results = obj.find_intersecting_np(si::Box3D{mk_point(min_corner),
+                                                        mk_point(max_corner)});
+                auto endpoint1 = py::array_t<CoordType>({results.endpoint1.size(), 3ul},
+                                                       (CoordType*)results.endpoint1.data());
+                auto endpoint2 = py::array_t<CoordType>({results.endpoint2.size(), 3ul},
+                                                       (CoordType*)results.endpoint2.data());
+                return py::dict("gid"_a=pyutil::to_pyarray(results.gid), 
+                                "section_id"_a=pyutil::to_pyarray(results.id1),
+                                "segment_id"_a=pyutil::to_pyarray(results.id2),
+                                "radius"_a=pyutil::to_pyarray(results.radius),
+                                "endpoint1"_a=endpoint1,
+                                "endpoint2"_a=endpoint2,
+                                "kind"_a=pyutil::to_pyarray(results.kind)
+                                );
+            },
+            R"(
+            Searches objects intersecting the given Box3D, and returns them as a dict of numpy arrays.
+
+            Args:
+                min_corner, max_corner(float32) : min/max corners of the query window
+            Returns:
+                a dict of numpy arrays contaning the data of the objects that intersecting the given 3D box.
+                The fields are the following: 'gid', 'section_id', 'segment_id', 'radius', 'endpoints', 'kind'.
+                The 'endpoints' field contains a tuple of arrays containing both the endpoints of the segment.
+                The 'kind' field returns an integer indicating the kind of object for that entry: 0 for Soma, 1 for Segment, 2 for Synapse.
+                In the case of Somas, the 'endpoint2' field returns a NaN, while 'endpoint1' returns the centroid of the object.
+            )"
+        );
+}
+
+template<typename Class>
 inline void add_IndexTree_count_intersecting_bindings(py::class_<Class>& c) {
     c
     .def("count_intersecting",
@@ -483,11 +518,39 @@ inline void create_Synapse_bindings(py::module& m) {
     ;
 }
 
+template<typename Class>
+inline void add_SynapseIndex_find_intersecting_window_np(py::class_<Class>& c) {
+    c
+    .def("find_intersecting_window_np",
+            [](Class& obj, const array_t& min_corner, const array_t& max_corner) {
+                const auto& results = obj.find_intersecting_np(si::Box3D{mk_point(min_corner),
+                                                        mk_point(max_corner)});
+
+                return py::dict("id"_a=pyutil::to_pyarray(results.gid),
+                                "pre_gid"_a=pyutil::to_pyarray(results.id1),
+                                "post_gid"_a=pyutil::to_pyarray(results.id2),
+                                "centroid"_a=py::array_t<CoordType>({results.centroid.size(), 3ul},
+                                                                    (CoordType*)results.centroid.data()),
+                                "kind"_a=pyutil::to_pyarray(results.kind)
+                                );
+            },
+            R"(
+            Searches objects intersecting the given Box3D, and returns them as a dict of numpy arrays.
+
+            Args:
+                min_corner, max_corner(float32) : min/max corners of the query window
+            Returns:
+                a dict of numpy arrays contaning the data of the objects that intersecting the given 3D box.
+                The fields are the following: 'gid', 'pre_gid', 'post_gid', 'centroid', 'kind'.
+                The 'kind' field returns an integer indicating the kind of object of that entry: 0 for Soma, 1 for Segment, 2 for Synapse.
+            )"
+        );
+}
 
 template <typename Class = si::IndexTree<si::Synapse>>
 inline void create_SynapseIndex_bindings(py::module& m, const char* class_name) {
     using value_type = typename Class::value_type;
-    create_IndexTree_bindings<value_type, value_type, Class>(m, class_name)
+    auto c = create_IndexTree_bindings<value_type, value_type, Class>(m, class_name)
 
     .def("add_synapses",
         [](Class& obj, const array_ids& syn_ids, const array_ids& post_gids, const array_ids& pre_gids, const array_t& points) {
@@ -517,6 +580,7 @@ inline void create_SynapseIndex_bindings(py::module& m, const char* class_name) 
             min_corner, max_corner(float32) : min/max corners of the query window
         )"
     );
+    add_SynapseIndex_find_intersecting_window_np(c);
 }
 
 
@@ -828,6 +892,8 @@ inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
     add_MorphIndex_add_branch_bindings<Class>(c);
     add_MorphIndex_add_neuron_bindings<Class>(c);
     add_MorphIndex_add_soma_bindings<Class>(c);
+
+    add_MorphIndex_find_intersecting_window_np<Class>(c);
 }
 
 

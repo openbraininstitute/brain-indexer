@@ -53,7 +53,47 @@ struct id_getter_for<boost::variant<S1, S...>> {
     using type = typename id_getter_for<S1>::type;
 };
 
+// Same as before but for all payload data.
 
+template <typename S>
+struct exp_getter_for {
+    using type = typename S::exp_getter_t;
+};
+
+template <typename S1, typename... S>
+struct exp_getter_for<boost::variant<S1, S...>> {
+    using type = typename exp_getter_for<S1>::type;
+};
+
+// Structures that contains the results of a query.
+// Necessary to export data as numpy arrays.
+
+enum class entry_kind {SOMA, SEGMENT, SYNAPSE};
+
+inline entry_kind get_entry_kind(const Sphere&) {
+    return entry_kind::SYNAPSE;
+}
+
+inline entry_kind get_entry_kind(const Segment&) {
+    return entry_kind::SEGMENT;
+}
+
+inline entry_kind get_entry_kind(const Soma&) {
+    return entry_kind::SOMA;
+}
+
+struct query_result {
+    
+    std::vector<identifier_t> gid;
+    std::vector<unsigned> id1;
+    std::vector<unsigned> id2;
+    std::vector<Point3D> centroid;
+    std::vector<CoordType> radius;
+    std::vector<Point3D> endpoint1;
+    std::vector<Point3D> endpoint2;
+    std::vector<entry_kind> kind;
+
+};
 
 }  // namespace detail
 
@@ -117,6 +157,59 @@ struct iter_gid_segm_getter: public detail::iter_append_only<iter_gid_segm_gette
 
   private:
     std::vector<gid_segm_t>& output_;
+};
+
+// Iterators to fetch all data from the payload of segments, soma and synapses.
+// Exports all the fields of the payload as query result object i.e. a struct of arrays.
+// Used to fetch data to export as numpy arrays.
+
+struct iter_entry_getter: public detail::iter_append_only<iter_entry_getter> {
+
+    iter_entry_getter(detail::query_result& output)
+        : output_(output) {}
+
+    template <typename S>
+    inline iter_entry_getter& operator=(const IndexedShape<S, ShapeId>& result_entry) { 
+        output_.gid.push_back(result_entry.id);
+        output_.id1.push_back(0u);
+        output_.id2.push_back(0u);
+        output_.centroid.push_back(result_entry.get_centroid());
+        output_.radius.push_back(result_entry.radius);
+        output_.endpoint1.push_back(get_endpoint(result_entry, 1));
+        output_.endpoint2.push_back(get_endpoint(result_entry, 0));
+        output_.kind.push_back(detail::get_entry_kind(result_entry));
+        return *this;
+    }
+
+    template <typename S>
+    inline iter_entry_getter& operator=(const IndexedShape<S, SynapseId>& result_entry) {
+        output_.gid.push_back(result_entry.id);
+        output_.id1.push_back(result_entry.pre_gid_);
+        output_.id2.push_back(result_entry.post_gid_);
+        output_.centroid.push_back(result_entry.get_centroid());
+        output_.kind.push_back(detail::get_entry_kind(result_entry));
+        return *this;
+    }
+
+    template <typename... ManyT>
+    inline iter_entry_getter& operator=(const boost::variant<ManyT...>& v) {
+        boost::apply_visitor(
+            [this](const auto& t) {
+                output_.gid.push_back(t.gid());
+                output_.id1.push_back(t.section_id());
+                output_.id2.push_back(t.segment_id());
+                output_.centroid.push_back(t.get_centroid());
+                output_.radius.push_back(t.radius);
+                output_.endpoint1.push_back(get_endpoint(t, 1));
+                output_.endpoint2.push_back(get_endpoint(t, 0));
+                output_.kind.push_back(detail::get_entry_kind(t));
+            },
+            v);
+        return *this;
+    }
+
+  private:
+    detail::query_result& output_;
 };
 
 }  // namespace spatial_index

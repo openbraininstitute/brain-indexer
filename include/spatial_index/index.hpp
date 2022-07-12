@@ -58,6 +58,8 @@ struct iter_ids_getter;
 /// \brief result iterator to collect gids and segment ids
 struct iter_gid_segm_getter;
 
+/// \brief result iterator to collect gids, segment ids, section ids and centroids
+struct iter_entry_getter;
 
 /**
  * \brief ShapeId adds an 'id' field to the underlying struct
@@ -66,6 +68,7 @@ struct ShapeId {
     identifier_t id;
 
     using id_getter_t = iter_ids_getter;
+    using exp_getter_t = iter_entry_getter;
 
     inline bool operator==(const ShapeId& rhs) const noexcept {
         return id == rhs.id;
@@ -128,6 +131,7 @@ struct SynapseId : public ShapeId {
  */
 struct MorphPartId : public ShapeId {
     using id_getter_t = iter_gid_segm_getter;
+    using exp_getter_t = iter_entry_getter;
 
     inline MorphPartId() = default;
 
@@ -309,6 +313,13 @@ class IndexTreeMixin {
      */
     template <typename ShapeT>
     inline decltype(auto) find_intersecting_pos(const ShapeT& shape) const;
+
+    /**
+     * \brief Finds & return objects which intersect, numpy version.
+     * \returns A vector of POD objects, to be exposed as numpy arrays(dtype)
+     */
+    template <typename ShapeT>
+    inline decltype(auto) find_intersecting_np(const ShapeT& shape) const;
 
     /**
      * \brief Gets the ids of the the nearest K objects
