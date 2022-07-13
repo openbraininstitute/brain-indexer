@@ -7,11 +7,11 @@ namespace spatial_index {
 namespace detail {
 
 /**
- * \brief get the 3D minimum distance between 2 segments
+ * \brief get the 3D minimum square distance between 2 segments
  * source: http://geomalgorithms.com/a07-_distance.html
  */
-inline CoordType distance_segment_segment(Point3D const& s1_0, Point3D const& s1_1,
-                                          Point3D const& s2_0, Point3D const& s2_1) {
+inline CoordType square_distance_segment_segment(Point3D const& s1_0, Point3D const& s1_1,
+                                                 Point3D const& s2_0, Point3D const& s2_1) {
     const Point3Dx u = Point3Dx(s1_1) - s1_0;
     const Point3Dx v = Point3Dx(s2_1) - s2_0;
     const Point3Dx w = Point3Dx(s1_0) - s2_0;
@@ -76,7 +76,12 @@ inline CoordType distance_segment_segment(Point3D const& s1_0, Point3D const& s1
     // get the difference of the two closest points
     Point3Dx dP = w + (sc * u) - (tc * v);  // =  S1(sc) - S2(tc)
 
-    return dP.norm();  // return the closest distance
+    return dP.norm_sq();  // return the closest square distance
+}
+
+inline CoordType distance_segment_segment(Point3D const& s1_0, Point3D const& s1_1,
+                                          Point3D const& s2_0, Point3D const& s2_1) {
+    return std::sqrt(square_distance_segment_segment(s1_0, s1_1, s2_0, s2_1));
 }
 
 }  // namespace detail
@@ -95,7 +100,11 @@ inline Point3Dx project_point_onto_line(
 
 // TODO remove this once C++17 is available.
 CoordType clamp(CoordType x, CoordType low, CoordType high) {
-    return std::min(std::max(x, low), high);
+    return std::min(std::max(low, x), high);
+}
+
+Point3D clamp(const Point3D &x, const Point3D &low, const Point3D &high) {
+    return min(max(low, x), high);
 }
 
 /** \brief Project a point onto a segment.
@@ -112,6 +121,13 @@ inline Point3Dx project_point_onto_segment(
     auto x_rel = clamp(x_dot_dir / dir_dot_dir, 0.0, 1.0);
 
     return base + x_rel * dir;
+}
+
+
+/** \brief Segment intersects Box.
+ */
+inline bool segment_intersects(const Box3D& box, const Point3D& p1, const Point3D& p2) {
+    return bg::intersects(box, bg::model::segment<Point3D>{p1, p2});
 }
 
 
@@ -177,9 +193,23 @@ inline bool Sphere::intersects(Cylinder const& c) const {
 }
 
 
-inline bool Sphere::intersects(Box3Dx const& b) const {
-    // FIXME, not sharp.
-    return b.intersects(*this);
+inline bool Sphere::intersects(Box3D const& b) const {
+    // If the center of the sphere is inside the box, then they definitely
+    // intersect. Otherwise, compute the point on the surface of the box
+    // which is closest to the centroid of the sphere. Then check the distance.
+
+    const auto &min_xyz = b.min_corner();
+    const auto &max_xyz = b.max_corner();
+
+    if(   (min_xyz.get<0>() <= centroid.get<0>() && centroid.get<0>() <= max_xyz.get<0>())
+       && (min_xyz.get<1>() <= centroid.get<1>() && centroid.get<1>() <= max_xyz.get<1>())
+       && (min_xyz.get<2>() <= centroid.get<2>() && centroid.get<2>() <= max_xyz.get<2>())
+    ) {
+        return true;
+    }
+
+    auto p = clamp(centroid, min_xyz, max_xyz);
+    return (p - centroid).norm_sq() <= radius * radius;
 }
 
 
@@ -188,10 +218,83 @@ inline bool Sphere::contains(Point3D const& p) const {
     return dist_sq <= radius * radius;
 }
 
-inline bool Box3Dx::intersects(Cylinder const& c) const {
-    // FIXME, not sharp.
-    return bg::intersects(bounding_box(), c.bounding_box());
+
+inline bool Box3Dx::intersects(Sphere const& s) const {
+    return s.intersects(*this);
 }
+
+
+inline bool Box3Dx::intersects(Cylinder const& c) const {
+    return c.intersects(*this);
+}
+
+inline bool Cylinder::intersects(Box3D const& b) const {
+    // We're approximating the cylinder as a capsule.
+
+    // There's three cases:
+    //  - the axis of the cylinder intersects with the box.
+    //  - the distance between the axis and the box is less
+    //    than the radius of the cylinder. Which can happen
+    //    two ways:
+    //    + Either one of the extreme points of the capsule
+    //      is closest to the box.
+    //    + Or the axis must be closest to one of the edges.
+
+    const auto& min_xyz = b.min_corner();
+    const auto& max_xyz = b.max_corner();
+
+    // Let's first check the caps:
+    if((clamp(p1, min_xyz, max_xyz) - p1).norm_sq() < radius*radius) {
+        return true;
+    }
+
+    if((clamp(p2, min_xyz, max_xyz) - p2).norm_sq() < radius*radius) {
+        return true;
+    }
+
+    // Let's check all 12 edges:
+    auto check_edge = [this](const Point3Dx& s1, const Point3Dx& s2) {
+        return detail::square_distance_segment_segment(s1, s2, p1, p2) < radius*radius;
+    };
+
+    std::array<Point3Dx, 4> lower_square {
+        Point3Dx{min_xyz.get<0>(), min_xyz.get<1>(), min_xyz.get<2>()},
+        Point3Dx{max_xyz.get<0>(), min_xyz.get<1>(), min_xyz.get<2>()},
+        Point3Dx{max_xyz.get<0>(), max_xyz.get<1>(), min_xyz.get<2>()},
+        Point3Dx{min_xyz.get<0>(), max_xyz.get<1>(), min_xyz.get<2>()}
+    };
+
+    std::array<Point3Dx, 4> upper_square {
+        Point3Dx{min_xyz.get<0>(), min_xyz.get<1>(), max_xyz.get<2>()},
+        Point3Dx{max_xyz.get<0>(), min_xyz.get<1>(), max_xyz.get<2>()},
+        Point3Dx{max_xyz.get<0>(), max_xyz.get<1>(), max_xyz.get<2>()},
+        Point3Dx{min_xyz.get<0>(), max_xyz.get<1>(), max_xyz.get<2>()}
+    };
+
+    if(
+        // Bottom square ----------------------------------------------------------
+        check_edge(lower_square[0], lower_square[1]) ||
+        check_edge(lower_square[1], lower_square[2]) ||
+        check_edge(lower_square[2], lower_square[3]) ||
+        check_edge(lower_square[3], lower_square[0]) ||
+        // Pillars ----------------------------------------------------------------
+        check_edge(lower_square[0], upper_square[0]) ||
+        check_edge(lower_square[1], upper_square[1]) ||
+        check_edge(lower_square[2], upper_square[2]) ||
+        check_edge(lower_square[3], upper_square[3]) ||
+        // Upper square ----------------------------------------------------------
+        check_edge(upper_square[0], upper_square[1]) ||
+        check_edge(upper_square[1], upper_square[2]) ||
+        check_edge(upper_square[2], upper_square[3]) ||
+        check_edge(upper_square[3], upper_square[0])
+    ) {
+        return true;
+    }
+
+    // Let's do the rays:
+    return segment_intersects(b, p1, p2);
+}
+
 
 inline bool Cylinder::intersects(Cylinder const& c) const {
     CoordType min_dist = detail::distance_segment_segment(p1, p2, c.p1, c.p2);

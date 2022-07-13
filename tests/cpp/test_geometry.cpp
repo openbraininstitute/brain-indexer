@@ -12,6 +12,15 @@ BOOST_AUTO_TEST_CASE(ClampTest) {
     BOOST_CHECK(clamp(0.34, 0.4, 0.5) == CoordType(0.4));
     BOOST_CHECK(clamp(0.84, 0.4, 0.5) == CoordType(0.5));
     BOOST_CHECK(clamp(0.42, 0.4, 0.5) == CoordType(0.42));
+
+    auto actual = clamp(
+        Point3D{0.213, 0.5239, 0.789},
+        Point3D{0.2,   0.3,    0.8},
+        Point3D{0.3,   0.5,    0.9}
+    );
+    auto expected = Point3Dx{0.213, 0.5, 0.8};
+
+    BOOST_CHECK(actual == expected);
 }
 
 BOOST_AUTO_TEST_CASE(Point3DtoFloatConversionTest) {
@@ -252,8 +261,159 @@ BOOST_AUTO_TEST_CASE(SelectedCases) {
         );
     }
 }
-
 BOOST_AUTO_TEST_SUITE_END()
+
+
+//////////////////////////////////////////////////////////////////
+// Intersection of Sphere and Box
+//////////////////////////////////////////////////////////////////
+BOOST_AUTO_TEST_SUITE(SphereBoxIntersection)
+BOOST_AUTO_TEST_CASE(SelectedCases) {
+    auto eps = CoordType(1e3) * std::numeric_limits<CoordType>::epsilon();
+
+    auto generic_box = Box3D{{-1.0, -0.5, -4.0}, {2.0, 3.0, 4.0}};
+
+    auto test_cases = std::vector<std::tuple<Box3D, Sphere, bool>>{
+        // Tiny sphere inside the box
+        {
+            generic_box,
+            Sphere{{0.1, 0.2, 0.3}, 0.01},
+            true
+        },
+
+        // Sphere far away
+        {
+            generic_box,
+            Sphere{{100.0, 0.2, 0.3}, 1.0},
+            false
+        }
+
+    };
+
+    auto register_pair = [&test_cases, eps](const Box3D& b, const Sphere& s) {
+        test_cases.emplace_back(
+            b,
+            Sphere{s.centroid, s.radius + eps},
+            true
+        );
+
+        test_cases.emplace_back(
+            b,
+            Sphere{s.centroid, s.radius - eps},
+            false
+        );
+    };
+
+    // Sphere at right, lower, front corner.
+    register_pair(generic_box, Sphere{{5.0, -4.5, -4.0}, 5.0});
+
+    // Sphere at lower side of the box
+    register_pair(generic_box, Sphere{{0.0, 1.0, -6.0}, 2.0});
+
+    // Sphere at front, lower edge of the box
+    register_pair(generic_box, Sphere{{0.5, -3.5, -8.0}, 5.0});
+
+    for(const auto & tc : test_cases) {
+        const auto &b = std::get<0>(tc);
+        const auto &s = std::get<1>(tc);
+        auto expected = std::get<2>(tc);
+
+        // TODO update with message once `operator<<(const Box3D &)`
+        // has been merged.
+        BOOST_CHECK(s.intersects(b) == expected);
+        BOOST_CHECK(Box3Dx{b}.intersects(s) == expected);
+    }
+}
+BOOST_AUTO_TEST_SUITE_END()
+
+//////////////////////////////////////////////////////////////////
+// Intersection of Sphere and Cylinder
+//////////////////////////////////////////////////////////////////
+BOOST_AUTO_TEST_SUITE(BoxCylinderIntersection)
+BOOST_AUTO_TEST_CASE(SelectedCases) {
+    auto eps = CoordType(1e3) * std::numeric_limits<CoordType>::epsilon();
+    auto generic_box = Box3D{{-1.0, -0.5, -4.0}, {2.0, 3.0, 4.0}};
+
+    auto test_cases = std::vector<std::tuple<Box3D, Cylinder, bool>>{};
+
+    // ------------------------------------------------------------------------
+    // Checks that thin cylinders are detected:
+
+    // The base is outside the box and dir point towards the box, such that
+    // `base + dir` lands inside the box.
+    auto register_stick_triples = [&test_cases, &generic_box]
+        (const Point3Dx& base, const Point3Dx &dir) {
+
+        test_cases.emplace_back(
+            generic_box,
+            Cylinder{base, base + dir, 0.001},
+            true
+        );
+
+        test_cases.emplace_back(
+            generic_box,
+            Cylinder{base, base + 2*dir, 0.001},
+            true
+        );
+
+        test_cases.emplace_back(
+            generic_box,
+            Cylinder{base, base - dir, 0.001},
+            false
+        );
+    };
+
+    // Axis aligned.
+    register_stick_triples(Point3Dx{-10.0, 0.0, 0.0}, Point3Dx{10.0, 0.0, 0.0});
+    register_stick_triples(Point3Dx{0.5, 10.0, 2.0}, Point3Dx{0.0, -8.0, 0.0});
+    register_stick_triples(Point3Dx{0.5, 2.0, -10.0}, Point3Dx{0.0, 0.0, 6.0});
+
+    // At an angle.
+    register_stick_triples(Point3Dx{1.0, -1.0, 1.0}, Point3Dx{-1.25, 1.0, 0.0});
+    register_stick_triples(Point3Dx{1.0, -1.0, 1.0}, Point3Dx{0.5, 3.0, 2.0});
+
+    // ------------------------------------------------------------------------
+    // Checks when the extreme points of the cylinder are closest.
+
+    auto register_pair = [&test_cases, &generic_box, eps]
+        (const Point3Dx& p1, const Point3Dx &p2, CoordType radius) {
+
+        test_cases.emplace_back(generic_box, Cylinder{p1, p2, radius + eps}, true);
+        test_cases.emplace_back(generic_box, Cylinder{p1, p2, radius - eps}, false);
+    };
+
+//    auto generic_box = Box3D{{-1.0, -0.5, -4.0}, {2.0, 3.0, 4.0}};
+    // touches right side.
+    register_pair({5, 1, 2}, {7, -1, 3}, 3.0);
+
+    // toches right, top, front corner.
+    register_pair({5, 7, -4}, {9, 7.5, -4.5}, 5.0);
+
+    // toches left, top edge
+    auto cyl_center = Point3Dx{-4, 7, -2};
+    auto dir = Point3Dx{4.0, 3.0, -1.0};
+    register_pair(cyl_center - dir, cyl_center + dir, 5.0);
+
+    std::cout << detail::distance_segment_segment(
+        {-1.0, 3.0, -4.0},
+        {-1.0, 3.0,  4.0},
+        cyl_center - dir,
+        cyl_center + dir
+    ) << std::endl;
+
+    for(const auto & tc : test_cases) {
+        const auto &b = std::get<0>(tc);
+        const auto &c = std::get<1>(tc);
+        auto expected = std::get<2>(tc);
+
+        // TODO update with message once `operator<<(const Box3D &)`
+        // has been merged.
+        BOOST_CHECK(c.intersects(b) == expected);
+        BOOST_CHECK(Box3Dx{b}.intersects(c) == expected);
+    }
+}
+BOOST_AUTO_TEST_SUITE_END()
+
 
 //////////////////////////////////////////////////////////////////
 // Intersection of Sphere and Cylinder
@@ -339,12 +499,22 @@ BOOST_AUTO_TEST_CASE(SelectedCases) {
             c.intersects(s) == expected,
             c << ", " << s << ", " << expected
         );
+
         BOOST_CHECK_MESSAGE(
             rc.intersects(s) == expected,
             rc << ", " << s << ", " << expected
         );
-    }
 
+        BOOST_CHECK_MESSAGE(
+            s.intersects(c) == expected,
+            s << ", " << c << ", " << expected
+        );
+
+        BOOST_CHECK_MESSAGE(
+            s.intersects(rc) == expected,
+            s << ", " << rc << ", " << expected
+        );
+    }
 }
 
 BOOST_AUTO_TEST_CASE(NoBoundingBoxOverlap) {
@@ -364,17 +534,15 @@ BOOST_AUTO_TEST_CASE(NoBoundingBoxOverlap) {
     for(const auto & c: cylinders) {
         BOOST_CHECK(bg::intersects(c.bounding_box(), s.bounding_box()) == false);
         BOOST_CHECK(s.intersects(c) == false);
+        BOOST_CHECK(c.intersects(s) == false);
     }
 }
-
 BOOST_AUTO_TEST_SUITE_END()
 
 //////////////////////////////////////////////////////////////////
 // Intersection between Capsules
 //////////////////////////////////////////////////////////////////
 BOOST_AUTO_TEST_SUITE(CapsuleCapsuleIntersection)
-
-BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_CASE(SelectedCases) {
     auto eps = CoordType(1e3) * std::numeric_limits<CoordType>::epsilon();
 
@@ -475,3 +643,4 @@ BOOST_AUTO_TEST_CASE(SelectedCases) {
         check(rc1, rc2, expected);
     }
 }
+BOOST_AUTO_TEST_SUITE_END()

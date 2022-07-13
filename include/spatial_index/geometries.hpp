@@ -33,7 +33,7 @@ struct Sphere {
     }
 
     inline bool intersects(Cylinder const& c) const;
-    inline bool intersects(Box3Dx const& b) const;
+    inline bool intersects(Box3D const& b) const;
 
     inline bool contains(Point3D const& p) const;
 
@@ -88,11 +88,7 @@ struct Box3Dx : public Box3D {
         return bg::intersects(bounding_box(), other);
     }
 
-    inline bool intersects(Sphere const& s) const {
-        // FIXME this isn't accurate, but the only usecase, allows this.
-        return bg::intersects(bounding_box(), s.bounding_box());
-    }
-
+    inline bool intersects(Sphere const& s) const;
     inline bool intersects(Cylinder const& c) const;
 
   private:
@@ -103,7 +99,6 @@ struct Box3Dx : public Box3D {
         ar & static_cast<Box3D&>(*this);
     }
 };
-
 
 
 /**
@@ -139,10 +134,7 @@ struct Cylinder {
         return s.intersects(*this);  // delegate to sphere
     }
 
-    inline bool intersects(Box3Dx const& b) const {
-        return b.intersects(*this);  // delegate to EnhancedBox
-    }
-
+    inline bool intersects(Box3D const& b) const;
     inline bool contains(Point3D const& p) const;
 
     inline void translate(Point3D const& vec) {

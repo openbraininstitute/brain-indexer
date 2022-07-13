@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(MorphIndexQueries) {
         auto actual = kv.second;
         const auto &element = elements.at(id);
 
-        auto expected = geometry_intersects(element, query_shape);
+        auto expected = query_shape.intersects(element);
 
         if(actual != expected) {
             std::cout << element << "\n";
