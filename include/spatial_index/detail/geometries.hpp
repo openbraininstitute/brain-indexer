@@ -297,8 +297,8 @@ inline bool Cylinder::intersects(Box3D const& b) const {
 
 
 inline bool Cylinder::intersects(Cylinder const& c) const {
-    CoordType min_dist = detail::distance_segment_segment(p1, p2, c.p1, c.p2);
-    return min_dist <= radius + c.radius;
+    CoordType min_dist_sq = detail::square_distance_segment_segment(p1, p2, c.p1, c.p2);
+    return min_dist_sq <= (radius + c.radius) * (radius + c.radius);
 }
 
 
