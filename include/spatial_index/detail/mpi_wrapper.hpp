@@ -1,5 +1,7 @@
 #pragma once
 
+#if SI_MPI == 1
+
 #include <iostream>
 
 namespace spatial_index {
@@ -59,3 +61,5 @@ Datatype create_contiguous_datatype() {
 
 }
 }
+
+#endif

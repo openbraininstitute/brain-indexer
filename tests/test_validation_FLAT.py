@@ -9,6 +9,7 @@ import numpy as np
 import os
 import sys
 from spatial_index import MorphIndexBuilder
+from spatial_index import MorphMultiIndexBuilder
 try:
     import pytest
     pytest_skipif = pytest.mark.skipif
@@ -25,6 +26,22 @@ MORPH_FILE = CIRCUIT_2K + "/morphologies/ascii"
 
 class Options:
     use_mem_mapped_file = False
+
+
+def do_multi_index_query_serial(min_corner, max_corner):
+    from mpi4py import MPI
+
+    output_dir = "tmp-jdiwo"
+    MorphMultiIndexBuilder.from_mvd_file(
+        MORPH_FILE, CIRCUIT_FILE,
+        target_gids=range(700, 1200),
+        output_dir=output_dir,
+        progress=False,
+        return_indexer=True)
+
+    if MPI.COMM_WORLD.Get_rank() == 0:
+        index = MorphMultiIndexBuilder.open_index(output_dir, max_subtrees=100)
+        return index.find_intersecting_window(min_corner, max_corner)
 
 
 def do_query_serial(min_corner, max_corner):
@@ -81,9 +98,28 @@ def test_validation_FLAT():
     check_vs_FLAT(do_query_serial(*query_window()))
 
 
+@pytest_skipif(True,
+               reason="Awaits better MPI integration with tests.")
+@pytest_long
+def test_multi_index_validation_FLAT():
+    from mpi4py import MPI
+
+    idx = do_multi_index_query_serial(*query_window())
+
+    if MPI.COMM_WORLD.Get_rank() == 0:
+        check_vs_FLAT(idx)
+
+
 if __name__ == "__main__":
     import logging
     logging.basicConfig(level=logging.DEBUG)
     if len(sys.argv) > 1 and sys.argv[1] == '--mem-file':
         Options.use_mem_mapped_file = True
-    test_validation_FLAT()
+
+    run_multi_index = len(sys.argv) > 1 and sys.argv[1] == '--run-multi-index'
+
+    if not run_multi_index:
+        test_validation_FLAT()
+
+    if run_multi_index:
+        test_multi_index_validation_FLAT()

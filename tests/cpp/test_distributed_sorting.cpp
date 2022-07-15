@@ -38,22 +38,22 @@ public:
     static double apply(const Sortable &v) {
         return v.value;
     }
+
+    static bool compare(const Sortable &v, const Sortable &w) {
+        return v.value < w.value;
+    }
+
 };
 
 BOOST_AUTO_TEST_CASE(DistributedSortingTests) {
-    auto mpi_rank = spatial_index::mpi::rank(MPI_COMM_WORLD);
-    auto comm_size = spatial_index::mpi::size(MPI_COMM_WORLD);
-
     int n_required_ranks = 2;
-    if(comm_size < n_required_ranks) {
-        throw std::runtime_error("Expected at least 2 MPI ranks.");
-    }
+    auto comm = mpi::comm_shrink(MPI_COMM_WORLD, n_required_ranks);
 
-    auto comm = mpi::comm_split(MPI_COMM_WORLD, mpi_rank < n_required_ranks, mpi_rank);
-
-    if(mpi_rank >= n_required_ranks) {
+    if(*comm == comm.invalid_handle()) {
         return;
     }
+
+    auto mpi_rank = mpi::rank(*comm);
 
     size_t n_r0 = 100ul; // size on rank 0
     size_t n_r1 = 2 * n_r0; // size on rank 1

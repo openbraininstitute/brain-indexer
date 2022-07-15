@@ -13,6 +13,7 @@ project(SpatialIndex VERSION ${SI_VERSION}
 
 option(SI_MPI "Build with MPI support" ON)
 option(SI_PYTHON_BINDINGS "Build the Python bindings" ON)
+option(SI_BUILTIN_JSON  "Use the builtin version of JSON" ON)
 option(SI_UNIT_TESTS "Build the C++ unit tests" ON)
 option(SI_BENCHMARKS "Build benchmarks tests" OFF)
 
@@ -36,6 +37,8 @@ add_definitions(
 #
 # Dependencies
 #
+
+# Boost
 set(Boost_NO_BOOST_CMAKE TRUE)  # Consistency
 set(BOOST_REQ_COMPONENTS serialization filesystem)
 if(SI_UNIT_TESTS)
@@ -47,8 +50,16 @@ endif()
 find_package(Boost 1.59.0 REQUIRED COMPONENTS ${BOOST_REQ_COMPONENTS})
 find_package(Threads REQUIRED QUIET)
 
+# MPI
 if(SI_MPI)
     find_package(MPI REQUIRED)
+endif()
+
+# JSON
+if(SI_BUILTIN_JSON)
+    add_subdirectory(3rdparty/nlohmann_json)
+else()
+    find_package(nlohmann_json REQUIRED)
 endif()
 
 #
@@ -64,12 +75,13 @@ target_link_libraries(SpatialIndex
     Boost::serialization
     Boost::filesystem
     Threads::Threads
+    nlohmann_json::nlohmann_json
 )
 target_compile_definitions(SpatialIndex PUBLIC "-DBOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL")
 
 if(SI_MPI)
   target_link_libraries(SpatialIndex PUBLIC MPI::MPI_CXX)
-  target_compile_definitions(SpatialIndex PUBLIC "-DSI_MPI")
+  target_compile_definitions(SpatialIndex PUBLIC "-DSI_MPI=1")
 endif()
 
 add_subdirectory(src)

@@ -29,10 +29,13 @@ si_unit_test("test_input_iters")
 si_unit_test("unit_tests")
 si_unit_test("test_grid")
 si_unit_test("test_geometry")
-si_unit_test("test_random_trees")
 
-si_mpi_unit_test("test_distributed_sorting")
-si_mpi_unit_test("test_serial_sort_tile_recursion")
+if(SI_MPI)
+    si_mpi_unit_test("test_distributed_sorting")
+    si_mpi_unit_test("test_multi_index")
+    si_mpi_unit_test("test_random_trees")
+    si_mpi_unit_test("test_serial_sort_tile_recursion")
+endif()
 
 
 if(SI_BENCHMARKS)

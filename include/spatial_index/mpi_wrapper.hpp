@@ -1,5 +1,7 @@
 #pragma once
 
+#if SI_MPI == 1
+
 #include <stdint.h>
 #include <limits.h>
 #include <vector>
@@ -51,6 +53,12 @@ inline MPI_Datatype datatype<double>() {
     return MPI_DOUBLE;
 }
 
+template<>
+inline MPI_Datatype datatype<size_t>() {
+    return MPI_SIZE_T;
+}
+
+
 /** \brief Convert counts into offsets.
  *
  * Computes the offsets into a buffer given counts. Essentially,
@@ -76,7 +84,7 @@ bool check_counts_are_safe(const std::vector<int> &counts);
 /** \brief Throws if the counts aren't safe.
  *  \sa `check_counts_are_safe`.
  */
-void assert_counts_are_safe(const std::vector<int> &counts);
+void assert_counts_are_safe(const std::vector<int> &counts, const std::string &error_id);
 
 
 /** \brief Gather counts for an `MPI_Gatherv`.
@@ -87,14 +95,14 @@ std::vector<int> gather_counts(size_t exact_count, MPI_Comm comm);
 /** \brief Exchange/Allgather `local_count`.
  *
  * This is useful when all MPI ranks need to know the size of the local
- * part of a buffer.
+ * parts of a buffer.
  *
  * Example: Given the global index of an element inside a distributed array, one can find the MPI
  * rank and local index if one knows how many elements each part of the distributed array has. This
  * function can be used to communicate the size of the local part to all other ranks and receive the
  * size of their local parts.
  */
-std::vector<int> exchange_counts(size_t local_count, MPI_Comm comm);
+std::vector<size_t> exchange_local_counts(size_t local_count, MPI_Comm comm);
 
 
 /** \brief Compute counts for an `MPI_Alltoallv`.
@@ -124,36 +132,6 @@ std::vector<int>
 exchange_counts(const std::vector<int> &send_counts, MPI_Comm comm);
 
 
-/** \brief Computes the size of perfectly balanced chunks.
- *
- * The fair chunk size of chunk `i` is element `i` in the
- * return value.
- *
- * \param global_count  The total number of elements.
- * \param n_chunks      Number of chunks.
- *
- */
-std::vector<size_t> balanced_chunk_sizes(size_t global_count, size_t n_chunks);
-
-/// Represents the range [low, high).
-struct Range {
-    size_t low;
-    size_t high; ///< one-past the end
-};
-
-
-/** \brief Split interval in almost equally sized chunks.
- *
- * The interval `[range.low, range.high)` is split into `n_chunks` parts. This
- * function returns the range of chunk `k_chunk`.
- */
-Range balanced_chunks(const Range &range, size_t n_chunks, size_t k_chunk);
-
-
-/// Split the interval `[0, n_total)` in almost equally sized chunks.
-Range balanced_chunks(size_t n_total, size_t n_chunks, size_t k_chunk);
-
-
 /** \brief Compute the number of elements to send for balancing.
  *
  * For a distributed array with local counts `counts_per_rank`, we would like
@@ -176,7 +154,7 @@ Range balanced_chunks(size_t n_total, size_t n_chunks, size_t k_chunk);
  * Useful routines: `mpi::exchange_counts`, `mpi::offsets_from_counts`.
  */
 std::vector<int>
-compute_balance_send_counts(const std::vector<int> & counts_per_rank, int mpi_rank);
+compute_balance_send_counts(const std::vector<size_t>& counts_per_rank, int mpi_rank);
 
 
 /// RAII style wrapper for MPI handles.
@@ -316,3 +294,5 @@ Datatype create_contiguous_datatype();
 }} // spatial_index::mpi
 
 #include "detail/mpi_wrapper.hpp"
+
+#endif // SI_MPI

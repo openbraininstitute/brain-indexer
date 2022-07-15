@@ -1,8 +1,10 @@
 #pragma once
 
 #include <spatial_index/index.hpp>
+#include "spatial_index/multi_index.hpp"
 #include <spatial_index/index_grid.hpp>
 #include <spatial_index/util.hpp>
+
 
 #include "bind11_utils.hpp"
 

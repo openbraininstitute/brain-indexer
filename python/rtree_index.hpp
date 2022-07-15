@@ -1,6 +1,6 @@
 #pragma once
-#include <iostream>
 #include "bind_common.hpp"
+#include <iostream>
 #include <pybind11/eval.h>
 
 namespace bg = boost::geometry;
@@ -322,6 +322,21 @@ inline void add_len_for_size_bindings(py::class_<Class>& c) {
 /// Generic IndexTree bindings. It is a common base between full in-memory
 /// and disk-based memory mapped version, basically leaving ctors out
 
+template<typename Class>
+inline void add_IndexTree_query_bindings(py::class_<Class> &c) {
+    add_IndexTree_is_intersecting_bindings<Class>(c);
+    add_IndexTree_find_intersecting_bindings<Class>(c);
+    add_IndexTree_find_intersecting_window_bindings<Class>(c);
+    add_IndexTree_find_intersecting_window_pos_bindings<Class>(c);
+
+    add_IndexTree_find_intersecting_objs_bindings<Class>(c);
+    add_IndexTree_find_intersecting_window_objs_bindings<Class>(c);
+
+    add_IndexTree_count_intersecting_bindings<Class>(c);
+
+    add_IndexTree_find_nearest_bindings<Class>(c);
+}
+
 template <
     typename T,
     typename SomaT = T,
@@ -336,17 +351,8 @@ inline py::class_<Class> generic_IndexTree_bindings(py::module& m,
     add_IndexTree_add_spheres_bindings<T, SomaT, Class>(c);
     add_IndexTree_add_points_bindings<T, SomaT, Class>(c);
 
-    add_IndexTree_is_intersecting_bindings<Class>(c);
-    add_IndexTree_find_intersecting_bindings<Class>(c);
-    add_IndexTree_find_intersecting_window_bindings<Class>(c);
-    add_IndexTree_find_intersecting_window_pos_bindings<Class>(c);
+    add_IndexTree_query_bindings(c);
 
-    add_IndexTree_find_intersecting_objs_bindings<Class>(c);
-    add_IndexTree_find_intersecting_window_objs_bindings<Class>(c);
-
-    add_IndexTree_count_intersecting_bindings<Class>(c);
-
-    add_IndexTree_find_nearest_bindings<Class>(c);
     add_str_for_streamable_bindings<Class>(c);
     add_len_for_size_bindings<Class>(c);
 
@@ -868,7 +874,7 @@ inline void add_MorphIndex_add_neuron_bindings(py::class_<Class>& c) {
 
         **Note:** There is not the concept of branching off from previous points.
         All branches start in a new point, the user can however provide a point
-        close to an existing point to mimick branching.
+        close to an existing point to mimic branching.
 
         Args:
             gid(int): The id of the soma
@@ -896,6 +902,107 @@ inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
     add_MorphIndex_find_intersecting_window_np<Class>(c);
 }
 
+#if SI_MPI == 1
+template <typename Class = si::MultiIndexBulkBuilder<MorphoEntry>>
+inline void create_MorphMultiIndexBulkBuilder_bindings(py::module& m, const char* class_name) {
+    py::class_<Class> c = py::class_<Class>(m, class_name);
+
+    c
+    .def(py::init<std::string>(),
+         py::arg("output_dir"),
+         R"(
+        Create a `MultiIndexBulkBuilder` that writes output to `output_dir`.
+
+        A `MultiIndexBulkBuilder` is an interface to build a multi index. Currently,
+        a multi index can only be built in bulk. Meaning first all elements to be
+        indexed are loaded, then the index is created. As a consequence, the multi
+        index in only created once `finalize` is called.
+
+        Args:
+            output_dir(string):  The directory where the all files that make up
+                the multi index are stored.
+        )"
+    )
+
+    .def("reserve",
+         [](Class &obj, std::size_t n_local_elements) {
+            obj.reserve(n_local_elements);
+         },
+         R"(
+        Reserve space for the elements to be inserted into the index.
+
+        In order to improve memory efficiency, the `MultiIndexBulkBuilder`
+        needs to know how many elements will be inserted into the spatial
+        index.
+
+        Args:
+            n_local_elements(int): Number of elements this MPI ranks will insert
+                into the index.
+        )"
+    )
+
+    .def("local_size",
+         [](Class &obj) {
+            return obj.local_size();
+         },
+         R"(
+        The current number of elements to be added to the index by this MPI rank.
+        )"
+    )
+
+    .def("finalize",
+         [](Class &obj) {
+            auto comm_size = mpi::size(MPI_COMM_WORLD);
+            auto comm = mpi::comm_shrink(MPI_COMM_WORLD, comm_size - 1);
+            if(*comm != comm.invalid_handle()) {
+                obj.finalize(*comm);
+            }
+         },
+         R"(
+        This will trigger building the multi index in bulk.
+        )"
+    );
+
+    add_len_for_size_bindings(c);
+
+    add_IndexTree_insert_bindings<MorphoEntry, si::Soma, Class>(c);
+    add_MorphIndex_insert_bindings<Class>(c);
+
+    add_MorphIndex_add_branch_bindings<Class>(c);
+    add_MorphIndex_add_neuron_bindings<Class>(c);
+    add_MorphIndex_add_soma_bindings<Class>(c);
+}
+#endif
+
+template <typename Class = si::MultiIndexTree<MorphoEntry>>
+inline void create_MorphMultiIndex_bindings(py::module& m, const char* class_name) {
+    py::class_<Class> c = py::class_<Class>(m, class_name);
+
+    c
+    .def(py::init<std::string, std::size_t>(),
+         py::arg("output_dir"),
+         py::arg("max_cached_bytes"),
+         R"(
+        Create a `MultiIndexBulkBuilder` that writes output to `output_dir`.
+
+        A `MultiIndexBulkBuilder` is an interface to build a multi index. Currently,
+        a multi index can only be built in bulk. Meaning first all elements to be
+        indexed are loaded, then the index is created. As a consequence, the multi
+        index in only created once `finalize` is called.
+
+        Args:
+            output_dir(string):  The directory where the all files that make up
+                the multi index are stored.
+
+            max_cached_bytes(int):  The total size of the index should, up to a
+                log factor, not use more than `max_cached_bytes` bytes of memory.
+        )"
+    );
+
+    add_IndexTree_query_bindings(c);
+
+    add_len_for_size_bindings(c);
+}
 
 }  // namespace py_bindings
 }  // namespace spatial_index

@@ -60,7 +60,6 @@ struct Sphere {
     }
 };
 
-// Poorly named.
 struct Box3Dx : public Box3D {
     using box_type = Box3D;
 
@@ -165,6 +164,28 @@ struct Cylinder {
         ar & radius;
     }
 };
+
+inline CoordType characteristic_length(const Sphere &sph) {
+    return 2*sph.radius;
+}
+
+inline CoordType characteristic_length(const Cylinder &cyl) {
+    return std::max(cyl.radius, (cyl.p1 - cyl.p2).norm());
+}
+
+inline CoordType characteristic_length(const Box3D &box) {
+    return (Point3Dx(box.max_corner()) - box.min_corner()).maximum();
+}
+
+template<class... V>
+inline CoordType characteristic_length(const boost::variant<V...> &v) {
+    return boost::apply_visitor(
+        [](const auto &t) {
+            return characteristic_length(t);
+        },
+        v
+    );
+}
 
 
 // Generic API for getting intersection among geometries

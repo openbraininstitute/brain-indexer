@@ -206,8 +206,9 @@ inline bool IndexTree<T, A>::is_intersecting(const ShapeT& shape) const {
 
 template <typename T, typename A>
 template <typename ShapeT>
-inline std::vector<typename IndexTree<T, A>::cref_t> IndexTree<T, A>::find_intersecting_objs(
-    const ShapeT& shape) const {
+inline
+std::vector<typename IndexTree<T, A>::cref_t>
+IndexTree<T, A>::find_intersecting_objs( const ShapeT& shape) const {
     std::vector<cref_t> results;
     this->find_intersecting(shape, std::back_inserter(results));
     return results;

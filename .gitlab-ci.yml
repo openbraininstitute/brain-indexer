@@ -115,6 +115,7 @@ build-wheels:
       export BOOST_INCLUDEDIR="/usr/include/boost169";
       export BOOST_LIBRARYDIR="/usr/lib64/boost169"
     TEST_RUN_TOX: "false"  # MVDtool doesnt have wheels
+    SI_MPI: "Off"
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"'
     - if: $CI_COMMIT_TAG

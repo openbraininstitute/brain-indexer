@@ -2,6 +2,10 @@
 #include "rtree_index.hpp"
 #include "index_grid.hpp"
 
+#if SI_MPI == 1
+#include "distributed_analysis.hpp"
+#endif
+
 #ifndef SI_GRID_VOXEL_LENGTH
 #define SI_GRID_VOXEL_LENGTH 10
 #endif
@@ -9,6 +13,12 @@
 namespace si_python = si::py_bindings;
 
 namespace spatial_index { namespace py_bindings {
+
+void check_signals() {
+    if (PyErr_CheckSignals() != 0) {
+        throw py::error_already_set();
+    }
+}
 
 using SphereGridT = si::SpatialGrid<si::IndexedSphere, SI_GRID_VOXEL_LENGTH>;
 using MorphGridT = si::MorphSpatialGrid<SI_GRID_VOXEL_LENGTH>;
@@ -42,5 +52,15 @@ PYBIND11_MODULE(_spatial_index, m) {
 
     si_python::create_IndexedShapeGrid_bindings<si_python::SphereGridT>(m, "SphereGrid");
     si_python::create_SpatialGrid_bindings<si_python::MorphGridT>(m, "MorphGrid");
+
+    // Experimental distributed/lazy R-trees.
+    si_python::create_MorphMultiIndex_bindings(m, "MorphMultiIndex");
+
+#if SI_MPI == 1
+    si_python::create_MorphMultiIndexBulkBuilder_bindings(m, "MorphMultiIndexBulkBuilder");
+
+    si_python::create_analysis_bindings(m);
+#endif
+
 }
 

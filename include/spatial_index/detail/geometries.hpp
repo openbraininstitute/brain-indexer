@@ -99,11 +99,11 @@ inline Point3Dx project_point_onto_line(
 }
 
 // TODO remove this once C++17 is available.
-CoordType clamp(CoordType x, CoordType low, CoordType high) {
+inline CoordType clamp(CoordType x, CoordType low, CoordType high) {
     return std::min(std::max(low, x), high);
 }
 
-Point3D clamp(const Point3D &x, const Point3D &low, const Point3D &high) {
+inline Point3D clamp(const Point3D &x, const Point3D &low, const Point3D &high) {
     return min(max(low, x), high);
 }
 

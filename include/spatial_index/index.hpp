@@ -246,17 +246,43 @@ class Segment: public IndexedShape<Cylinder, MorphPartId> {
 };
 
 
-class IndexedSubtreeBox : public IndexedShape<Box3Dx, ShapeId> {
-    using super = IndexedShape<Box3Dx, ShapeId>;
+class SubtreeId {
+  public:
+    size_t id;
+    size_t n_elements;
+
+    SubtreeId() : id(0), n_elements(0) {}
+
+    SubtreeId(const SubtreeId&) = default;
+
+    SubtreeId(size_t id, size_t n_elements)
+    : id(id), n_elements(n_elements) {}
+
+    inline bool operator==(const ShapeId& rhs) const noexcept {
+        return id == rhs.id;
+    }
+
+  protected:
+    friend class boost::serialization::access;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int /* version*/) {
+        ar & id;
+        ar & n_elements;
+    }
+
+};
+
+
+class IndexedSubtreeBox : public IndexedShape<Box3Dx, SubtreeId> {
+    using super = IndexedShape<Box3Dx, SubtreeId>;
 
   public:
     using super::IndexedShape;
 
-    inline IndexedSubtreeBox(identifier_t id, Box3D const& box)
-        : super(id, Box3Dx(box)) {}
+    inline IndexedSubtreeBox(size_t id, size_t n_elements, Box3D const& box)
+        : super(SubtreeId(id, n_elements), Box3Dx(box)) {}
 
-    inline IndexedSubtreeBox(identifier_t id, Box3Dx const& box)
-        : super(id, box) {}
 
 };
 
@@ -368,7 +394,7 @@ class IndexTree: public IndexTreeMixin<IndexTree<T, A>, T>, public IndexTreeBase
         : super::rtree(bgi::linear<16, 2>(),
                        bgi::indexable<T>(),
                        bgi::equal_to<T>(),
-                       std::forward<Alloc>(alloc)) { }
+                       std::forward<Alloc>(alloc)) {}
 
     /// \brief Constructor to rebuild from binary data file
     // Note: One must override char* and string since there is a template<T> constructor

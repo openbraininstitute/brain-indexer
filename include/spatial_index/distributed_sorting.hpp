@@ -4,6 +4,8 @@
 
 #pragma once
 
+#if SI_MPI == 1
+
 #include <vector>
 #include <algorithm>
 #include <numeric>
@@ -28,9 +30,11 @@ namespace spatial_index {
  *
  * \tparam T     The type of the objects being sorted.
  * \tparam Key   The static method `Key::apply(const T&a)` is used to
- *               compute a scalar value, which is then used to for
- *               sorting with the comparison:
- *                   Key::apply(a) < Key::apply(b)
+ *               compute a scalar value, which is used to for creating
+ *               bins. The static method
+ *                   Key::compare(const T& a, const T& b)
+ *               will be used for comparison. The additional method
+ *               enables breaking ties.
  *
  * \sa https://en.wikipedia.org/wiki/Samplesort
  */
@@ -106,3 +110,4 @@ void gather_and_subsample(std::vector<T> &samples, MPI_Comm comm);
 }
 
 #include "detail/distributed_sorting.hpp"
+#endif // SI_MPI

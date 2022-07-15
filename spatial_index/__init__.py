@@ -11,4 +11,8 @@ except Exception:
 from . import _spatial_index as core  # noqa
 from ._spatial_index import *  # noqa
 from .node_indexer import MorphIndexBuilder  # noqa
+
+if hasattr(core, "MorphMultiIndexBulkBuilder"):
+    from .node_indexer import MorphMultiIndexBuilder  # noqa
+
 from .synapse_indexer import PointIndex, SynapseIndexBuilder  # noqa

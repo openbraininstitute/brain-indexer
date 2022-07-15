@@ -150,6 +150,14 @@ struct Point3Dx: public Point3D {
         return *this;
     }
 
+    inline CoordType maximum() noexcept {
+        return std::max(get<0>(), std::max(get<1>(), get<2>()));
+    }
+
+    inline CoordType minimum() noexcept {
+        return std::min(get<0>(), std::min(get<1>(), get<2>()));
+    }
+
     /// Relation with other points
 
     inline CoordType dist_sq(Point3D const& p2) const {

@@ -1,12 +1,28 @@
+#define BOOST_TEST_NO_MAIN
 #define BOOST_TEST_MODULE SpatialIndex_UnitTests
 #include <boost/test/unit_test.hpp>
+namespace bt = boost::unit_test;
 
 #include <random>
 #include <vector>
+
 #include <spatial_index/index.hpp>
+#include <spatial_index/multi_index.hpp>
 #include <spatial_index/util.hpp>
 
 using namespace spatial_index;
+
+
+template<class Element>
+identifier_t get_id(const Element &element) {
+    return element.gid();
+}
+
+template<>
+identifier_t get_id<IndexedSubtreeBox>(const IndexedSubtreeBox& element) {
+    return element.id;
+}
+
 
 template<class Element>
 static std::vector<Element>
@@ -41,7 +57,74 @@ random_elements<Segment>(size_t n_elements,
     return elements;
 }
 
+template<class Element>
+static std::vector<Element>
+gather_elements(const std::vector<Element> &local_elements, MPI_Comm comm) {
+    auto comm_size = mpi::size(comm);
+
+    auto n_elements = util::safe_integer_cast<int>(local_elements.size());
+    std::vector<Element> all_elements(comm_size*local_elements.size());
+
+    auto mpi_type = mpi::Datatype(mpi::create_contiguous_datatype<Element>());
+
+    MPI_Gather(
+        (void *) local_elements.data(), n_elements, *mpi_type,
+        (void *) all_elements.data(), n_elements, *mpi_type,
+        /* root = */ 0,
+        comm
+    );
+
+    return all_elements;
+}
+
+template<class Element, class Index, class QueryShape>
+static void check_queries_against_geometric_primitives(
+    const std::vector<Element> &elements,
+    const Index &index,
+    const QueryShape &query_shape) {
+
+    std::vector<Element> found;
+    index.find_intersecting(query_shape, std::back_inserter(found));
+
+    auto intersecting = std::unordered_map<identifier_t, bool>{};
+
+    for(const auto &element : elements) {
+        auto id = get_id(element);
+        if(intersecting.find(id) != intersecting.end()) {
+            // This signals a faulty assumption in the test logic; and the test
+            // needs to be rewritten.
+            throw std::runtime_error("Ids aren't unique.");
+        }
+
+        intersecting[id] = false;
+    }
+
+    for(const auto &element : found) {
+        auto id = get_id(element);
+        intersecting[id] = true;
+    }
+
+    for(const auto &kv : intersecting) {
+        auto id = kv.first;
+        auto actual = kv.second;
+        const auto &element = elements.at(id);
+
+        auto expected = geometry_intersects(element, query_shape);
+
+        if(actual != expected) {
+            std::cout << element << " expected = " << expected << "\n";
+        }
+
+        BOOST_CHECK(actual == expected);
+    }
+}
+
+
 BOOST_AUTO_TEST_CASE(MorphIndexQueries) {
+    if(mpi::rank(MPI_COMM_WORLD) != 0) {
+        return;
+    }
+
     auto n_elements = identifier_t(1000);
     auto domain = std::array<CoordType, 2>{-10.0, 10.0};
 
@@ -54,36 +137,47 @@ BOOST_AUTO_TEST_CASE(MorphIndexQueries) {
     //   [-7.0, -7.0, -7.0] x [1.0, 1.0, 1.0]
     auto query_shape = Sphere{{-3.0, -3.0, -3.0}, 4.0};
 
-    std::vector<Segment> found;
-    index.find_intersecting(query_shape, std::back_inserter(found));
+    check_queries_against_geometric_primitives(elements, index, query_shape);
+}
 
-    auto intersecting = std::unordered_map<identifier_t, bool>{};
 
-    for(const auto &element : elements) {
-        if(intersecting.find(element.gid()) != intersecting.end()) {
-            // This signals a faulty assuption in the test logic; and the test
-            // needs to be rewritten.
-            throw std::runtime_error("Ids aren't unique.");
-        }
+BOOST_AUTO_TEST_CASE(MorphMultiIndexQueries) {
+    auto output_dir = "tmp-ndwiu";
 
-        intersecting[element.gid()] = false;
+    int n_required_ranks = 2;
+    auto comm = mpi::comm_shrink(MPI_COMM_WORLD, n_required_ranks);
+
+    if(*comm == MPI_COMM_NULL) {
+        return;
     }
 
-    for(const auto &element : found) {
-        intersecting[element.gid()] = true;
+    auto n_elements = identifier_t(1000);
+    auto domain = std::array<CoordType, 2>{-10.0, 10.0};
+
+    auto mpi_rank = mpi::rank(*comm);
+    auto elements = random_elements<Segment>(n_elements, domain, mpi_rank * n_elements);
+    auto all_elements = gather_elements(elements, *comm);
+
+    auto builder = MultiIndexBulkBuilder<Segment>(output_dir);
+    builder.insert(elements.begin(), elements.end());
+    builder.finalize(*comm);
+
+    if(mpi_rank == 0) {
+        auto index = MultiIndexTree<Segment>(output_dir, /* mem = */ size_t(1e6));
+
+        // Large-ish sphere.
+        auto query_shape = Sphere{{-3.0, -3.0, -3.0}, 4.0};
+
+        check_queries_against_geometric_primitives(all_elements, index, query_shape);
     }
+}
 
-    for(const auto &kv : intersecting) {
-        auto id = kv.first;
-        auto actual = kv.second;
-        const auto &element = elements.at(id);
 
-        auto expected = query_shape.intersects(element);
+int main(int argc, char *argv[]) {
+    MPI_Init(&argc, &argv);
 
-        if(actual != expected) {
-            std::cout << element << "\n";
-        }
+    auto return_code = bt::unit_test_main([](){ return true; }, argc, argv );
 
-        BOOST_CHECK(actual == expected);
-    }
+    MPI_Finalize();
+    return return_code;
 }

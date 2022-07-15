@@ -1,3 +1,4 @@
+#if SI_MPI == 1
 #include <spatial_index/mpi_wrapper.hpp>
 
 #include <sstream>
@@ -33,14 +34,13 @@ std::vector<int> offsets_from_counts(const std::vector<int>& counts) {
     return offsets;
 }
 
-
 bool check_count_is_safe(size_t count) {
     return count <= util::safe_integer_cast<size_t>(std::numeric_limits<int>::max());
 }
 
-void assert_count_is_safe(size_t count) {
+void assert_count_is_safe(size_t count, const std::string &error_id) {
     if(!check_count_is_safe(count)) {
-        throw std::runtime_error("Count is too large and will overflow `int`.");
+        throw std::runtime_error("Count is too large and will overflow `int`. [" + error_id + "]");
     }
 }
 
@@ -50,9 +50,9 @@ bool check_counts_are_safe(const std::vector<int>& counts) {
 }
 
 
-void assert_counts_are_safe(const std::vector<int>& counts) {
+void assert_counts_are_safe(const std::vector<int>& counts, const std::string &error_id) {
     if(!check_counts_are_safe(counts)) {
-        throw std::runtime_error("Counts are too large and will overflow `int`.");
+        throw std::runtime_error("Counts are too large and will overflow `int`. [" + error_id + "]");
     }
 }
 
@@ -68,19 +68,17 @@ std::vector<int> gather_counts(size_t exact_count, MPI_Comm comm) {
         comm
     );
 
-    assert_counts_are_safe(recv_counts);
+    assert_counts_are_safe(recv_counts, "vneoq");
     return recv_counts;
 }
 
 
-std::vector<int> exchange_counts(size_t local_count, MPI_Comm comm) {
+std::vector<size_t> exchange_local_counts(size_t local_count, MPI_Comm comm) {
     auto comm_size = mpi::size(comm);
-    std::vector<int> count_per_rank(util::safe_integer_cast<size_t>(comm_size));
+    std::vector<size_t> count_per_rank(util::safe_integer_cast<size_t>(comm_size));
 
-    auto int_count = util::safe_integer_cast<int>(local_count);
-    MPI_Allgather(&int_count, 1, MPI_INT, count_per_rank.data(), 1, MPI_INT, comm);
+    MPI_Allgather(&local_count, 1, MPI_SIZE_T, count_per_rank.data(), 1, MPI_SIZE_T, comm);
 
-    assert_counts_are_safe(count_per_rank);
     return count_per_rank;
 }
 
@@ -96,47 +94,17 @@ std::vector<int> exchange_counts(const std::vector<int>& send_counts, MPI_Comm c
     // The `send_counts` should be safe, however one rank might
     // be receiving all the big slabs. Hence, we need to check
     // `recv_counts`.
-    assert_counts_are_safe(recv_counts);
+    assert_counts_are_safe(recv_counts, "pieww");
     return recv_counts;
 }
 
 
-std::vector<size_t> balanced_chunk_sizes(size_t global_count, size_t n_chunks) {
-    size_t base_count = global_count / n_chunks;
-
-    std::vector<size_t> balanced_count_per_rank(n_chunks, base_count);
-    for(size_t i = 0; i < global_count % n_chunks; ++i) {
-        balanced_count_per_rank[i]++;
-    }
-
-    return balanced_count_per_rank;
-}
-
-
-Range balanced_chunks(const Range& range, size_t n_chunks, size_t k_chunk) {
-    size_t length = range.high - range.low;
-    size_t chunk_size = length / n_chunks;
-    size_t n_large_chunks = length % n_chunks;
-
-    size_t low =  range.low + k_chunk     * chunk_size + std::min(k_chunk,   n_large_chunks);
-    size_t high = range.low + (k_chunk+1) * chunk_size + std::min(k_chunk+1, n_large_chunks);
-
-    return Range{std::min(low, range.high), std::min(high, range.high)};
-}
-
-
-Range balanced_chunks(size_t n_total, size_t n_chunks, size_t k_chunk) {
-    return balanced_chunks(Range{0, n_total}, n_chunks, k_chunk);
-}
-
-
 std::vector<int>
-compute_balance_send_counts(const std::vector<int>& counts_per_rank, int mpi_rank) {
+compute_balance_send_counts(const std::vector<size_t>& counts_per_rank, int mpi_rank) {
     auto comm_size = counts_per_rank.size();
     auto global_count = std::accumulate(
         counts_per_rank.begin(), counts_per_rank.end(), 0ul
     );
-    assert_count_is_safe(global_count);
 
     // global index of beginning local part of the array.
     size_t local_start = std::accumulate(
@@ -146,7 +114,7 @@ compute_balance_send_counts(const std::vector<int>& counts_per_rank, int mpi_ran
     );
     size_t local_end = local_start + counts_per_rank[mpi_rank]; // (exclusive)
 
-    auto balanced_count_per_rank = balanced_chunk_sizes(global_count, comm_size);
+    auto balanced_count_per_rank = util::balanced_chunk_sizes(global_count, comm_size);
 
     // Stores the number of values to be sent to each MPI rank.
     auto send_counts = std::vector<int>(comm_size, 0);
@@ -173,7 +141,7 @@ compute_balance_send_counts(const std::vector<int>& counts_per_rank, int mpi_ran
         balanced_start = balanced_end;
     }
 
-    assert_counts_are_safe(send_counts);
+    assert_counts_are_safe(send_counts, "kdwoi");
     return send_counts;
 }
 
@@ -226,3 +194,4 @@ MPI_Comm Comm::invalid_handle() noexcept {
 
 }
 }
+#endif // SI_MPI

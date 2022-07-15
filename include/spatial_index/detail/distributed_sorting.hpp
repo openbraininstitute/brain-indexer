@@ -61,7 +61,7 @@ auto DistributedMemorySorter<T, Key>::balance(const Values &values, MPI_Comm com
     // without changing their order.
 
     // Step 1: Find out how many elements each MPI rank has.
-    auto counts_per_rank = mpi::exchange_counts(values.size(), comm);
+    auto counts_per_rank = mpi::exchange_local_counts(values.size(), comm);
 
     // Step 2: Figure out how many elements this MPI rank needs to
     //         send to every MPI rank:
@@ -86,8 +86,6 @@ auto DistributedMemorySorter<T, Key>::balance(const Values &values, MPI_Comm com
 }
 
 
-
-
 template<class T, class Key>
 void DistributedMemorySorter<T, Key>::sort(Values &values,
                                            MPI_Comm comm) {
@@ -108,7 +106,7 @@ void DistributedMemorySorter<T, Key>::sort(Values &values,
     }
 
     auto cmp = [=](const Value &a, const Value &b) {
-        return Key::apply(a) < Key::apply(b);
+        return Key::compare(a, b);
     };
     node_local_sort(values.begin(), values.end(), cmp);
 

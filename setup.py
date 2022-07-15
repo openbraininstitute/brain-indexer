@@ -82,6 +82,9 @@ package_info = dict(
         'spatial_index._spatial_index',
         cmake_opts=[
             '-DSI_UNIT_TESTS=OFF',
+            '-DSI_MPI={}'.format(
+                os.environ["SI_MPI"] if "SI_MPI" in os.environ else "On"
+            ),
             '-DSI_VERSION=' + __version__
         ]
     )],
@@ -100,6 +103,11 @@ package_info = dict(
         "mvdtool>=2.4.1",
         "docopt",
     ],
+    extras_require={
+        "mpi": [
+            "mpi4py"
+        ]
+    },
     tests_require=["pytest", "h5py", ],
     setup_requires=(["pytest-runner"] if "test" in sys.argv else [])
 )

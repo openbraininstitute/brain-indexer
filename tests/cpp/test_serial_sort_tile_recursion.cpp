@@ -7,6 +7,7 @@ namespace bt = boost::unit_test;
 #include <random>
 
 #include <spatial_index/distributed_sorting.hpp>
+#include <spatial_index/multi_index.hpp>
 #include <spatial_index/sort_tile_recursion.hpp>
 #include <spatial_index/util.hpp>
 
@@ -148,10 +149,11 @@ void check_bounding_boxes(std::vector<Value> &values,
 }
 
 BOOST_AUTO_TEST_CASE(SerialSTRTests) {
-    auto mpi_rank = mpi::rank(MPI_COMM_WORLD);
-    if(mpi_rank != 0) {
+    if(mpi::rank(MPI_COMM_WORLD) != 0) {
         return;
     }
+
+    int fake_mpi_rank = 32;
 
     size_t n_values = 1000ul;
     std::vector<Value> values;
@@ -164,14 +166,14 @@ BOOST_AUTO_TEST_CASE(SerialSTRTests) {
     for(size_t i = 0; i < n_values; ++i) {
         values.push_back(Value{
             {dist(gen), dist(gen), dist(gen)},
-            {util::integer_cast<size_t>(mpi_rank), i}
+            {size_t(fake_mpi_rank), i}
         });
     }
 
     auto str_params = SerialSTRParams{n_values, {3ul, 2ul, 1ul}};
     serial_sort_tile_recursion<Value, GetCoordFromValue>(values, str_params);
 
-    check_nothing_got_lost(values, n_values, mpi_rank);
+    check_nothing_got_lost(values, n_values, fake_mpi_rank);
 
     auto partition_boundaries = str_params.partition_boundaries();
     check_bounding_boxes(values, partition_boundaries, str_params, domain);
@@ -182,7 +184,7 @@ std::vector<Value> random_values(size_t n_values,
                                  int comm_rank) {
     std::vector<Value> values;
     values.reserve(n_values);
-    auto gen = std::default_random_engine{};
+    auto gen = std::default_random_engine{util::integer_cast<size_t>(comm_rank+1)};
     auto dist = std::uniform_real_distribution<float>(domain[0], domain[1]);
 
     for(size_t i = 0; i < n_values; ++i) {
@@ -199,7 +201,7 @@ std::vector<Value> random_values(size_t n_values,
 
 
 BOOST_AUTO_TEST_CASE(DistributedSTRTests) {
-    int n_required_ranks = 2;
+    int n_required_ranks = 4;
     auto comm = mpi::comm_shrink(MPI_COMM_WORLD, n_required_ranks);
 
     if(*comm == comm.invalid_handle()) {
@@ -214,8 +216,9 @@ BOOST_AUTO_TEST_CASE(DistributedSTRTests) {
     auto domain = std::array<float, 2>{-1.0, 1.0};
     auto values = random_values(n_initial_values, domain, comm_rank);
 
-    auto distr_params = DistributedSTRParams{comm_size * n_initial_values, {2, 1, 1}};
+    auto distr_params = DistributedSTRParams{comm_size * n_initial_values, {2, 2, 1}};
     distributed_sort_tile_recursion<Value, GetCoordFromValue>(values, distr_params, *comm);
+
 
     auto recv_counts = mpi::gather_counts(values.size(), *comm);
     auto recv_offsets = mpi::offsets_from_counts(recv_counts);
@@ -249,6 +252,32 @@ BOOST_AUTO_TEST_CASE(DistributedSTRTests) {
         std::copy(recv_offsets.begin(), recv_offsets.end(), boundaries.begin());
         check_bounding_boxes(all_values, boundaries, all_str_params, domain);
     }
+}
+
+BOOST_AUTO_TEST_CASE(DistributedPartitionTests) {
+    // Currently, only checks that everything compiles and runs.
+    using Value = MorphoEntry;
+
+    int n_required_ranks = 2;
+    auto comm = mpi::comm_shrink(MPI_COMM_WORLD, n_required_ranks);
+
+    if(*comm == comm.invalid_handle()) {
+        return;
+    }
+
+    auto comm_size = mpi::size(*comm);
+
+    std::string output_dir = "tmp-wiowu";
+    util::ensure_valid_output_directory(output_dir);
+
+    auto storage = NativeStorageT<Value>(output_dir);
+
+    auto n_values = 1000ul;
+    auto n_total_values = comm_size * n_values;
+    auto values = std::vector<Value>(n_values);
+    auto str_params = two_level_str_heuristic(n_total_values, size_t(1e6), comm_size);
+
+    distributed_partition<GetCenterCoordinate<Value>>(storage, values, str_params, *comm);
 }
 
 int main(int argc, char *argv[]) {

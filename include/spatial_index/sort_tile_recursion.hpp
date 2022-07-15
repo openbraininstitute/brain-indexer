@@ -3,12 +3,50 @@
 #include <array>
 #include <cmath>
 
-#include <spatial_index/mpi_wrapper.hpp>
-#include <spatial_index/distributed_sorting.hpp>
 #include <spatial_index/index.hpp>
 
 
 namespace spatial_index {
+
+template<class GetCoordinate, size_t dim>
+struct STRKey {
+    template<class Value>
+    static auto apply(const Value &a) {
+        return GetCoordinate::template apply<dim>(a);
+    }
+
+    template<class Value>
+    static auto compare(const Value &a, const Value &b) {
+        auto xa = STRKey<GetCoordinate, dim>::apply(a);
+        auto xb = STRKey<GetCoordinate, dim>::apply(b);
+
+        // TODO modernize with C++17 constexpr if
+        if(xa == xb) {
+            return STRKey<GetCoordinate, dim+1>::compare(a, b);
+        }
+        else {
+            return xa < xb;
+        }
+    }
+};
+
+template<class GetCoordinate>
+struct STRKey<GetCoordinate, 2> {
+    template<class Value>
+    static auto apply(const Value &a) {
+        return GetCoordinate::template apply<2>(a);
+    }
+
+    template<class Value>
+    static auto compare(const Value &a, const Value &b) {
+        auto xa = STRKey<GetCoordinate, 2>::apply(a);
+        auto xb = STRKey<GetCoordinate, 2>::apply(b);
+
+        return xa < xb;
+    }
+};
+
+
 
 /** \brief Parameters defining the Sort Tile Recursion.
  *
@@ -66,18 +104,8 @@ struct SerialSTRParams {
      * The aim of this heuristic is to provide suitable parameters when
      * computing a distributed R-Tree.
      */
-    static SerialSTRParams from_heuristic(size_t n_points);
-};
+    static SerialSTRParams from_heuristic(size_t n_points, size_t max_elements_per_part);
 
-/// Parameters for `DistributedSortTileRecursion`.
-struct DistributedSTRParams {
-    size_t n_boxes;
-    std::array<int, 3> n_ranks_per_dim;
-};
-
-/// Minimal description of the on node STR partitioning.
-struct LocalSTRParams {
-    std::array<size_t, 3> n_parts_per_dim;
 };
 
 /** \brief Performs single-threaded Sort Tile Recursion.
@@ -113,6 +141,8 @@ struct LocalSTRParams {
 template<class Value, typename GetCoordinate, size_t dim>
 class SerialSortTileRecursion {
 private:
+    using Key = STRKey<GetCoordinate, dim>;
+
     template<size_t D>
     using STR = SerialSortTileRecursion<Value, GetCoordinate, D>;
 
@@ -139,113 +169,10 @@ public:
 template <typename Value, typename GetCoordinate>
 void serial_sort_tile_recursion(std::vector<Value> &values, const SerialSTRParams&str_params);
 
-/** \brief MPI-parallel version of Sort Tile Recursion.
- *
- * Please refer to `SerialSortTileRecursion` for a detailed
- * explanation of the algorithm and the template parameters.
- *
- * The first thing to observe is that if we had a distributed
- * sorting algorithm, then STR can be computed in an MPI-parallel
- * in a straightforward manner.
- *
- * Assume that `n` is the number of parts per dimension and that
- * there are `product(n)` MPI ranks, i.e. one per part. Now,
- * distributed STR consists of: First perform a distributed sort
- * w.r.t to coordinate `x[0]`, redistribute the array such that
- * every MPI rank has roughly the same number of elements. Now
- * compute successive groups of MPI ranks of size `n[1]*n[2]*...`;
- * and continue with STR recursively.
- *
- * \sa `distributed_sort_tile_recursion` for a more convenient interface.
- * \sa `DistributedMemorySorter` for an implementation of a
- * distributed and balanced sorting algorithm.
- */
-template<typename Value, typename GetCoordinate, size_t dim>
-class DistributedSortTileRecursion {
-private:
-  class Key {
-  public:
-      static auto apply(const Value &a) {
-          return GetCoordinate::template apply<dim>(a);
-      }
-  };
-
-  template<size_t D>
-  using STR = DistributedSortTileRecursion<Value, GetCoordinate, D>;
-
-public:
-    static void apply(std::vector<Value> &values,
-                      const DistributedSTRParams&str_params,
-                      MPI_Comm mpi_comm);
-};
-
-template<typename Value, typename GetCoordinate>
-class DistributedSortTileRecursion<Value, GetCoordinate, 3ul> {
-public:
-    template<class ...Args>
-    static void apply(Args&& ...) {
-        // Only here to break the infinite recursion.
-    }
-};
-
-/** \brief  MPI-parallel Sort Tile Recursion.
- *
- * \sa `DistributedSortTileRecursion`.
- */
-template <typename Value, typename GetCoordinate>
-void distributed_sort_tile_recursion(std::vector<Value> &values,
-                                     const DistributedSTRParams&str_params,
-                                     MPI_Comm mpi_comm);
-
-
-
-std::vector<IndexedSubtreeBox> gather_bounding_boxes(
-    const std::vector<IndexedSubtreeBox> &local_bounding_boxes,
-    MPI_Comm comm);
-
-
-/** \brief Parameters for a combined distributed and local STR.
- *  It can be convenient to perform STR first in a distributed
- *  manner, creating one large region per MPI rank. Then
- *  in a second step these region can be partitioned again using
- *  local STR.
- */
-struct TwoLevelSTRParams {
-    DistributedSTRParams distributed;
-    LocalSTRParams local;
-};
-
-
-LocalSTRParams infer_local_str_params(
-    const SerialSTRParams &overall_str_params,
-    const DistributedSTRParams &distributed_str_params);
-
-
 inline bool is_power_of_two(int n) { return (n & (n - 1)) == 0; }
 inline int int_log2(int n) { return int(std::round(std::log2(n))); }
 inline int int_pow2(int k) { return 1 << k; }
 
-/* \brief Evenly distribute ranks across dimensions.
- *  Given `n` MPI ranks find `m[0]`, `m[1]`, `m[2]` such
- *  that `n == m[0] * m[1] * m[2]` and the difference between all
- *  `m[k]` is reasonably small.
- *
- *  \warning Current implementation only supports powers of two.
- */
-std::array<int, 3> rank_distribution(int comm_size);
-
-/// Uses `SerialSTRParams::from_heuristics` as a heuristic.
-TwoLevelSTRParams two_level_str_heuristic(size_t n_elements, int comm_size);
-
-
-/// Creates the top-level and all subtrees of the multi-index.
-template <class GetCenterCoordinate, class Storage, class Value>
-void distributed_partition(const Storage &storage,
-                           std::vector<Value> &values,
-                           const TwoLevelSTRParams &str_params,
-                           MPI_Comm comm);
 
 }
-
-
 #include "detail/sort_tile_recursion.hpp"

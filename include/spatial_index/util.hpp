@@ -135,8 +135,77 @@ T integer_cast(S s) {
 }
 
 
+/// Represents the range [low, high).
+struct Range {
+    size_t low;
+    size_t high; ///< one-past the end
+};
+
+
+/** \brief Computes the size of perfectly balanced chunks.
+ *
+ * The fair chunk size of chunk `i` is element `i` in the
+ * return value.
+ *
+ * \param global_count  The total number of elements.
+ * \param n_chunks      Number of chunks.
+ *
+ */
+std::vector<size_t> balanced_chunk_sizes(size_t global_count, size_t n_chunks);
+
+
+/** \brief Split interval in almost equally sized chunks.
+ *
+ * The interval `[range.low, range.high)` is split into `n_chunks` parts. This
+ * function returns the range of chunk `k_chunk`.
+ */
+inline Range balanced_chunks(const Range &range, size_t n_chunks, size_t k_chunk);
+
+
+/// Split the interval `[0, n_total)` in almost equally sized chunks.
+inline Range balanced_chunks(size_t n_total, size_t n_chunks, size_t k_chunk);
+
+
+/// Now formatted as 'YYYY-MM-DDTHH:MM:SS'.
+std::string iso_datetime_now() {
+    // Credit: https://stackoverflow.com/a/9528166
+
+    time_t now;
+    time(&now);
+    char buf[sizeof "2011-10-08T07:07:09"];
+    strftime(buf, sizeof buf, "%FT%T", gmtime(&now));
+
+    return std::string(buf);
+}
+
+
 }  // namespace util
 }  // namespace spatial_index
 
 
+namespace spatial_index {
+namespace py_bindings {
+
+#if SI_FOR_PYBIND == 1
+// Defined in `py_bindings.cpp`.
+void check_signals();
+#endif
+
+} // spatial_index::py_bindings
+
+namespace util {
+
+void check_signals() {
+#if SI_FOR_PYBIND == 1
+    spatial_index::py_bindings::check_signals();
+#endif
+}
+
+} // spatial_index::util
+} // spatial_index
+
+
+
+
+#include "detail/util.hpp"
 #include "detail/input_iterators.hpp"
