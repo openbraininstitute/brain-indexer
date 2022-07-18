@@ -310,41 +310,42 @@ template <typename Derived, typename T>
 class IndexTreeMixin {
   public:
     /**
-     * \brief Find elements in tree intersecting the given shape.
+     * \brief Find elements in tree that intersect with the given shape.
+     *
+     * The query shape is always treated as the exact shape. The indexed elements
+     * on the other hand can either be selected if their bounding box intersects with
+     * the query shape; or if the 'exact' shape intersects with the query shape. Note,
+     * that exact isn't true for cylinders which are often treated as capsules instead.
+     *
+     * \tparam GeometryMode: Selects between exact (`ExactGeometry`) and bounding
+     *   box geometry (`BoundingBoxGeometry`).
      *
      * \param iter: An iterator object used to collect matching entries.
      *   Consider using the builtin transformation iterators: iter_ids_getter and
      *   iter_gid_segm_getter. For finer control check the alternate overload
      */
-    template <typename ShapeT, typename OutputIt>
+    template <typename GeometryMode=BoundingBoxGeometry, typename ShapeT, typename OutputIt>
     inline void find_intersecting(const ShapeT& shape, const OutputIt& iter) const;
-
-    /**
-     * \brief Find elements in tree intersecting the given bounding box.
-     * An overload of find_intersecting
-     */
-    template <typename OutputIt>
-    inline void find_intersecting(const Box3D& shape, const OutputIt& iter) const;
 
     /**
      * \brief Gets the ids of the intersecting objects
      * \returns The object ids, identifier_t or gid_segm_t, depending on the default id getter
      */
-    template <typename ShapeT>
+    template <typename GeometryMode=BoundingBoxGeometry, typename ShapeT>
     inline decltype(auto) find_intersecting(const ShapeT& shape) const;
 
     /**
      * \brief Gets the pos of the intersecting objects
      * \returns The object pos, depending on the default pos getter
      */
-    template <typename ShapeT>
+    template <typename GeometryMode=BoundingBoxGeometry, typename ShapeT>
     inline decltype(auto) find_intersecting_pos(const ShapeT& shape) const;
 
     /**
      * \brief Finds & return objects which intersect, numpy version.
      * \returns A vector of POD objects, to be exposed as numpy arrays(dtype)
      */
-    template <typename ShapeT>
+    template <typename GeometryMode=BoundingBoxGeometry, typename ShapeT>
     inline decltype(auto) find_intersecting_np(const ShapeT& shape) const;
 
     /**
@@ -355,11 +356,11 @@ class IndexTreeMixin {
     inline decltype(auto) find_nearest(const ShapeT& shape, unsigned k_neighbors) const;
 
     /// \brief Counts objects intersecting the given region deliminted by the shape
-    template <typename ShapeT>
+    template <typename GeometryMode=BoundingBoxGeometry, typename ShapeT>
     inline size_t count_intersecting(const ShapeT& shape) const;
 
     /// \brief Counts objects intersecting the given region deliminted by the shape
-    template <typename ShapeT>
+    template <typename GeometryMode=BoundingBoxGeometry, typename ShapeT>
     inline std::unordered_map<identifier_t, size_t> count_intersecting_agg_gid(
         const ShapeT& shape) const;
 };
@@ -406,14 +407,14 @@ class IndexTree: public IndexTreeMixin<IndexTree<T, A>, T>, public IndexTreeBase
     inline void dump(const std::string& filename) const;
 
     /// \brief Checks whether a given shape intersects any object in the tree
-    template <typename ShapeT>
+    template <typename GeometryMode=BoundingBoxGeometry, typename ShapeT>
     inline bool is_intersecting(const ShapeT& shape) const;
 
     /**
      * \brief Finds & return objects which intersect. To be used mainly with id-less objects
      * \returns A vector of references to tree objects
      */
-    template <typename ShapeT>
+    template <typename GeometryMode=BoundingBoxGeometry, typename ShapeT>
     inline std::vector<cref_t> find_intersecting_objs(const ShapeT& shape) const;
 
 

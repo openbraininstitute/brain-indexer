@@ -83,8 +83,13 @@ static void check_queries_against_geometric_primitives(
     const Index &index,
     const QueryShape &query_shape) {
 
+    using GeometryMode = BoundingBoxGeometry;
+
     std::vector<Element> found;
-    index.find_intersecting(query_shape, std::back_inserter(found));
+    index.template find_intersecting<GeometryMode>(query_shape, std::back_inserter(found));
+
+    BOOST_CHECK(index.template count_intersecting<GeometryMode>(query_shape) == found.size());
+    BOOST_CHECK(index.template is_intersecting<GeometryMode>(query_shape) == !found.empty());
 
     auto intersecting = std::unordered_map<identifier_t, bool>{};
 
@@ -109,7 +114,7 @@ static void check_queries_against_geometric_primitives(
         auto actual = kv.second;
         const auto &element = elements.at(id);
 
-        auto expected = geometry_intersects(element, query_shape);
+        auto expected = geometry_intersects(query_shape, element, GeometryMode{});
 
         if(actual != expected) {
             std::cout << element << " expected = " << expected << "\n";

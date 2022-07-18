@@ -84,7 +84,7 @@ def test_intersection_none():
     centroid = np.array([0., 0., 0.], dtype=np.float32)
     radius = np.random.uniform(low=0.0, high=0.49)
 
-    idx = t.find_intersecting(centroid, radius)
+    idx = t.find_intersecting(centroid, radius, geometry="exact")
     assert len(idx) == 0, "Should be empty, but {} were found instead.".format(idx)
 
 
@@ -101,8 +101,8 @@ def test_intersection_all():
     centroid = np.array([0., 0., 0.], dtype=np.float32)
     radius = np.random.uniform(low=0.5, high=1.0)
 
-    idx = t.find_intersecting(centroid, radius)
-    objs = t.find_intersecting_objs(centroid, radius)
+    idx = t.find_intersecting(centroid, radius, geometry="exact")
+    objs = t.find_intersecting_objs(centroid, radius, geometry="exact")
     expected_result = np.arange(3, dtype=np.uintp)
 
     if len(idx.dtype) > 1:
@@ -132,7 +132,7 @@ def test_intersection_random():
 
     t = IndexClass(centroids, radii)
 
-    idx = t.find_intersecting(q_centroid, q_radius)
+    idx = t.find_intersecting(q_centroid, q_radius, geometry="exact")
     if len(idx.dtype) > 1:
         idx = idx['gid']  # Records
     assert len(np.setdiff1d(idx, expected_result)) == 0, (idx, expected_result)

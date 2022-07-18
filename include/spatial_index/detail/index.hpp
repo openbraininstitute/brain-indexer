@@ -14,24 +14,18 @@
 
 namespace spatial_index {
 
-
 // Specialization of geometry_intersects for variant geometries
+template <typename T, typename... VarT, typename GeometryMode>
+bool geometry_intersects(const T& query_shape,
+                         const boost::variant<VarT...>& element_shape,
+                         GeometryMode geo) {
 
-template <typename T, typename... VarT>
-bool geometry_intersects(const boost::variant<VarT...>& geom1, const T& geom2) {
     return boost::apply_visitor(
-        [&geom2](const auto& g1) {
-            // In case T is another variant, can be matched
-            return geometry_intersects(g1, geom2);
+        [&query_shape, geo](const auto& e1) {
+            return geometry_intersects(query_shape, e1, geo);
         },
-        geom1);
+        element_shape);
 }
-
-template <typename T, typename... VarT>
-bool geometry_intersects(const T& geom1, const boost::variant<VarT...>& geom2) {
-    return geometry_intersects(geom2, geom1);
-}
-
 
 template <typename T>
 inline Point3D get_centroid(const T& geometry) {
@@ -74,39 +68,35 @@ inline Point3D get_endpoint(const Segment& seg, bool first) {
 /////////////////////////////////////////
 
 template <typename Derived, typename T>
-template <typename ShapeT, typename OutputIt>
+template <typename GeometryMode, typename ShapeT, typename OutputIt>
 inline void IndexTreeMixin<Derived, T>::find_intersecting(const ShapeT& shape,
                                                           const OutputIt& iter) const {
 
     const auto &derived = static_cast<const Derived&>(*this);
     // Using a callback makes the query slightly faster than using qbegin()...qend()
-    auto real_intersection = [&shape](const auto& v){ return geometry_intersects(shape, v); };
+    auto real_intersects = [&shape](const auto &v) {
+        return geometry_intersects(shape, v, GeometryMode{});
+    };
+
     derived.query(
-        bgi::intersects(bgi::indexable<ShapeT>{}(shape)) && bgi::satisfies(real_intersection),
-        iter
-    );
+        bgi::intersects(bgi::indexable<ShapeT>{}(shape)) && bgi::satisfies(real_intersects),
+        iter);
 }
 
-template <typename Derived, typename T>
-template <typename OutputIt>
-inline void IndexTreeMixin<Derived, T>::find_intersecting(const Box3D& shape,
-                                                          const OutputIt& iter) const {
-    static_cast<const Derived&>(*this).query(bgi::intersects(shape), iter);
-}
 
 template <typename Derived, typename T>
-template <typename ShapeT>
+template <typename GeometryMode, typename ShapeT>
 inline decltype(auto) IndexTreeMixin<Derived, T>::find_intersecting(const ShapeT& shape) const {
     using ids_getter = typename detail::id_getter_for<T>::type;
     std::vector<typename ids_getter::value_type> ids;
-    find_intersecting(shape, ids_getter(ids));
+    find_intersecting<GeometryMode>(shape, ids_getter(ids));
     return ids;
 }
 
 // Function to return payload data as a numpy arrays
 
 template <typename Derived, typename T>
-template <typename ShapeT>
+template <typename GeometryMode, typename ShapeT>
 inline decltype(auto) 
 IndexTreeMixin<Derived, T>::find_intersecting_np(const ShapeT& shape) const {
     using exp_getter = typename detail::exp_getter_for<T>::type;
@@ -117,46 +107,43 @@ IndexTreeMixin<Derived, T>::find_intersecting_np(const ShapeT& shape) const {
 
 
 template <typename Derived, typename T>
-template <typename ShapeT>
+template <typename GeometryMode, typename ShapeT>
 inline decltype(auto) IndexTreeMixin<Derived, T>::find_intersecting_pos(const ShapeT& shape) const {
-    const auto &derived = static_cast<const Derived&>(*this);
-
     std::vector<Point3D> points;
     auto point_accu = boost::make_function_output_iterator(
         [&points](const auto& item) {
             points.push_back(get_centroid(item));
         }
     );
-    derived.query(bgi::intersects(shape), point_accu);
+
+    find_intersecting<GeometryMode>(shape, point_accu);
     return points;
 }
 
 template <typename Derived, typename T>
-template <typename ShapeT>
+template <typename GeometryMode, typename ShapeT>
 inline size_t IndexTreeMixin<Derived, T>::count_intersecting(const ShapeT& shape) const {
-    const auto &derived = static_cast<const Derived&>(*this);
-
     size_t cardinality = 0; // number of matches in set
     auto counter = boost::make_function_output_iterator(
         [&cardinality](const auto&) { ++cardinality; }
     );
-    derived.query(bgi::intersects(shape), counter);
+
+    find_intersecting<GeometryMode>(shape, counter);
     return cardinality;
 }
 
 template <typename Derived, typename T>
-template <typename ShapeT>
+template <typename GeometryMode, typename ShapeT>
 inline std::unordered_map<identifier_t, size_t>
 IndexTreeMixin<Derived, T>::count_intersecting_agg_gid(const ShapeT& shape) const {
-    const auto &derived = static_cast<const Derived&>(*this);
-
     std::unordered_map<identifier_t, size_t> counts;
     auto counter = boost::make_function_output_iterator(
         [&counts](const auto& elem) {
             counts[elem.post_gid()] += 1;
         }
     );
-    derived.query(bgi::intersects(shape), counter);
+
+    find_intersecting<GeometryMode>(shape, counter);
     return counts;
 }
 
@@ -191,26 +178,26 @@ inline void IndexTree<T, A>::dump(const std::string& filename) const {
 
 
 template <typename T, typename A>
-template <typename ShapeT>
+template <typename GeometryMode, typename ShapeT>
 inline bool IndexTree<T, A>::is_intersecting(const ShapeT& shape) const {
-    for (auto it = this->qbegin(bgi::intersects(bgi::indexable<ShapeT>{}(shape)));
-         it != this->qend();
-         ++it) {
-        if (geometry_intersects(shape, *it)) {
-            return true;
-        }
-    }
-    return false;
+    auto real_intersects = [&shape](const auto& v) {
+        return geometry_intersects(shape, v, GeometryMode{});
+    };
+
+    auto it = this->qbegin(
+        bgi::intersects(bgi::indexable<ShapeT>{}(shape)) && bgi::satisfies(real_intersects)
+    );
+
+    return it != this->qend();
 }
 
 
 template <typename T, typename A>
-template <typename ShapeT>
-inline
-std::vector<typename IndexTree<T, A>::cref_t>
-IndexTree<T, A>::find_intersecting_objs( const ShapeT& shape) const {
+template <typename GeometryMode, typename ShapeT>
+inline std::vector<typename IndexTree<T, A>::cref_t>
+IndexTree<T, A>::find_intersecting_objs(const ShapeT& shape) const {
     std::vector<cref_t> results;
-    this->find_intersecting(shape, std::back_inserter(results));
+    this->template find_intersecting<GeometryMode>(shape, std::back_inserter(results));
     return results;
 }
 
@@ -249,7 +236,7 @@ inline bool IndexTree<T, A>::place(const Box3D& region, ShapeT& shape) {
 
             for (int z_i = 0; z_i < nsteps[2]; z_i++) {
                 shape.translate(offset - previous_offset);
-                if (!is_intersecting(shape)) {
+                if (!is_intersecting<ExactGeometry>(shape)) {
                     this->insert(shape);
                     return true;
                 }

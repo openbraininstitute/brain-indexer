@@ -15,7 +15,7 @@ struct Box3Dx;  // FWDecl
 /**
  * \brief A Sphere represention. Base abstraction for somas
  *
- * For compat with indexing Geometries must implement bounding_box() and intersects()
+ * For compatibility with indexing Geometries must implement bounding_box() and intersects()
  */
 struct Sphere {
     using box_type = Box3D;
@@ -190,11 +190,86 @@ inline CoordType characteristic_length(const boost::variant<V...> &v) {
 
 // Generic API for getting intersection among geometries
 
-template <typename T1, typename T2>
-inline bool geometry_intersects(const T1& geom1, const T2& geom2) {
-    // Geometries should know how to intersect each other
-    return geom1.intersects(geom2);
+/// Flag to tell queries to treat the indexed elements by their bounding boxes.
+class BoundingBoxGeometry{};
+
+/// Flag to tell queries to consider the 'exact' shape of the indexed elements.
+class ExactGeometry{};
+
+template<class Shape>
+constexpr bool is_sphere_or_cylinder() {
+    return std::is_convertible<Shape*, Sphere*>::value ||
+           std::is_convertible<Shape*, Cylinder*>::value;
 }
+
+template<class Shape>
+constexpr bool is_box_sphere_or_cylinder() {
+    return std::is_convertible<Shape*, Box3D *>::value ||
+           is_sphere_or_cylinder<Shape>();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Bounding Box Geometry
+///////////////////////////////////////////////////////////////////////////////
+inline bool geometry_intersects(const Box3D& query_shape,
+                                const Box3D& element_shape,
+                                BoundingBoxGeometry) {
+    return bg::intersects(element_shape, query_shape);
+}
+
+template<class QueryShape,
+    std::enable_if_t<is_sphere_or_cylinder<QueryShape>(), int> SFINAE = 0
+>
+inline bool geometry_intersects(const QueryShape& query_shape,
+                                const Box3D& element_shape,
+                                BoundingBoxGeometry) {
+    return query_shape.intersects(element_shape);
+}
+
+template<class QueryShape,
+         class ElementShape,
+         std::enable_if_t<
+             is_box_sphere_or_cylinder<QueryShape>() &&
+             is_sphere_or_cylinder<ElementShape>(),
+             int> SFINAE = 0
+>
+inline bool geometry_intersects(const QueryShape& query_shape,
+                                const ElementShape& element_shape,
+                                BoundingBoxGeometry geo) {
+    return geometry_intersects(query_shape, element_shape.bounding_box(), geo);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Exact Geometry
+///////////////////////////////////////////////////////////////////////////////
+inline bool geometry_intersects(const Box3D& query_shape,
+                                const Box3D& element_shape,
+                                ExactGeometry) {
+    return bg::intersects(query_shape, element_shape);
+}
+
+template<class ElementShape,
+    std::enable_if_t<is_sphere_or_cylinder<ElementShape>(), int> SFINAE = 0
+>
+inline bool geometry_intersects(const Box3D& query_shape,
+                                const ElementShape& element_shape,
+                                ExactGeometry) {
+    return element_shape.intersects(query_shape);
+}
+
+template<class QueryShape,
+    class ElementShape,
+    std::enable_if_t<
+        is_sphere_or_cylinder<QueryShape>() &&
+        is_box_sphere_or_cylinder<ElementShape>(),
+        int> SFINAE = 0
+>
+inline bool geometry_intersects(const QueryShape& query_shape,
+                                const ElementShape& element_shape,
+                                ExactGeometry) {
+    return query_shape.intersects(element_shape);
+}
+
 
 inline std::ostream& operator<<(std::ostream& os, const Sphere& s);
 inline std::ostream& operator<<(std::ostream& os, const Cylinder& c);

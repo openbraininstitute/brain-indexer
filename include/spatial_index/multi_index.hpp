@@ -323,7 +323,7 @@ class MultiIndexTree: public IndexTreeMixin<MultiIndexTree<T>, T>,
                    const UsageRateCacheParams& params);
 
     /// \brief Checks whether a given shape intersects any object in the tree
-    template <typename ShapeT>
+    template <typename GeometryMode=BoundingBoxGeometry, typename ShapeT>
     inline bool is_intersecting(const ShapeT& shape) const;
 
 
@@ -331,7 +331,7 @@ class MultiIndexTree: public IndexTreeMixin<MultiIndexTree<T>, T>,
      * \brief Finds & return objects which intersect. To be used mainly with id-less objects
      * \returns A vector of references to tree objects
      */
-    template <typename ShapeT>
+    template <typename GeometryMode=BoundingBoxGeometry, typename ShapeT>
     inline auto find_intersecting_objs(const ShapeT& shape) const -> std::vector<value_type>;
 
     /** \brief Total number of index elements.

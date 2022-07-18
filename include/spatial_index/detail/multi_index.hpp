@@ -351,42 +351,46 @@ MultiIndexTree<T>::MultiIndexTree(
 
 
 template <typename T>
-template <typename ShapeT>
+template <typename GeometryMode, typename ShapeT>
 inline bool
 MultiIndexTree<T>::is_intersecting(const ShapeT& shape) const {
     auto inner_sweep = [&shape](const auto &tree) {
-        auto it = tree.qbegin(bgi::intersects(bgi::indexable<ShapeT>{}(shape)));
-        for(; it != tree.qend(); ++it) {
-            if(geometry_intersects(shape, *it)) {
-                return true;
-            }
-        }
+        auto it = tree.qbegin(
+            bgi::intersects(bgi::indexable<ShapeT>{}(shape))
+            && bgi::satisfies([&shape](const auto& v) {
+                return geometry_intersects(shape, v, GeometryMode{});
+            })
+        );
 
-        return false;
+        return it != tree.qend();
     };
 
-    auto it = this->top_rtree.qbegin(bgi::intersects(bgi::indexable<ShapeT>{}(shape)));
+    auto it = this->top_rtree.qbegin(
+        bgi::intersects(bgi::indexable<ShapeT>{}(shape))
+        && bgi::satisfies([&shape](const auto& v) {
+            return geometry_intersects(shape, v, GeometryMode{});
+        })
+    );
     for(; it != this->top_rtree.qend(); ++it) {
-        if (geometry_intersects(shape, *it)) {
-            const auto &tree = this->load_subtree(*it);
+        const auto &tree = this->load_subtree(*it);
 
-            if(inner_sweep(tree)) {
-                return true;
-            }
+        if(inner_sweep(tree)) {
+            return true;
         }
     }
+
     return false;
 }
 
 
 template <typename T>
-template <typename ShapeT>
+template <typename GeometryMode, typename ShapeT>
 inline auto
 MultiIndexTree<T>::find_intersecting_objs(const ShapeT& shape) const
     -> std::vector<value_type> {
 
     std::vector<value_type> results;
-    this->find_intersecting(shape, std::back_inserter(results));
+    this->template find_intersecting<GeometryMode>(shape, std::back_inserter(results));
     return results;
 }
 
