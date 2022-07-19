@@ -53,10 +53,10 @@ inline void SpatialGrid<T, VoxelLen>::serialize(Archive& ar, const unsigned int)
 template <typename T, int VoxelLen>
 inline SpatialGrid<T, VoxelLen>&
 SpatialGrid<T, VoxelLen>::operator+=(const SpatialGrid<T, VoxelLen>& rhs) {
-    for (const auto& item : rhs.grid_) {
-        auto& v = grid_[item.first];
-        v.reserve(v.size() + item.second.size());
-        v.insert(v.end(), item.second.begin(), item.second.end());
+    for (const auto& [i, w] : rhs.grid_) {
+        auto& v = grid_[i];
+        v.reserve(v.size() + w.size());
+        v.insert(v.end(), w.begin(), w.end());
     }
     return *this;
 }
@@ -67,14 +67,14 @@ inline bool SpatialGrid<T, VoxelLen>::operator==(const SpatialGrid<T, VoxelLen>&
     if (grid_.size() != rhs.grid_.size()) {
         return false;
     }
-    for (const auto& rhs_item : rhs.grid_) {
-        const auto& lhs_item = grid_.find(rhs_item.first);
-        if (lhs_item == grid_.end()) {
+    for (const auto& [i, w] : rhs.grid_) {
+        const auto& it = grid_.find(i);
+        if (it == grid_.end()) {
             return false;
         }
         // We delegate comparison to the std::vector implementation
         // Elements must implement operator==
-        return lhs_item->second == rhs_item.second;
+        return it->second == w;
     }
     return true;
 }
@@ -85,10 +85,9 @@ inline std::ostream& operator<<(std::ostream& os,
                                 const spatial_index::SpatialGrid<T, VoxelLen>& obj) {
     using spatial_index::operator<<;
     os << boost::format("SpatialGrid<%d>({\n") % VoxelLen;
-    for (const auto& item : obj.items()) {
-        const auto& idx = item.first;
+    for (const auto& [idx, entries] : obj.items()) {
         os << boost::format(" (%d %d %d): [\n") % idx[0] % idx[1] % idx[2];
-        for (const auto& entry : item.second) {
+        for (const auto& entry : entries) {
             os << "    " << entry << '\n';
         }
         os << " ],\n";
@@ -102,9 +101,8 @@ inline void SpatialGrid<T, VoxelLen>::create_indexes_disk(const std::string& loc
     using IndexT = IndexTree<T>;
     detail::IndexDB<IndexT> disk_index_(location, detail::OpenMode::WriteTruncate,
                                         VoxelLen);
-    for (const auto& voxel : grid_) {
-        disk_index_.store(voxel.first,
-                          IndexT(voxel.second.cbegin(), voxel.second.cend()));
+    for (const auto& [i, entries]: grid_) {
+        disk_index_.store(i, IndexT(entries.cbegin(), entries.cend()));
     }
 }
 

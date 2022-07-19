@@ -47,19 +47,23 @@ inline Point3D get_centroid(const boost::variant<VariantT...>& mixed_geometry) {
 // In that case the centroid will be returned as the first endpoint.
 
 inline Point3D get_endpoint(const Soma& sphere, bool first) {
-    if (first) 
+    if (first) {
         return sphere.centroid;
-    else
+    }
+    else {
         return Point3D{std::numeric_limits<CoordType>::quiet_NaN(),
                        std::numeric_limits<CoordType>::quiet_NaN(),
                        std::numeric_limits<CoordType>::quiet_NaN()};
+    }
 }
 
 inline Point3D get_endpoint(const Segment& seg, bool first) {
-    if (first)
+    if (first) {
         return seg.p1;
-    else
+    }
+    else {
         return seg.p2;
+    }
 }
 
 

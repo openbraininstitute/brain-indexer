@@ -161,20 +161,22 @@ void DistributedSortTileRecursion<Value, GetCoordinate, dim>::apply(
     const DistributedSTRParams& str_params,
     MPI_Comm mpi_comm) {
 
-    util::check_signals();
-    DistributedMemorySorter<Value, Key>::sort_and_balance(values, mpi_comm);
+    if constexpr (dim < 3) {
+        util::check_signals();
+        DistributedMemorySorter<Value, Key>::sort_and_balance(values, mpi_comm);
 
-    if(dim == 2) {
-        return;
+        if(dim == 2) {
+            return;
+        }
+
+        // 1. Create a comm for everyone in this slice.
+        auto k_rank_in_slice = mpi::rank(mpi_comm);
+        int color = k_rank_in_slice / str_params.n_ranks_in_subslice<dim>();
+        auto sub_comm = mpi::comm_split(mpi_comm, color, k_rank_in_slice);
+
+        // 2. Let them do STR.
+        STR<dim+1>::apply(values, str_params, *sub_comm);
     }
-
-    // 1. Create a comm for everyone in this slice.
-    auto k_rank_in_slice = mpi::rank(mpi_comm);
-    int color = k_rank_in_slice / str_params.n_ranks_in_subslice<dim>();
-    auto sub_comm = mpi::comm_split(mpi_comm, color, k_rank_in_slice);
-
-    // 2. Let them do STR.
-    STR<dim+1>::apply(values, str_params, *sub_comm);
 }
 
 

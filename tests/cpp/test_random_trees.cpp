@@ -104,16 +104,13 @@ static void check_queries_against_geometric_primitives(
         intersecting[id] = false;
     }
 
-    for(const auto &element : found) {
+    for(const auto& element : found) {
         auto id = get_id(element);
         intersecting[id] = true;
     }
 
-    for(const auto &kv : intersecting) {
-        auto id = kv.first;
-        auto actual = kv.second;
+    for(const auto& [id, actual] : intersecting) {
         const auto &element = elements.at(id);
-
         auto expected = geometry_intersects(query_shape, element, GeometryMode{});
 
         if(actual != expected) {

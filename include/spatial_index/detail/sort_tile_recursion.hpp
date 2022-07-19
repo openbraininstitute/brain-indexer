@@ -60,32 +60,33 @@ void SerialSortTileRecursion<Value, GetCoordinate, dim>::apply(std::vector<Value
                                                                size_t values_end,
                                                                const SerialSTRParams& str_params) {
 
-    util::check_signals();
-    std::sort(
-        values.data() + values_begin,
-        values.data() + values_end,
-        [](const Value &a, const Value &b) {
-            return Key::compare(a, b);
+    if constexpr(dim < 3) {
+        util::check_signals();
+        std::sort(
+            values.data() + values_begin,
+            values.data() + values_end,
+            [](const Value &a, const Value &b) {
+                return Key::compare(a, b);
+            }
+        );
+
+        auto n_parts_per_dim = str_params.n_parts_per_dim;
+
+        for (size_t i = 0; i < n_parts_per_dim[dim]; ++i) {
+            auto range = util::balanced_chunks(values_end - values_begin,
+                                               n_parts_per_dim[dim],
+                                               i);
+
+            auto subvalues_begin = std::min(values_begin + range.low, values_end);
+            auto subvalues_end = std::min(values_begin + range.high, values_end);
+
+            STR<dim+1>::apply(
+                values,
+                subvalues_begin,
+                subvalues_end,
+                str_params
+            );
         }
-    );
-
-    auto n_parts_per_dim = str_params.n_parts_per_dim;
-
-    for (size_t i = 0; i < n_parts_per_dim[dim]; ++i) {
-        auto range = util::balanced_chunks(values_end - values_begin,
-                                           n_parts_per_dim[dim],
-                                           i
-        );
-
-        auto subvalues_begin = std::min(values_begin + range.low, values_end);
-        auto subvalues_end = std::min(values_begin + range.high, values_end);
-
-        STR<dim+1>::apply(
-            values,
-            subvalues_begin,
-            subvalues_end,
-            str_params
-        );
     }
 }
 

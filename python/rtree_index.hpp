@@ -463,7 +463,7 @@ inline void add_str_for_streamable_bindings(py::class_<Class>& c) {
 template<typename Class>
 inline void add_len_for_size_bindings(py::class_<Class>& c) {
     c
-    .def("__len__", &Class::size);
+    .def("__len__", [](const Class& obj) { return obj.size(); });
 }
 
 /// Generic IndexTree bindings. It is a common base between full in-memory
@@ -591,7 +591,8 @@ inline py::class_<Class> create_IndexTree_bindings(py::module& m,
         )"
     )
 
-    .def("dump", &Class::dump,
+    .def("dump",
+        [](const Class& obj, const std::string& filename) { obj.dump(filename); },
         R"(
         Save the spatial index tree to a file on disk.
 
@@ -614,13 +615,24 @@ inline py::class_<Class> create_IndexTree_bindings(py::module& m, const char* cl
     using MemDiskManager = si::MemDiskPtr<Class>;
 
     return generic_IndexTree_bindings<T, SomaT, Class, MemDiskManager>(m, class_name)
-    .def_static("open", &MemDiskManager::open,
+    .def_static("open",
+        [](const std::string& filename) {
+            return MemDiskManager::open(filename);
+        },
         py::return_value_policy::take_ownership,
-        "Opens a SpatialIndex from a memory mapped file."
+        R"(
+        Opens a SpatialIndex from a memory mapped file.
+
+        Args:
+            filename(str): The path of the memory mapped file.
+        )"
     )
 
     /// Build tree allocated in disk
-    .def_static("create", &MemDiskManager::create,
+    .def_static("create",
+        [](const std::string& filename, size_t size_mb, bool close_shrink) {
+            return MemDiskManager::create(filename, size_mb, close_shrink);
+        },
         py::return_value_policy::take_ownership,
         R"(
         Creates a SpatialIndex where memory is mapped to a file.
@@ -661,11 +673,11 @@ inline void create_Synapse_bindings(py::module& m) {
             "The Synapse id"
         )
         .def_property_readonly("post_gid",
-            &Class::post_gid,
+            [](Class& obj) { return obj.post_gid(); },
             "The post-synaptic Neuron id (gid)"
         )
         .def_property_readonly("pre_gid",
-            &Class::pre_gid,
+            [](Class& obj) { return obj.pre_gid(); },
             "The pre-synaptic Neuron id (gid)"
         )
     ;

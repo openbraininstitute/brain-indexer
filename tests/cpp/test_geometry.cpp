@@ -83,9 +83,8 @@ BOOST_AUTO_TEST_CASE(ProjectPointOntoSegment) {
         { { 3.0,  3.0,  0.0 }, p2 }
     };
 
-    for(const auto &tc : test_cases) {
-        const auto &expected = tc.second;
-        auto actual = project_point_onto_segment(p1, d, tc.first);
+    for(const auto& [x, expected] : test_cases) {
+        auto actual = project_point_onto_segment(p1, d, x);
 
         auto eps = std::numeric_limits<CoordType>::epsilon();
         auto delta = actual - expected;
@@ -135,11 +134,7 @@ BOOST_AUTO_TEST_CASE(SelectedCases) {
     register_pair(Sphere{{1.0, 2.0, 3.0}, 3.0}, Point3D{1.0, 5.0, 3.0}, 1);
     register_pair(Sphere{{1.0, 2.0, 3.0}, 3.0}, Point3D{1.0, 2.0, 6.0}, 2);
 
-    for(const auto & tc: test_cases) {
-        const auto &s = std::get<0>(tc);
-        const auto &x = std::get<1>(tc);
-        auto expected = std::get<2>(tc);
-
+    for(const auto& [s, x, expected]: test_cases) {
         BOOST_CHECK_MESSAGE(
             s.contains(x) == expected,
             s << ", " << Point3Dx(x) << ", " << expected
@@ -199,11 +194,7 @@ BOOST_AUTO_TEST_CASE(SelectedCases) {
         Point3D{0.125, 3.0, 4.0},
         1);
 
-    for(const auto & tc: test_cases) {
-        const auto& c = std::get<0>(tc);
-        const auto& x = std::get<1>(tc);
-        auto expected = std::get<2>(tc);
-
+    for(const auto& [c, x, expected] : test_cases) {
         BOOST_CHECK_MESSAGE(
             c.contains(x) == expected,
             c << ", " << Point3Dx(x) << ", " << expected
@@ -250,11 +241,7 @@ BOOST_AUTO_TEST_CASE(SelectedCases) {
         }
     };
 
-    for(const auto & tc : test_cases) {
-        const auto &s1 = std::get<0>(tc);
-        const auto &s2 = std::get<1>(tc);
-        auto expected = std::get<2>(tc);
-
+    for(const auto& [s1, s2, expected] : test_cases) {
         BOOST_CHECK_MESSAGE(
             s1.intersects(s2) == expected,
             s1 << ", " << s2 << ", " << expected
@@ -313,13 +300,7 @@ BOOST_AUTO_TEST_CASE(SelectedCases) {
     // Sphere at front, lower edge of the box
     register_pair(generic_box, Sphere{{0.5, -3.5, -8.0}, 5.0});
 
-    for(const auto & tc : test_cases) {
-        const auto &b = std::get<0>(tc);
-        const auto &s = std::get<1>(tc);
-        auto expected = std::get<2>(tc);
-
-        // TODO update with message once `operator<<(const Box3D &)`
-        // has been merged.
+    for(const auto& [b, s, expected]: test_cases) {
         BOOST_CHECK(s.intersects(b) == expected);
         BOOST_CHECK(Box3Dx{b}.intersects(s) == expected);
     }
@@ -401,11 +382,7 @@ BOOST_AUTO_TEST_CASE(SelectedCases) {
         cyl_center + dir
     ) << std::endl;
 
-    for(const auto & tc : test_cases) {
-        const auto &b = std::get<0>(tc);
-        const auto &c = std::get<1>(tc);
-        auto expected = std::get<2>(tc);
-
+    for(const auto& [b, c, expected]: test_cases) {
         // TODO update with message once `operator<<(const Box3D &)`
         // has been merged.
         BOOST_CHECK(c.intersects(b) == expected);
@@ -488,12 +465,8 @@ BOOST_AUTO_TEST_CASE(SelectedCases) {
         }
     };
 
-    // TODO Needs C++17 modernization.
-    for(const auto & tc: test_cases) {
-        const auto & s = std::get<0>(tc);
-        const auto & c = std::get<1>(tc);
+    for(const auto& [s, c, expected]: test_cases) {
         auto rc = Cylinder{c.p2, c.p1, c.radius};
-        auto expected = std::get<2>(tc);
 
         BOOST_CHECK_MESSAGE(
             c.intersects(s) == expected,
@@ -531,7 +504,7 @@ BOOST_AUTO_TEST_CASE(NoBoundingBoxOverlap) {
 
     auto s = Sphere{{-3.0, -3.0, -3.0}, 4.0};
 
-    for(const auto & c: cylinders) {
+    for(const auto& c : cylinders) {
         BOOST_CHECK(bg::intersects(c.bounding_box(), s.bounding_box()) == false);
         BOOST_CHECK(s.intersects(c) == false);
         BOOST_CHECK(c.intersects(s) == false);
@@ -629,11 +602,7 @@ BOOST_AUTO_TEST_CASE(SelectedCases) {
     );
 
 
-    for(const auto & tc: test_cases) {
-        const auto &c1 = std::get<0>(tc);
-        const auto &c2 = std::get<1>(tc);
-        auto expected = std::get<2>(tc);
-
+    for(auto [c1, c2, expected] : test_cases) {
         auto rc1 = Cylinder{c1.p2, c1.p1, c1.radius};
         auto rc2 = Cylinder{c2.p2, c2.p1, c2.radius};
 

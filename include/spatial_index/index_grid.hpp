@@ -36,8 +36,9 @@ class SpatialGrid {
      */
     inline void insert(const value_type* begin, const value_type* end) {
         GridPlacementHelper<T> placer{grid_};
-        while (begin < end)
+        while (begin < end) {
             placer. template insert<VoxelLen>(*begin++);
+        }
     }
 
     /** \brief Insert a range of elements defined by begin-end pointers

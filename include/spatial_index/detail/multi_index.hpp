@@ -182,10 +182,7 @@ UsageRateCache<Storage>::MetaData::on_evict(size_t query_count) {
 template <class Storage>
 UsageRateCache<Storage>::~UsageRateCache() {
     nlohmann::json j;
-    for(const auto &kv : meta_data) {
-        const auto & id = kv.first;
-        const auto & md = kv.second;
-
+    for(const auto &[id, md] : meta_data) {
         j.push_back({
             { "id", id },
             { "access_count", md.access_count() },
@@ -218,7 +215,7 @@ UsageRateCache<Storage>::load_subtree(const SubtreeID& subtree_id, size_t query_
         return subtrees[id] = storage.load_subtree(id);
     }
 
-    meta_data[found->first].on_query();
+    meta_data[id].on_query();
     return found->second;
 }
 
@@ -226,8 +223,8 @@ template <class Storage>
 inline size_t
 UsageRateCache<Storage>::cached_elements() const {
     size_t n_cached_elements = 0ul;
-    for(const auto &kv: subtrees) {
-        n_cached_elements += kv.second.size();
+    for(const auto &[_, subtree] : subtrees) {
+        n_cached_elements += subtree.size();
     }
 
     return n_cached_elements;
@@ -272,8 +269,8 @@ UsageRateCache<Storage>::subtree_ids_sorted_by_usage_rate(size_t query_count) {
     std::vector<size_t> loaded_subtree_ids;
     loaded_subtree_ids.reserve(subtrees.size());
 
-    for (const auto& kv: subtrees) {
-        loaded_subtree_ids.push_back(kv.first);
+    for (const auto& [id, _]: subtrees) {
+        loaded_subtree_ids.push_back(id);
     }
 
     std::sort(loaded_subtree_ids.begin(),

@@ -20,32 +20,13 @@ struct STRKey {
         auto xa = STRKey<GetCoordinate, dim>::apply(a);
         auto xb = STRKey<GetCoordinate, dim>::apply(b);
 
-        // TODO modernize with C++17 constexpr if
-        if(xa == xb) {
-            return STRKey<GetCoordinate, dim+1>::compare(a, b);
-        }
-        else {
+        if constexpr (dim+1 < 3) {
+            return xa == xb ? STRKey<GetCoordinate, dim+1>::compare(a, b) : xa < xb;
+        } else {
             return xa < xb;
         }
     }
 };
-
-template<class GetCoordinate>
-struct STRKey<GetCoordinate, 2> {
-    template<class Value>
-    static auto apply(const Value &a) {
-        return GetCoordinate::template apply<2>(a);
-    }
-
-    template<class Value>
-    static auto compare(const Value &a, const Value &b) {
-        auto xa = STRKey<GetCoordinate, 2>::apply(a);
-        auto xb = STRKey<GetCoordinate, 2>::apply(b);
-
-        return xa < xb;
-    }
-};
-
 
 
 /** \brief Parameters defining the Sort Tile Recursion.
@@ -151,15 +132,6 @@ public:
                       size_t values_begin,
                       size_t values_end,
                       const SerialSTRParams &str_params);
-};
-
-template<class Value, typename GetCoordinate>
-class SerialSortTileRecursion<Value, GetCoordinate, 3ul> {
-public:
-    template<class ...Args>
-    static void apply(Args&& ...) {
-        // Only here to break the infinite recursion.
-    }
 };
 
 /** \brief Single threaded Sort Tile Recursion.

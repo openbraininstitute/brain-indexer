@@ -98,9 +98,8 @@ inline Point3Dx project_point_onto_line(
     return base + (x_dot_dir * dir) / dir_dot_dir;
 }
 
-// TODO remove this once C++17 is available.
 inline CoordType clamp(CoordType x, CoordType low, CoordType high) {
-    return std::min(std::max(low, x), high);
+    return std::clamp(x, low, high);
 }
 
 inline Point3D clamp(const Point3D &x, const Point3D &low, const Point3D &high) {

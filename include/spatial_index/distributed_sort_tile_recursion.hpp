@@ -70,16 +70,6 @@ public:
 };
 
 
-template<typename Value, typename GetCoordinate>
-class DistributedSortTileRecursion<Value, GetCoordinate, 3ul> {
-public:
-    template<class ...Args>
-    static void apply(Args&& ...) {
-        // Only here to break the infinite recursion.
-    }
-};
-
-
 /** \brief  MPI-parallel Sort Tile Recursion.
  *
  * \sa `DistributedSortTileRecursion`.

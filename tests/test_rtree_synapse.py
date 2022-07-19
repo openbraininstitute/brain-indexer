@@ -33,6 +33,7 @@ def _test_rtree(rtree):
                                            expected_ids,
                                            expected_post_gids,
                                            expected_pre_gids):
+
         assert obj.id == id_ and obj.post_gid == post_gid and obj.pre_gid == pre_gid, \
             (obj.id, obj.post_gid, obj.pre_gid, "!=", id_, post_gid, pre_gid)
 

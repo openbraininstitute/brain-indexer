@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(MultiIndexLoad) {
     auto params = UsageRateCacheParams(20ul);
     auto storage = MockStorage(subtree_state);
 
-    auto cache = UsageRateCache<MockStorage>(params, storage);
+    auto cache = UsageRateCache(params, storage);
 
     cache.load_subtree(SubtreeID{42ul, 4ul}, /* query_count */ 0ul);
     cache.load_subtree(SubtreeID{42ul, 4ul}, /* query_count */ 0ul);
