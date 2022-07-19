@@ -4,7 +4,6 @@
 
 import h5py
 import os.path
-import sys
 from libsonata import Selection
 from spatial_index import SynapseIndexBuilder
 try:
@@ -62,12 +61,3 @@ def test_syn_index():
     assert aggregated[159] == 2
     assert aggregated[473] == 4
     assert total_in_region == sum(aggregated.values())
-
-
-if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        EDGE_FILE = sys.argv[1]
-    if not os.path.exists(EDGE_FILE):
-        print("EDGE file is not available:", EDGE_FILE)
-        sys.exit()
-    test_syn_index()

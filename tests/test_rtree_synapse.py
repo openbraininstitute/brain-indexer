@@ -68,10 +68,3 @@ def test_synapse_save_restore():
     rtree2 = SynapseIndex("test_syntree.save")
 
     _test_rtree(rtree2)
-
-
-if __name__ == "__main__":
-    test_synapse_query_aggregate()
-    print("Test aggregated_per_gid PASSED!")
-    test_synapse_save_restore()
-    print("Test save-restore PASSED!")

@@ -53,6 +53,7 @@ find_package(Threads REQUIRED QUIET)
 # MPI
 if(SI_MPI)
     find_package(MPI REQUIRED)
+    include(CMake/mpi_launcher.cmake)
 endif()
 
 # JSON

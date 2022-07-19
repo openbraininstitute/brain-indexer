@@ -45,14 +45,3 @@ def test_iadd():
               [3, 4])
     c1 += c2
     print(c1)
-
-
-def run_tests():
-    test_insert_check_size()
-    test_insert_array()
-    test_serialization()
-    test_iadd()
-
-
-if __name__ == "__main__":
-    run_tests()

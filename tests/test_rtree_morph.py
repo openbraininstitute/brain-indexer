@@ -170,22 +170,3 @@ def test_add_neuron_exc_without_soma(points, radius, offsets, exc_msg):
     with pytest.raises(ValueError) as excinfo:
         rtree.add_neuron(1, points, radius, offsets, has_soma=False)
     assert exc_msg in str(excinfo.value)
-
-
-if __name__ == "__main__":
-    test_rtree_sphere.run_tests()
-
-    test_morphos_insert()
-    print("[PASSED] MTest test_morphos_insert")
-
-    test_bulk_neuron_add()
-    print("[PASSED] MTest test_bulk_neuron_add")
-
-    test_add_neuron_with_soma_and_toString()
-    print("[PASSED] MTest test_add_neuron_with_soma")
-
-    test_add_neuron_without_soma_and_toString()
-    print("[PASSED] MTest test_add_neuron_without_soma")
-
-    test_endpoints_retrieval()
-    print("[PASSED] MTest test_endpoints_retrieval")

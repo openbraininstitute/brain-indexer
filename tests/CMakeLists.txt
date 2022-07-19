@@ -15,7 +15,7 @@ endfunction()
 
 function(SI_MPI_UNIT_TEST test_src)
     si_unit_test_build(${test_src})
-    add_test(NAME ${test_src} COMMAND mpirun -np 4 "${CMAKE_CURRENT_BINARY_DIR}/${test_src}")
+    add_test(NAME ${test_src} COMMAND ${${PROJECT}_MPIEXEC} ${${PROJECT}_MPIEXEC_NPROC_FLAG} 4 "${CMAKE_CURRENT_BINARY_DIR}/${test_src}")
 endfunction()
 
 function(SI_CPP_EXAMPLE test_src)
@@ -46,25 +46,3 @@ endif()
 
 si_cpp_example("test_clean")
 si_cpp_example("disk_mem_tree")
-
-
-# Python tests
-if(NOT SI_PYTHON_BINDINGS)
-    return()
-endif()
-
-function(SI_PYTHON_TEST test_file)
-    # We dont want to deal with python setup.py here, so our tests have a __main__
-    add_test(NAME "Python_${test_file}"
-             COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/${test_file}")
-    set_tests_properties("Python_${test_file}" PROPERTIES ENVIRONMENT
-                         PYTHONPATH=${PROJECT_SOURCE_DIR}:$ENV{PYTHONPATH})
-endfunction()
-
-
-si_python_test("test_rtree_sphere.py")
-si_python_test("test_rtree_morph.py")
-si_python_test("test_rtree_point.py")
-si_python_test("test_grid.py")
-si_python_test("test_index_mvd.py")
-si_python_test("test_validation_FLAT.py")

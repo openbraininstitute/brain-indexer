@@ -66,21 +66,3 @@ def test_print_rtree():
         '])')
     str_result = str(p)
     assert str_result == str_expect
-
-
-def run_tests():
-    test_add_points()
-    print("[PASSED] Test test_add_points()")
-
-    test_init_points()
-    print("[PASSED] Test test_init_points()")
-
-    test_init_points_with_ids()
-    print("[PASSED] Test test_init_points_with_ids()")
-
-    test_print_rtree()
-    print("[PASSED] Test test_print_rtree()")
-
-
-if __name__ == "__main__":
-    run_tests()

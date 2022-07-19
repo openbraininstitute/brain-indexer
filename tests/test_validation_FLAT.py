@@ -6,6 +6,7 @@
 """
 
 import numpy as np
+import logging
 import os
 import sys
 from spatial_index import MorphIndexBuilder
@@ -111,15 +112,7 @@ def test_multi_index_validation_FLAT():
 
 
 if __name__ == "__main__":
-    import logging
-    logging.basicConfig(level=logging.DEBUG)
-    if len(sys.argv) > 1 and sys.argv[1] == '--mem-file':
-        Options.use_mem_mapped_file = True
-
     run_multi_index = len(sys.argv) > 1 and sys.argv[1] == '--run-multi-index'
-
-    if not run_multi_index:
-        test_validation_FLAT()
 
     if run_multi_index:
         test_multi_index_validation_FLAT()

@@ -3,7 +3,6 @@
 
     Test indexing circuits, from mvd and morphology libraries
 """
-import logging
 import os
 
 import numpy.testing as nptest
@@ -137,10 +136,3 @@ def test_sonata_selection():
     assert len(obj_in_region) == 21
     for obj in obj_in_region:
         assert 13 <= obj.centroid[0] <= 22
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    test_serial_exec()
-    test_sonata_index()
-    test_memory_mapped_file_morph_index()

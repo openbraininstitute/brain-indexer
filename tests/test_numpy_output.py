@@ -62,10 +62,3 @@ def test_numpy_output_seg():
         assert np.array_equal(obj.segment_id, np_out['segment_id'][i])
         assert np.array_equal(obj.endpoints[0], np_out['endpoint1'][i])
         assert np.array_equal(obj.endpoints[1], np_out['endpoint2'][i])
-
-
-if __name__ == "__main__":
-    import logging
-    logging.basicConfig(level=logging.DEBUG)
-    test_numpy_output_syn()
-    test_numpy_output_seg()
