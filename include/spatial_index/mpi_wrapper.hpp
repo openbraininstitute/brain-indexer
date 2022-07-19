@@ -36,9 +36,9 @@
 
 namespace spatial_index { namespace mpi {
 
-int rank(MPI_Comm comm);
-int size(MPI_Comm comm);
-void abort(const std::string &msg, MPI_Comm comm = MPI_COMM_WORLD, int exit_code=-1);
+inline int rank(MPI_Comm comm);
+inline int size(MPI_Comm comm);
+inline void abort(const std::string &msg, MPI_Comm comm = MPI_COMM_WORLD, int exit_code=-1);
 
 template<class T>
 inline MPI_Datatype datatype();
@@ -67,7 +67,7 @@ inline MPI_Datatype datatype<size_t>() {
  * Note, the offsets are length `counts.size() + 1`, i.e. the
  * last element in `offsets` is the size of the buffer.
  */
-std::vector<int> offsets_from_counts(const std::vector<int> & counts);
+inline std::vector<int> offsets_from_counts(const std::vector<int> & counts);
 
 
 /** \brief Check that these counts won't lead to `int` overflow.
@@ -79,17 +79,17 @@ std::vector<int> offsets_from_counts(const std::vector<int> & counts);
  *  This function checks that with these counts, no integer overflow
  *  will happen.
  */
-bool check_counts_are_safe(const std::vector<int> &counts);
+inline bool check_counts_are_safe(const std::vector<int> &counts);
 
 /** \brief Throws if the counts aren't safe.
  *  \sa `check_counts_are_safe`.
  */
-void assert_counts_are_safe(const std::vector<int> &counts, const std::string &error_id);
+inline void assert_counts_are_safe(const std::vector<int> &counts, const std::string &error_id);
 
 
 /** \brief Gather counts for an `MPI_Gatherv`.
  */
-std::vector<int> gather_counts(size_t exact_count, MPI_Comm comm);
+inline std::vector<int> gather_counts(size_t exact_count, MPI_Comm comm);
 
 
 /** \brief Exchange/Allgather `local_count`.
@@ -102,7 +102,7 @@ std::vector<int> gather_counts(size_t exact_count, MPI_Comm comm);
  * function can be used to communicate the size of the local part to all other ranks and receive the
  * size of their local parts.
  */
-std::vector<size_t> exchange_local_counts(size_t local_count, MPI_Comm comm);
+inline std::vector<size_t> exchange_local_counts(size_t local_count, MPI_Comm comm);
 
 
 /** \brief Compute counts for an `MPI_Alltoallv`.
@@ -128,7 +128,7 @@ std::vector<size_t> exchange_local_counts(size_t local_count, MPI_Comm comm);
  *   are checked with `assert_counts_are_safe` to protect against
  *   `int` overflow in later routines.
  */
-std::vector<int>
+inline std::vector<int>
 exchange_counts(const std::vector<int> &send_counts, MPI_Comm comm);
 
 
@@ -153,7 +153,7 @@ exchange_counts(const std::vector<int> &send_counts, MPI_Comm comm);
  *
  * Useful routines: `mpi::exchange_counts`, `mpi::offsets_from_counts`.
  */
-std::vector<int>
+inline std::vector<int>
 compute_balance_send_counts(const std::vector<size_t>& counts_per_rank, int mpi_rank);
 
 
@@ -261,7 +261,7 @@ void comm_free(MPI_Comm &comm);
  *               that they are sorted w.r.t. `order`. Or put more simply the
  *               new MPI ranks will be in the order `order` suggests.
  */
-Comm comm_split(MPI_Comm comm, int color, int order);
+inline Comm comm_split(MPI_Comm comm, int color, int order);
 
 
 /** \brief Create a new comm with the desired size.
@@ -272,7 +272,7 @@ Comm comm_split(MPI_Comm comm, int color, int order);
  *  Common usecase: For testing purposes one may want to one use
  *  the first few MPI ranks and ignore the rest.
  */
-Comm comm_shrink(MPI_Comm old_comm, int n_ranks);
+inline Comm comm_shrink(MPI_Comm old_comm, int n_ranks);
 
 
 /// A minimal RAII-style wrapper for `MPI_Datatype`.

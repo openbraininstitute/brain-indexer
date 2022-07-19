@@ -67,24 +67,23 @@ endif()
 #
 set(SI_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 
-add_library(SpatialIndex SHARED)
-target_include_directories(SpatialIndex PUBLIC ${SI_INCLUDE_DIR})
+add_library(SpatialIndex INTERFACE)
+target_include_directories(SpatialIndex INTERFACE ${SI_INCLUDE_DIR})
 target_link_libraries(SpatialIndex
-  PUBLIC
+  INTERFACE
     Boost::boost
     Boost::serialization
     Boost::filesystem
     Threads::Threads
     nlohmann_json::nlohmann_json
 )
-target_compile_definitions(SpatialIndex PUBLIC "-DBOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL")
+target_compile_definitions(SpatialIndex INTERFACE "-DBOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL")
 
 if(SI_MPI)
-  target_link_libraries(SpatialIndex PUBLIC MPI::MPI_CXX)
-  target_compile_definitions(SpatialIndex PUBLIC "-DSI_MPI=1")
+  target_link_libraries(SpatialIndex INTERFACE MPI::MPI_CXX)
+  target_compile_definitions(SpatialIndex INTERFACE "-DSI_MPI=1")
 endif()
 
-add_subdirectory(src)
 
 #
 # Py-bindings with PyBind11
