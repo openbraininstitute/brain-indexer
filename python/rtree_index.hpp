@@ -1159,6 +1159,7 @@ inline void create_MorphMultiIndex_bindings(py::module& m, const char* class_nam
     );
 
     add_IndexTree_query_bindings(c);
+    add_MorphIndex_find_intersecting_window_np<Class>(c);
 
     add_len_for_size_bindings(c);
 }
