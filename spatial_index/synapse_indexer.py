@@ -33,9 +33,9 @@ class SynapseIndexBuilder(ChunkedProcessingMixin):
     N_ELEMENTS_CHUNK = 1  # override from ChunkedProcessingMixin
     MAX_SYN_COUNT_RANGE = 100_000
 
-    def __init__(self, sonata_edges, selection, mem_map_props: DiskMemMapProps = None):
-        if mem_map_props:
-            self.index = core.SynapseIndexMemDisk.create(*mem_map_props.args)
+    def __init__(self, sonata_edges, selection, disk_mem_map: DiskMemMapProps = None):
+        if disk_mem_map:
+            self.index = core.SynapseIndexMemDisk.create(*disk_mem_map.args)
         else:
             self.index = core.SynapseIndex()
         self.edges = sonata_edges

@@ -151,29 +151,29 @@ def _parse_mem_map_options(options: dict) -> DiskMemMapProps:
 
 
 def _run_spatial_index_nodes(morphology_dir, nodes_file, options):
-    mem_map_props = _parse_mem_map_options(options)
+    disk_mem_map = _parse_mem_map_options(options)
 
     index = MorphIndexBuilder.create(
         morphology_dir,
         nodes_file,
-        mem_map_props=mem_map_props,
+        disk_mem_map=disk_mem_map,
         progress=True
     )
 
-    if not mem_map_props:
+    if not disk_mem_map:
         logging.info("Writing index to file: %s", options["out"])
         index.dump(options["out"])
 
 
 def _run_spatial_index_synapses(edges_file, population, options):
-    mem_map_props = _parse_mem_map_options(options)
+    disk_mem_map = _parse_mem_map_options(options)
     index = SynapseIndexBuilder.from_sonata_file(
         edges_file,
         population,
-        disk_mem_map=mem_map_props,
+        disk_mem_map=disk_mem_map,
         progress=True
     )
 
-    if not mem_map_props:
+    if not disk_mem_map:
         logging.info("Writing index to file: %s", options["out"])
         index.dump(options["out"])

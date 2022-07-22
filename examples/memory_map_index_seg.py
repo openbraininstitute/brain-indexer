@@ -38,14 +38,14 @@ print("Pre-Made Index - Number of elements within window:", len(ids))
 # please contact the HPC team or the main developers of Spatial Index.
 
 # Specify the index output filename, size and shrink on close
-mem_map_props = MorphIndexBuilder.DiskMemMapProps("mem_map.bin", 2048, True, True)
+disk_mem_map = MorphIndexBuilder.DiskMemMapProps("mem_map.bin", 2048, True, True)
 
 # Then create a MorphIndexBuilder object specifying
 # the path to the morphology directory and the nodes file
 index = MorphIndexBuilder.create(
     MORPH_FILE,
     NODE_FILE,
-    mem_map_props=mem_map_props,
+    disk_mem_map=disk_mem_map,
     progress=True
 )
 

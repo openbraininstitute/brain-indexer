@@ -39,7 +39,7 @@ print("Pre-Made Index - Number of elements within window:", len(ids))
 # please contact the HPC team or the main developers of Spatial Index.
 
 # Specify the index output filename, size and shrink on close
-mem_map_props = SynapseIndexBuilder.DiskMemMapProps("syn_map.bin", 2048, True)
+disk_mem_map = SynapseIndexBuilder.DiskMemMapProps("syn_map.bin", 2048, True)
 
 # Then create a SynapseIndexBuilder object specifying
 # the path to the edges file and the population name
@@ -47,7 +47,7 @@ mem_map_props = SynapseIndexBuilder.DiskMemMapProps("syn_map.bin", 2048, True)
 index = SynapseIndexBuilder.from_sonata_file(
     EDGES_FILE,
     POPULATION,
-    disk_mem_map=mem_map_props,
+    disk_mem_map=disk_mem_map,
     progress=True
 )
 

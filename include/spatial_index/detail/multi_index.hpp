@@ -250,7 +250,8 @@ UsageRateCache<Storage>::evict_subtrees(const SubtreeID& subtree_id,
 
     auto loaded_subtree_ids = subtree_ids_sorted_by_usage_rate(query_count);
 
-    for (size_t k = 0; k < cache_params.max_evict; ++k) {
+    auto n_evict = std::min(cache_params.max_evict, loaded_subtree_ids.size());
+    for (size_t k = 0; k < n_evict; ++k) {
         size_t i = loaded_subtree_ids[k];
         auto it = subtrees.find(i);
         if (it == subtrees.end()) {

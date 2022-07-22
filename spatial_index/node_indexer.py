@@ -71,8 +71,6 @@ class MorphIndexBuilderBase:
             nodes_file (str): The Sonata/mvd nodes file
             population (str, optional): The nodes population. Defaults to "" (default).
             gids ([type], optional): A selection of gids to index. Defaults to None (All)
-            mem_map_props (DiskMemMapProps, optional): In provided, specifies properties
-                of the memory-mapped-file backing this struct [experimental!]
         """
 
         self.morph_lib = MorphologyLib(morphology_dir)

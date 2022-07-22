@@ -93,9 +93,9 @@ def test_serial_exec():
 
 def test_memory_mapped_file_morph_index():
     MEM_MAP_FILE = "rtree_image.bin"
-    mem_map_props = MorphIndexBuilder.DiskMemMapProps(MEM_MAP_FILE, 1, True)
+    disk_mem_map = MorphIndexBuilder.DiskMemMapProps(MEM_MAP_FILE, 1, True)
     node_indexer = MorphIndexBuilder(MORPHOLOGY_FILES[1], FILETEST,
-                                     disk_mem_map=mem_map_props)
+                                     disk_mem_map=disk_mem_map)
     node_indexer.process_range((0, 1))
     index = node_indexer.index
     assert len(index) > 1700

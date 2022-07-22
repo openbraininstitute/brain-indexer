@@ -41,7 +41,7 @@ def do_multi_index_query_serial(min_corner, max_corner):
         return_indexer=True)
 
     if MPI.COMM_WORLD.Get_rank() == 0:
-        index = MorphMultiIndexBuilder.open_index(output_dir, max_subtrees=100)
+        index = MorphMultiIndexBuilder.open_index(output_dir, mem=int(1e9))
         return index.find_intersecting_window(min_corner, max_corner)
 
 

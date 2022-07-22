@@ -32,7 +32,7 @@ def example_create_multi_index_from_sonata():
 
 def example_query_multi_index_from_sonata():
     if MPI.COMM_WORLD.Get_rank() == 0:
-        index = MorphMultiIndexBuilder.open_index(OUTPUT_DIR, max_subtrees=100)
+        index = MorphMultiIndexBuilder.open_index(OUTPUT_DIR, mem=int(1e6))
 
         min_corner, max_corner = [-50, 0, 0], [0, 50, 50]
 

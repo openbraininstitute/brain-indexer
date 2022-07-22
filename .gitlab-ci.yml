@@ -21,8 +21,14 @@ workflow:
     - if: '$CI_COMMIT_BRANCH'
     - if: '$CI_COMMIT_TAG'
 
+
 variables:
   bb5_partition: prod_small
+
+
+spack_setup:
+  stage: .pre
+  extends: .spack_setup
 
 
 test-cpp-unit:
@@ -41,10 +47,34 @@ test-cpp-unit:
     - cmake --build build -j2
     - cd build && ctest --output-on-failure
 
+test-examples:
+  stage: test
+  tags:
+    - bb5_map
+  variables:
+    bb5_constraint: cpu
+    bb5_ntasks: 5
+    bb5_cpus_per_task: 1
+    SLURM_OVERLAP: 1
+    DATADIR: /gpfs/bbp.cscs.ch/project/proj12/jenkins
 
-setup_spack:
-  stage: .pre
-  extends: .spack_setup
+  script:
+    - module load unstable cmake gcc boost hpe-mpi py-mpi4py
+    - python -m venv venv
+    - source venv/bin/activate
+    - pip install -e .
+    - python examples/segment_index_sonata.py
+    - python examples/segment_index.py
+    - python examples/synapses_index.py
+    - srun -n5 python examples/segment_multi_index_sonata.py
+    # This should be done somewhere more appropriate, but here goes:
+    - srun -n5 python tests/test_validation_FLAT.py --run-multi-index
+    - bash .ci/test_circuit_config-segments-2k.sh
+    # This test fails only in CI. I've tried many to spot any
+    # difference between running it on BB5 directly/manually
+    # and when CI runs it on BB5, without success. This test always
+    # succeeds when run manually.
+    # - bash .ci/test_circuit_config-synapses-2k.sh
 
 
 test-bare-ubuntu:
