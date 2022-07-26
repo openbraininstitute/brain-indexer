@@ -23,6 +23,10 @@ struct Sphere {
     Point3D centroid;
     CoordType radius;
 
+    Sphere() = default;
+    Sphere(const Point3D& centroid, CoordType radius)
+        : centroid(centroid), radius(radius) {}
+
     inline Box3D bounding_box() const {
         return Box3D(Point3Dx(centroid) - radius, Point3Dx(centroid) + radius);
     }
@@ -108,6 +112,10 @@ struct Cylinder {
 
     Point3D p1, p2;
     CoordType radius;
+
+    Cylinder() = default;
+    Cylinder(const Point3D& p1, const Point3D& p2, CoordType radius)
+        : p1(p1), p2(p2), radius(radius) {}
 
     inline CoordType length() const {
         return static_cast<CoordType>(bg::distance(p1, p2));

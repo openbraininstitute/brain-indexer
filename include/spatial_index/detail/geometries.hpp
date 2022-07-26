@@ -326,21 +326,20 @@ inline std::ostream& operator<<(std::ostream& os, const Sphere& s) {
                  "radius=" << boost::format("%.3g") % s.radius << ')';
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Box3D& b) {
-    auto min_corner = Point3D(b.min_corner());
-    auto max_corner = Point3D(b.max_corner());
-
-    return os << "Box([ " << min_corner << ", " << max_corner << "])";
-}
-
-inline std::ostream& operator<<(std::ostream& os, const Box3Dx& b) {
-    return os << "Box3Dx(" << b.bounding_box() << ')';
-}
-
 inline std::ostream& operator<<(std::ostream& os, const Cylinder& c) {
     return os << "Cylinder(centroids=(" << c.p1 << ", " << c.p2 << "), "
                  "radius=" << boost::format("%.3g") % c.radius << ')';
 }
 
-
 }  // namespace spatial_index
+
+namespace boost { namespace geometry { namespace model {
+inline std::ostream& operator<<(std::ostream& os, const spatial_index::Box3D& b) {
+    auto min_corner = spatial_index::Point3D(b.min_corner());
+    auto max_corner = spatial_index::Point3D(b.max_corner());
+
+    return os << "Box([ " << min_corner << ", " << max_corner << "])";
+}
+
+}}}
+

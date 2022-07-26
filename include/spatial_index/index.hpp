@@ -222,6 +222,7 @@ class Soma: public IndexedShape<Sphere, MorphPartId> {
   public:
     // bring contructors
     using super::IndexedShape;
+
 };
 
 

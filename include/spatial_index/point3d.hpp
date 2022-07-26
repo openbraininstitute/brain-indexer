@@ -13,7 +13,6 @@ namespace spatial_index {
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
 
-
 #ifdef BBPSPATIAL_DOUBLE_PRECISION
 using CoordType = double;
 #define SI_EQUALITY_TOLERANCE 1e-8
@@ -24,7 +23,6 @@ using CoordType = float;
 
 using Point3D = bg::model::point<CoordType, 3, bg::cs::cartesian>;
 using Box3D = bg::model::box<Point3D>;
-
 
 /**
  * \brief An OO augmented point to improve code readability
@@ -208,13 +206,17 @@ inline Point3D min(Point3D const& p1, Point3D const& p2) {
                    std::min(p1.get<2>(), p2.get<2>())};
 }
 
-inline std::ostream& operator<<(std::ostream& os, Point3D const& p) {
+}  // namespace spatial_index
+
+namespace boost { namespace geometry { namespace model {
+
+inline std::ostream& operator<<(std::ostream& os, spatial_index::Point3D const& p) {
     os << boost::format("[%.3g %.3g %.3g]") % p.get<0>() % p.get<1>() % p.get<2>();
     return os;
 }
 
+}}}
 
-}  // namespace spatial_index
 
 
 // operator== directly on boost Point3D

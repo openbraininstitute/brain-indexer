@@ -27,6 +27,16 @@ The user may instantiate a Spatial Index of Morphology Pieces (both Somas and Se
 
 As so, if it is enough for the user to create a Spatial Index of spherical geometries, like soma placement, he should rather use :class:`spatial_index.SphereIndex`. For the cases where Spatial Indexing of cylindrical or mixed geometries is required, e.g. full neuron geometries, the user shall use  :class:`spatial_index.MorphIndex`. Furthermore, the latter features higher level methods to help in the load of entire Neuron morphologies.
 
+Query Semantics
+---------------
+Every query consists of a *query shape* and a *geometry mode*. The query shape defines the region for which elements in the index are considered (usually returned, sometimes counted, depending on the query). The geometry mode defines precisely when an element should be returned.
+
+A query shape is said to overlap with an indexed shape in *bounding box geometry* if the bounding box of the indexed shape intersects with the query shape. Note: this is the semantics adopted by FLAT.
+
+A query shape is said to overlap with an indexed shape in *exact geometry* if first the bounding box of the indexed shape intersects with the query shape; and additionally intersects with the query shape either exactly or in the case of Box/Cylinder and Cylinder/Cylinder as Box/Capsule and Capsule/Capsule respectively.
+
+A query returns all indexed elements that overlap with the query shape in the requested geometry mode. The query shape can be either an axis-aligned box in which case the query is called a *window query*; a sphere which we call a *vicinity query*; or a cylinder (mostly for internal purposes such as placing segments).
+
 
 Indexing BBP Node and Edge files
 ================================

@@ -273,7 +273,11 @@ inline std::ostream& operator<<(std::ostream& os, const ShapeId& obj) {
 }
 
 inline std::ostream& operator<<(std::ostream& os, const MorphPartId& obj) {
-    return os << '(' << obj.gid() << ", " << obj.section_id() << ", " << obj.segment_id() << ')';
+    return os << "(" << obj.gid() << ", " << obj.section_id() << ", " << obj.segment_id() << ")";
+}
+
+inline std::ostream& operator<<(std::ostream& os, const SubtreeId& obj) {
+    return os << "(" << obj.id << ", " << obj.n_elements << ")";
 }
 
 template <typename ShapeT, typename IndexT>
@@ -281,7 +285,7 @@ inline std::ostream& IndexedShape<ShapeT, IndexT>::repr(
         std::ostream& os, const std::string& cls_name) const {
     return os << cls_name << "("
               "id=" << static_cast<const IndexT&>(*this) << ", "
-              << static_cast<const ShapeT&>(*this) << ')';
+              << static_cast<const ShapeT&>(*this) << ")";
 }
 
 
