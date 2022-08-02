@@ -59,6 +59,7 @@ PYBIND11_MODULE(_spatial_index, m) {
 #if SI_MPI == 1
     si_python::create_MorphMultiIndexBulkBuilder_bindings(m, "MorphMultiIndexBulkBuilder");
 
+    si_python::create_call_some_mpi_from_cxx_bindings(m);
     si_python::create_analysis_bindings(m);
 #endif
 

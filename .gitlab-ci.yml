@@ -96,6 +96,29 @@ test-bb5-py39:
     EXTRA_MODULES:
       unstable:gcc
 
+
+test-bb5-mpi-compat-hpe:
+  extends: .tox-template
+  variables:
+    TOXENV: mpi-compat
+    EXTRA_MODULES:
+      unstable:gcc
+      unstable:boost
+      unstable:hpe-mpi
+      unstable:py-mpi4py
+
+
+test-bb5-mpi-compat-mvapich2:
+  extends: .tox-template
+  variables:
+    TOXENV: mpi-compat
+    EXTRA_MODULES:
+      unstable:gcc
+      unstable:boost
+      unstable:mvapich2
+      unstable:py-mpi4py
+
+
 # The following stages are overrides. Dont rename
 # Always add the manual option to create sdist/wheel or upload
 build-package:
