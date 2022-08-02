@@ -198,3 +198,14 @@ BOOST_AUTO_TEST_CASE(IntegerConversion) {
     BOOST_CHECK(util::integer_cast<size_t>(-1) == size_t(-1));
 #endif
 }
+
+
+//////////////////////////////////////////////////////////////////
+// Internal assumptions
+//////////////////////////////////////////////////////////////////
+BOOST_AUTO_TEST_CASE(IdentifierIs64BitAndUnsigned) {
+    // The code contains bit magic to pack the GID, section & segment id
+    // all into a single 64 bit unsigned integer.
+    BOOST_CHECK(sizeof(identifier_t) == 8);
+    BOOST_CHECK(!std::is_signed_v<identifier_t>);
+}

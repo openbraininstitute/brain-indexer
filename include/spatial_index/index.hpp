@@ -18,22 +18,30 @@
 #include <boost/variant.hpp>
 
 #include "geometries.hpp"
+#include "util.hpp"
 
 /// Bump the top-level structure version when serialized data structures change
 #define SPATIAL_INDEX_STRUCT_VERSION 1
 
-#define N_SEGMENT_BITS 10
-#define N_SECTION_BITS 14
-#define N_TOTAL_BITS (N_SEGMENT_BITS + N_SECTION_BITS)
-#define MASK_SEGMENT_BITS ((1 << N_SEGMENT_BITS)-1)
-#define MASK_SECTION_BITS (((1 << N_SECTION_BITS)-1) << N_SEGMENT_BITS)
-#define MASK_TOTAL_BITS ((1 << N_TOTAL_BITS)-1)
-
 namespace spatial_index {
-
 
 // Type of the pieces identifiers
 using identifier_t = unsigned long;
+
+
+// Constants for packing identifiers.
+static constexpr int N_SEGMENT_BITS = 10;
+static constexpr int N_SECTION_BITS = 14;
+static constexpr int N_TOTAL_BITS = N_SEGMENT_BITS + N_SECTION_BITS;
+static constexpr int N_GID_BITS = 64 - N_TOTAL_BITS;
+
+template<class Int=identifier_t>
+inline constexpr Int mask_bits(int n_bits) {
+  return ((Int(1) << n_bits) - 1);
+}
+
+static constexpr identifier_t MASK_SEGMENT_BITS = mask_bits(N_SEGMENT_BITS);
+static constexpr identifier_t MASK_SECTION_BITS = mask_bits(N_SECTION_BITS) << N_SEGMENT_BITS;
 
 
 ///
@@ -124,6 +132,18 @@ struct SynapseId : public ShapeId {
     }
 };
 
+inline bool is_gid_safe(identifier_t gid) {
+    return (gid & ~mask_bits(N_GID_BITS)) == 0;
+}
+
+inline bool is_section_id_safe(unsigned section_id) {
+    return (section_id & ~mask_bits<unsigned>(N_SECTION_BITS)) == 0;
+}
+
+inline bool is_segment_id_safe(unsigned segment_id) {
+    return (segment_id & ~mask_bits<unsigned>(N_SEGMENT_BITS)) == 0;
+}
+
 
 /**
  * \brief A neuron piece extends IndexedShape in concept, adding gid(), section_id and segment_id()
@@ -136,10 +156,12 @@ struct MorphPartId : public ShapeId {
     inline MorphPartId() = default;
 
     inline MorphPartId(identifier_t gid, unsigned section_id = 0, unsigned segment_id = 0)
-        : ShapeId{((gid << N_TOTAL_BITS) & (~MASK_TOTAL_BITS))
-                  + ((section_id << N_SEGMENT_BITS) & MASK_SECTION_BITS)
-                  + (segment_id & MASK_SEGMENT_BITS)}
-    {}
+        : ShapeId{(gid << N_TOTAL_BITS) + (section_id << N_SEGMENT_BITS) + segment_id}
+    {
+        assert(is_gid_safe(gid));
+        assert(is_section_id_safe(section_id));
+        assert(is_segment_id_safe(segment_id));
+    }
 
     inline MorphPartId(const std::tuple<const identifier_t&, const unsigned&, const unsigned&>& ids)
         : MorphPartId(std::get<0>(ids), std::get<1>(ids), std::get<2>(ids))
@@ -150,11 +172,11 @@ struct MorphPartId : public ShapeId {
     }
 
     inline unsigned segment_id() const noexcept {
-        return static_cast<unsigned>(id & MASK_SEGMENT_BITS);
+        return util::integer_cast<unsigned>(id & MASK_SEGMENT_BITS);
     }
 
     inline unsigned section_id() const noexcept {
-        return static_cast<unsigned>((id & MASK_SECTION_BITS) >> N_SEGMENT_BITS);
+        return util::integer_cast<unsigned>((id & MASK_SECTION_BITS) >> N_SEGMENT_BITS);
     }
 };
 
