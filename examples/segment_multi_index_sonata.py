@@ -26,22 +26,23 @@ def example_create_multi_index_from_sonata():
         NODES_FILE,
         "All",
         output_dir=OUTPUT_DIR,
-        return_indexer=False
     )
 
 
-def example_query_multi_index_from_sonata():
+def example_query_multi_index():
     if MPI.COMM_WORLD.Get_rank() == 0:
+        # The index may use at most roughly 1e6 bytes.
         index = MorphMultiIndexBuilder.open_index(OUTPUT_DIR, mem=int(1e6))
 
+        # Define a query window by its two extreme corners, and run the
+        # query.
         min_corner, max_corner = [-50, 0, 0], [0, 50, 50]
+        found = index.find_intersecting_window_np(min_corner, max_corner)
 
-        ids = index.find_intersecting_window(min_corner, max_corner)
-        print("Number of elements within window:", len(ids))
-        if len(ids) > 0:
-            gid, section_id, segment_id = ids[0]
+        # Now you're ready for the real science:
+        print(found)
 
 
 if __name__ == "__main__":
     example_create_multi_index_from_sonata()
-    example_query_multi_index_from_sonata()
+    example_query_multi_index()

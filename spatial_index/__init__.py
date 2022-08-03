@@ -15,4 +15,7 @@ from .node_indexer import MorphIndexBuilder  # noqa
 if hasattr(core, "MorphMultiIndexBulkBuilder"):
     from .node_indexer import MorphMultiIndexBuilder  # noqa
 
+if hasattr(core, "SynapseMultiIndexBulkBuilder"):
+    from .synapse_indexer import SynapseMultiIndexBuilder  # noqa
+
 from .synapse_indexer import PointIndex, SynapseIndexBuilder  # noqa

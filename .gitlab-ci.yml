@@ -67,6 +67,7 @@ test-examples:
     - python examples/segment_index.py
     - python examples/synapses_index.py
     - srun -n5 python examples/segment_multi_index_sonata.py
+    - srun -n3 python examples/synapse_multi_index_sonata.py
     # This should be done somewhere more appropriate, but here goes:
     - srun -n5 python tests/test_validation_FLAT.py --run-multi-index
     - bash .ci/test_circuit_config-segments-2k.sh

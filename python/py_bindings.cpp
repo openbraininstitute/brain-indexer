@@ -55,9 +55,11 @@ PYBIND11_MODULE(_spatial_index, m) {
 
     // Experimental distributed/lazy R-trees.
     si_python::create_MorphMultiIndex_bindings(m, "MorphMultiIndex");
+    si_python::create_SynapseMultiIndex_bindings(m, "SynapseMultiIndex");
 
 #if SI_MPI == 1
     si_python::create_MorphMultiIndexBulkBuilder_bindings(m, "MorphMultiIndexBulkBuilder");
+    si_python::create_SynapseMultiIndexBulkBuilder_bindings(m, "SynapseMultiIndexBulkBuilder");
 
     si_python::create_call_some_mpi_from_cxx_bindings(m);
     si_python::create_analysis_bindings(m);

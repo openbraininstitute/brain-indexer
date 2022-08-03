@@ -220,8 +220,6 @@ count_intersecting(Class& obj, const Shape& query_shape, const std::string& geom
     throw std::runtime_error("Invalid geometry: " + geometry + ".");
 }
 
-
-
 }
 
 template<typename Class>
@@ -318,7 +316,6 @@ inline void add_IndexTree_find_intersecting_window_pos_bindings(py::class_<Class
     );
 }
 
-
 template<typename Class>
 inline void add_IndexTree_find_intersecting_objs_bindings(py::class_<Class>& c) {
     c
@@ -341,7 +338,6 @@ inline void add_IndexTree_find_intersecting_objs_bindings(py::class_<Class>& c) 
         )"
     );
 }
-
 
 template<typename Class>
 inline void add_IndexTree_find_intersecting_window_objs_bindings(py::class_<Class>& c) {
@@ -712,11 +708,9 @@ inline void add_SynapseIndex_find_intersecting_window_np(py::class_<Class>& c) {
         );
 }
 
-template <typename Class = si::IndexTree<si::Synapse>>
-inline void create_SynapseIndex_bindings(py::module& m, const char* class_name) {
-    using value_type = typename Class::value_type;
-    auto c = create_IndexTree_bindings<value_type, value_type, Class>(m, class_name)
-
+template<class Class>
+inline void add_SynapseIndex_add_synapses_bindings(py::class_<Class>& c) {
+    c
     .def("add_synapses",
         [](Class& obj, const array_ids& syn_ids, const array_ids& post_gids, const array_ids& pre_gids, const array_t& points) {
             const auto syn_ids_ = syn_ids.template unchecked<1>();
@@ -730,8 +724,13 @@ inline void create_SynapseIndex_bindings(py::module& m, const char* class_name) 
         Builds a synapse index.
         These indices maintain the gids as well to enable computing aggregated counts.
         )"
-    )
+    );
+}
 
+
+template<class Class>
+inline void add_SynapseIndex_count_intersecting_agg_gid_bindings(py::class_<Class>& c) {
+    c
     .def("count_intersecting_agg_gid",
         [](Class& obj, const array_t& min_corner, const array_t& max_corner) {
             return obj.count_intersecting_agg_gid(
@@ -745,6 +744,16 @@ inline void create_SynapseIndex_bindings(py::module& m, const char* class_name) 
             min_corner, max_corner(float32) : min/max corners of the query window
         )"
     );
+}
+
+
+template <typename Class = si::IndexTree<si::Synapse>>
+inline void create_SynapseIndex_bindings(py::module& m, const char* class_name) {
+    using value_type = typename Class::value_type;
+    auto c = create_IndexTree_bindings<value_type, value_type, Class>(m, class_name);
+
+    add_SynapseIndex_add_synapses_bindings(c);
+    add_SynapseIndex_count_intersecting_agg_gid_bindings(c);
     add_SynapseIndex_find_intersecting_window_np(c);
 }
 
@@ -1062,10 +1071,9 @@ inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
 }
 
 #if SI_MPI == 1
-template <typename Class = si::MultiIndexBulkBuilder<MorphoEntry>>
-inline void create_MorphMultiIndexBulkBuilder_bindings(py::module& m, const char* class_name) {
-    py::class_<Class> c = py::class_<Class>(m, class_name);
 
+template<typename Class>
+inline void add_MultiIndexBulkBuilder_creation_bindings(py::class_<Class>& c) {
     c
     .def(py::init<std::string>(),
          py::arg("output_dir"),
@@ -1085,7 +1093,7 @@ inline void create_MorphMultiIndexBulkBuilder_bindings(py::module& m, const char
 
     .def("reserve",
          [](Class &obj, std::size_t n_local_elements) {
-            obj.reserve(n_local_elements);
+             obj.reserve(n_local_elements);
          },
          R"(
         Reserve space for the elements to be inserted into the index.
@@ -1097,15 +1105,6 @@ inline void create_MorphMultiIndexBulkBuilder_bindings(py::module& m, const char
         Args:
             n_local_elements(int): Number of elements this MPI ranks will insert
                 into the index.
-        )"
-    )
-
-    .def("local_size",
-         [](Class &obj) {
-            return obj.local_size();
-         },
-         R"(
-        The current number of elements to be added to the index by this MPI rank.
         )"
     )
 
@@ -1122,7 +1121,39 @@ inline void create_MorphMultiIndexBulkBuilder_bindings(py::module& m, const char
         )"
     );
 
+}
+
+template<typename Class>
+inline void add_MultiIndexBulkBuilder_local_size_bindings(py::class_<Class>& c) {
+    c
+    .def("local_size",
+         [](Class &obj) {
+             return obj.local_size();
+         },
+         R"(
+    The current number of elements to be added to the index by this MPI rank.
+    )"
+    );
+}
+
+
+template <typename Value, typename Class=si::MultiIndexBulkBuilder<Value>>
+inline py::class_<Class>
+create_MultiIndexBulkBuilder_bindings(py::module& m, const char* class_name) {
+    py::class_<Class> c = py::class_<Class>(m, class_name);
+
+    add_MultiIndexBulkBuilder_creation_bindings(c);
+    add_MultiIndexBulkBuilder_local_size_bindings(c);
+
     add_len_for_size_bindings(c);
+
+    return c;
+}
+
+
+template <typename Class = si::MultiIndexBulkBuilder<MorphoEntry>>
+inline void create_MorphMultiIndexBulkBuilder_bindings(py::module& m, const char* class_name) {
+    py::class_<Class> c = create_MultiIndexBulkBuilder_bindings<MorphoEntry>(m, class_name);
 
     add_IndexTree_insert_bindings<MorphoEntry, si::Soma, Class>(c);
     add_MorphIndex_insert_bindings<Class>(c);
@@ -1131,10 +1162,20 @@ inline void create_MorphMultiIndexBulkBuilder_bindings(py::module& m, const char
     add_MorphIndex_add_neuron_bindings<Class>(c);
     add_MorphIndex_add_soma_bindings<Class>(c);
 }
+
+
+template <typename Class = si::MultiIndexBulkBuilder<Synapse>>
+inline void create_SynapseMultiIndexBulkBuilder_bindings(py::module& m, const char* class_name) {
+    py::class_<Class> c = create_MultiIndexBulkBuilder_bindings<Synapse>(m, class_name);
+
+    add_IndexTree_insert_bindings<Synapse, Synapse, Class>(c);
+    add_SynapseIndex_add_synapses_bindings<Class>(c);
+}
+
 #endif
 
-template <typename Class = si::MultiIndexTree<MorphoEntry>>
-inline void create_MorphMultiIndex_bindings(py::module& m, const char* class_name) {
+template <typename Value, typename Class = si::MultiIndexTree<Value>>
+inline py::class_<Class> create_MultiIndex_bindings(py::module& m, const char* class_name) {
     py::class_<Class> c = py::class_<Class>(m, class_name);
 
     c
@@ -1162,7 +1203,32 @@ inline void create_MorphMultiIndex_bindings(py::module& m, const char* class_nam
     add_MorphIndex_find_intersecting_window_np<Class>(c);
 
     add_len_for_size_bindings(c);
+
+    return c;
 }
+
+
+template <typename Class = si::MultiIndexTree<MorphoEntry>>
+inline py::class_<Class> create_MorphMultiIndex_bindings(py::module& m, const char* class_name) {
+    using value_type = typename Class::value_type;
+    auto c = create_MultiIndex_bindings<value_type>(m, class_name);
+
+    add_MorphIndex_find_intersecting_window_np(c);
+
+    return c;
+}
+
+
+template <typename Class = si::MultiIndexTree<Synapse>>
+inline py::class_<Class> create_SynapseMultiIndex_bindings(py::module& m, const char* class_name) {
+    using value_type = typename Class::value_type;
+    auto c = create_MultiIndex_bindings<value_type>(m, class_name);
+
+    add_SynapseIndex_find_intersecting_window_np(c);
+
+    return c;
+}
+
 
 }  // namespace py_bindings
 }  // namespace spatial_index
