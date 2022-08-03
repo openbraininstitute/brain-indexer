@@ -81,7 +81,7 @@ test-examples:
 test-bare-ubuntu:
   stage: test
   tags: [kubernetes]
-  image: bbpgitlab.epfl.ch:5050/hpc/spatialindex/ubuntu_20.04_devel
+  image: bbpgitlab.epfl.ch:5050/hpc/spatial-index/ubuntu_20.04_devel
   variables:
     KUBERNETES_MEMORY_LIMIT: 5Gi    # memory overrides
     KUBERNETES_MEMORY_REQUEST: 4Gi  # memory overrides
@@ -159,7 +159,7 @@ build-package:
 
 build-wheels:
   tags: [kubernetes]
-  image: bbpgitlab.epfl.ch:5050/hpc/spatialindex/manylinux2014_boost_x86_64
+  image: bbpgitlab.epfl.ch:5050/hpc/spatial-index/manylinux2014_boost_x86_64
   variables:
     KUBERNETES_MEMORY_LIMIT: 5Gi    # memory overrides
     KUBERNETES_MEMORY_REQUEST: 4Gi  # memory overrides
