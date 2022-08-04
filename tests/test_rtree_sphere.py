@@ -237,8 +237,7 @@ def test_nearest_all():
 def _nearest_random():
     """
     We use the internal nearest() predicate, which uses the distance to the
-    bouding box. As so results might not completely match but are good enough.
-    In this test we get 100% match 80-90% of the times.
+    bounding box. Due to floating point arithmetic this test can fail, rarely.
     """
     p1 = np.array([-10., -10., -10.], dtype=np.float32)
     p2 = np.array([10., 10., 10.], dtype=np.float32)
@@ -251,8 +250,11 @@ def _nearest_random():
 
     center = np.array([0., 0., 0.], dtype=np.float32)
 
-    distances = np.linalg.norm(centroids, axis=1) - radii
-    distances[distances < .0] = .0
+    closest_point = np.minimum(
+        np.maximum(center, centroids - radii[:, np.newaxis]),
+        centroids + radii[:, np.newaxis]
+    )
+    distances = np.linalg.norm(closest_point - center, axis=1)
     expected_result = np.argsort(distances)[:K]
 
     t = IndexClass(centroids, radii)
@@ -264,11 +266,16 @@ def _nearest_random():
 
 
 def test_nearest_random():
-    # At east 1 in 3 must exactly match. See previous comment
-    for i in range(3):
+    # The test `_nearest_random` can fail due to floating point
+    # issue. This should happen very rarely. Hence 2 out of 3
+    # should always succeed.
+    n_success = 0
+
+    for _ in range(3):
         try:
             _nearest_random()
-            break
+            n_success += 1
         except AssertionError:
-            if i == 2:
-                raise
+            pass
+
+    assert n_success >= 2
