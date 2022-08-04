@@ -33,6 +33,7 @@ spack_setup:
 
 test-cpp-unit:
   stage: test
+  needs: []
   tags:
     - bb5_map
   variables:
@@ -49,6 +50,7 @@ test-cpp-unit:
 
 test-examples:
   stage: test
+  needs: []
   tags:
     - bb5_map
   variables:
@@ -80,6 +82,7 @@ test-examples:
 
 test-bare-ubuntu:
   stage: test
+  needs: []
   tags: [kubernetes]
   image: bbpgitlab.epfl.ch:5050/hpc/spatial-index/ubuntu_20.04_devel
   variables:
@@ -91,7 +94,7 @@ test-bare-ubuntu:
     - ln -s /usr/bin/python3 /usr/bin/python
     - !reference [.setup-venv]
   script:
-    - apt-get update 
+    - apt-get update
     - apt install -y libboost-filesystem1.71-dev libboost-serialization1.71-dev libboost-test1.71-dev
     - apt install -y libopenmpi-dev
     - pip install -v -e .
@@ -100,6 +103,7 @@ test-bare-ubuntu:
 
 test-spack:
   stage: test
+  needs: ["spack_setup"]
   tags:
     - bb5_map
   variables:
@@ -120,6 +124,7 @@ test-spack:
 
 test-bb5-py39:
   extends: .tox-template
+  needs: []
   variables:
     TOXENV: flake8, py39  # boost depends on py38
     PRE_BUILD_COMMAND: |
@@ -153,20 +158,17 @@ test-bb5-mpi-compat-mvapich2:
 # The following stages are overrides. Dont rename
 # Always add the manual option to create sdist/wheel or upload
 build-package:
+  needs: []
   tags: []
   rules:
     - when: always
 
 build-wheels:
   tags: [kubernetes]
-  image: bbpgitlab.epfl.ch:5050/hpc/spatial-index/manylinux2014_boost_x86_64
+  image: bbpgitlab.epfl.ch:5050/hpc/spatial-index/manylinux2014_boost_x86_64:boost-179
   variables:
     KUBERNETES_MEMORY_LIMIT: 5Gi    # memory overrides
     KUBERNETES_MEMORY_REQUEST: 4Gi  # memory overrides
-    SYS_PACKAGES: boost169-devel
-    PRE_BUILD_COMMAND: free;
-      export BOOST_INCLUDEDIR="/usr/include/boost169";
-      export BOOST_LIBRARYDIR="/usr/lib64/boost169"
     TEST_RUN_TOX: "false"  # MVDtool doesnt have wheels
     SI_MPI: "Off"
   rules:
@@ -177,12 +179,14 @@ build-wheels:
 
 publish-package:
   tags: []
+  needs: ["build-package", "build-wheels"]
   rules:
     - if: $CI_COMMIT_TAG
     - when: manual
       allow_failure: true
 
 docs:
+  needs: []
   variables:
     TOXENV: docs
     PRE_BUILD_COMMAND: |
@@ -195,6 +199,7 @@ docs:
 
 publish-docs:
   tags: []
+  needs: ["docs"]
   variables:
     SYS_PACKAGES: openssh-clients
     PIP_PACKAGES: docs_internal_upload
