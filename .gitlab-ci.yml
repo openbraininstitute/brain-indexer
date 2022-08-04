@@ -73,11 +73,7 @@ test-examples:
     # This should be done somewhere more appropriate, but here goes:
     - srun -n5 python tests/test_validation_FLAT.py --run-multi-index
     - bash .ci/test_circuit_config-segments-2k.sh
-    # This test fails only in CI. I've tried many to spot any
-    # difference between running it on BB5 directly/manually
-    # and when CI runs it on BB5, without success. This test always
-    # succeeds when run manually.
-    # - bash .ci/test_circuit_config-synapses-2k.sh
+    - bash .ci/test_circuit_config-synapses-2k.sh
 
 
 test-bare-ubuntu:

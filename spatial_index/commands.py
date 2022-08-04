@@ -5,6 +5,7 @@ import logging
 from .node_indexer import MorphIndexBuilder
 from .synapse_indexer import SynapseIndexBuilder
 from .util import DiskMemMapProps, check_free_space, docopt_get_args, get_dirname
+from .util import is_likely_same_index
 
 
 def spatial_index_nodes(args=None):
@@ -90,6 +91,36 @@ def spatial_index_circuit(args=None):
     elif options['synapses']:
         edges_file = _sonata_edges_file(config, population)
         _run_spatial_index_synapses(edges_file, population, options)
+
+    else:
+        raise NotImplementedError("Missing subcommand.")
+
+
+def spatial_index_compare(args=None):
+    """spatial-index-compare
+
+    Compares two circuits and returns with a non-zero exit code
+    if a difference was detect. Otherwise the exit code is zero.
+
+    Usage:
+        spatial-index-compare segments <lhs-circuit> <rhs-circuit>
+        spatial-index-compare synapses <lhs-circuit> <rhs-circuit>
+    """
+    options = docopt_get_args(spatial_index_compare, args)
+
+    if options["segments"]:
+        lhs = MorphIndexBuilder.load_dump(options["lhs_circuit"])
+        rhs = MorphIndexBuilder.load_dump(options["rhs_circuit"])
+
+    elif options["synapses"]:
+        lhs = SynapseIndexBuilder.load_dump(options["lhs_circuit"])
+        rhs = SynapseIndexBuilder.load_dump(options["rhs_circuit"])
+
+    else:
+        raise NotImplementedError("Missing subcommand.")
+
+    if not is_likely_same_index(lhs, rhs):
+        exit(-1)
 
 
 def _validated_population(options):

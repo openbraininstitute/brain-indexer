@@ -85,6 +85,32 @@ inline void add_IndexTree_place_bindings(py::class_<Class>& c) {
     );
 }
 
+template<typename Class>
+inline void add_IndexTree_bounds_bindings(py::class_<Class>& c) {
+    c
+    .def("bounds",
+        [](Class& obj) {
+            auto box = obj.bounds();
+
+            return py::make_tuple(
+                pyutil::to_pyarray(std::vector<CoordType>{
+                    bg::get<bg::min_corner, 0>(box),
+                    bg::get<bg::min_corner, 1>(box),
+                    bg::get<bg::min_corner, 2>(box)
+                }),
+                pyutil::to_pyarray(std::vector<CoordType>{
+                    bg::get<bg::max_corner, 0>(box),
+                    bg::get<bg::max_corner, 1>(box),
+                    bg::get<bg::max_corner, 2>(box)
+                })
+            );
+        },
+        R"(
+        The bounding box of all elements in the index.
+        )"
+    );
+}
+
 template<typename T, typename SomaT, typename Class>
 inline void add_IndexTree_add_spheres_bindings(py::class_<Class>& c) {
     c
@@ -496,6 +522,7 @@ inline py::class_<Class> generic_IndexTree_bindings(py::module& m,
 
     add_IndexTree_query_bindings(c);
 
+    add_IndexTree_bounds_bindings(c);
     add_str_for_streamable_bindings<Class>(c);
     add_len_for_size_bindings<Class>(c);
 
@@ -1202,6 +1229,7 @@ inline py::class_<Class> create_MultiIndex_bindings(py::module& m, const char* c
     add_IndexTree_query_bindings(c);
     add_MorphIndex_find_intersecting_window_np<Class>(c);
 
+    add_IndexTree_bounds_bindings(c);
     add_len_for_size_bindings(c);
 
     return c;

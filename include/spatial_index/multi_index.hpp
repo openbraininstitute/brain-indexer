@@ -264,6 +264,10 @@ class MultiIndexTreeBase {
     template <class Predicates, class OutIt>
     inline void query(const Predicates& predicates, const OutIt& it) const;
 
+    inline Box3D bounds() const {
+      return top_rtree.bounds();
+    }
+
   protected:
     template <class SubtreeID, class Predicates, class OutIt>
     inline void query_subtree(const SubtreeID& subtree_id,

@@ -32,7 +32,7 @@ echo "circuit_spi=${circuit_spi}"
 spatial-index-synapses ${edges_file} -o ${direct_spi}
 spatial-index-circuit synapses "${circuit_config_seg}" -o ${circuit_spi}
 
-if ! cmp "${direct_spi}" "${circuit_spi}"
+if ! spatial-index-compare synapses "${direct_spi}" "${circuit_spi}"
 then
     echo "The output from '*-synapses' and '*-circuit' differ."
     exit -1

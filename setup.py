@@ -92,6 +92,7 @@ package_info = dict(
         'spatial-index-nodes=spatial_index.commands:spatial_index_nodes',
         'spatial-index-synapses=spatial_index.commands:spatial_index_synapses',
         'spatial-index-circuit=spatial_index.commands:spatial_index_circuit',
+        'spatial-index-compare=spatial_index.commands:spatial_index_compare',
     ]),
     cmdclass=dict(build_ext=CMakeBuild),
     include_package_data=True,

@@ -18,10 +18,13 @@ circuit_config_seg="${SI_DATADIR}/circuit_config-2k.json"
 pushd ${SI_DATADIR}
 
 output_dir=$(mktemp -d ~/tmp-spatial_index-XXXXX)
-spatial-index-nodes nodes.h5 ascii_sonata -o "${output_dir}/direct.spi"
-spatial-index-circuit segments "${circuit_config_seg}" -o "${output_dir}/circuit.spi"
+direct_spi="${output_dir}/direct.spi"
+circuit_spi="${output_dir}/circuit.spi"
 
-if ! cmp "${output_dir}/direct.spi" "${output_dir}/circuit.spi"
+spatial-index-nodes nodes.h5 ascii_sonata -o "${direct_spi}"
+spatial-index-circuit segments "${circuit_config_seg}" -o "${circuit_spi}"
+
+if ! spatial-index-compare segments "${direct_spi}" "${circuit_spi}"
 then
     echo "The output from '*-nodes' and '*-circuit' differ."
     exit -1

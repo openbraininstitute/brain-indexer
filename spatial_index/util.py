@@ -331,3 +331,132 @@ class MultiIndexWorkQueue:
         # This rank is now waiting for work.
         self._is_waiting[source] = True
         self._current_sizes[source] = local_count
+
+
+def is_likely_same_index(lhs, rhs, confidence=0.99, error_rate=0.001, rtol=1e-6):
+    """Are the two indexes `lhs` and `rhs` likely the same?
+
+    This will first perform a few fast, deterministic checks to check if the two
+    indexes are impossibly the same. Then follow it up with a sampling based
+    check.
+
+    Assuming that the elements in the index are uniformly distributed, then
+    `confidence` is the frequency which which this test succeeds, if
+    ratio of different elements is `error_rate`.
+    """
+    if confidence == 1.0 or error_rate == 0.0:
+        raise NotImplementedError(
+            "The deterministic edge cases haven't been implemented."
+        )
+
+    n_elements = len(lhs)
+    if n_elements != len(rhs):
+        return False
+
+    lhs_box = lhs.bounds()
+    rhs_box = rhs.bounds()
+
+    lhs_extent = lhs_box[1] - lhs_box[0]
+    rhs_extent = rhs_box[1] - rhs_box[0]
+
+    atol = rtol * np.maximum(lhs_extent, rhs_extent)
+
+    for lhs_xyz, rhs_xyz in zip(lhs_box, rhs_box):
+        if not np.all(np.abs(lhs_xyz - rhs_xyz) < atol):
+            return False
+
+    box = lhs_box
+    extent = lhs_extent
+
+    # For uniformly distributed small elements we'd expect
+    # on average one element in a box of this size.
+    n_elements_per_dim = n_elements ** (1.0 / 3.0)
+    sampling_extent = extent / n_elements_per_dim
+
+    # Assuming we're picking elements randomly from two large sets, what's
+    # the probability of drawing `n` equal elements if the error rate is
+    # `1.0 - p`:
+    #
+    #    p ** n =: alpha
+    #
+    # Therefore,
+    #    n = ceil(log_p(alpha)) = ceil(log(alpha)) / log(p))
+    # is the number of sample we need to draw. Note that,
+    #
+    #    p == 1.0 - error_rate
+    #    alpha == 1.0 - confidence.
+    max_elements_checked = int(np.ceil(
+        np.log(1.0 - confidence) / np.log(1.0 - error_rate)
+    ))
+
+    # A bit loose, but we'll assume that we get one element per
+    # query (on average).
+    n_queries = max_elements_checked
+
+    for _ in range(n_queries):
+        xyz = np.random.uniform(box[0], box[1])
+        min_corner = xyz - 0.5 * sampling_extent
+        max_corner = xyz + 0.5 * sampling_extent
+
+        if not is_window_query_equal(lhs, rhs, min_corner, max_corner, atol):
+            return False
+
+    return True
+
+
+def is_window_query_equal(lhs, rhs, min_corner, max_corner, atol):
+    """Does the window queryreturn the same result?
+
+    Given the two indexes `rhs` and `lhs`, will performing the same
+    window query on both indexes return the same result? Here "same"
+    is stable to small differences due to floating point arithmetic.
+
+    The `atol` is the absolute tolerance for comparing coordinates. The value
+    can be different for each dimension.
+    """
+    def is_contained(a, b):
+        return is_window_query_contained(a, b, min_corner, max_corner, atol)
+
+    return is_contained(lhs, rhs) and is_contained(rhs, lhs)
+
+
+def is_window_query_contained(lhs, rhs, min_corner, max_corner, atol):
+    """Are results from one query contained in the other?
+
+    Given the two indexes `rhs` and `lhs`, will performing the window
+    query on `lhs` be contained in the a slightly inflated window
+    query on `rhs`?
+
+    The `atol` is the size by which the window is inflated.
+    """
+    lhs_results = lhs.find_intersecting_window_np(min_corner, max_corner)
+    rhs_results = rhs.find_intersecting_window_np(min_corner - atol, max_corner + atol)
+
+    def pack_ids(r):
+        if "gid" in r and "section_id" in r and "segment_id" in r:
+            # Morphology indexes
+            keys = ["gid", "section_id", "segment_id"]
+            dtype = "i,i,i"
+
+        elif "id" in r:
+            # Synapse indexes (and more).
+            keys = ["id"]
+            dtype = "i"
+
+        else:
+            raise NotImplementedError(
+                "This isn't implemented yet for {} and {}".format(
+                    type(lhs),
+                    type(rhs)
+                )
+            )
+
+        if lhs_results[keys[0]].size == 0:
+            return True
+
+        return np.array([ijk for ijk in zip(*[r[k] for k in keys])], dtype=dtype)
+
+    lhs_ids = pack_ids(lhs_results)
+    rhs_ids = pack_ids(rhs_results)
+
+    return np.all(np.isin(lhs_ids, rhs_ids))
