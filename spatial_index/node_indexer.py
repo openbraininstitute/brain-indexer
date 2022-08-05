@@ -40,7 +40,7 @@ class MorphologyLib:
         if ospath.isfile(self._pth):
             morph = morphio.Morphology(self._pth)
         elif ospath.isdir(self._pth):
-            morph = morphio.Morphology(ospath.join(self._pth, morph_name) + ".asc")
+            morph = morphio.Morphology(self._guess_morph_filename(morph_name))
         else:
             raise Exception("Morphology path not found: " + self._pth)
 
@@ -53,6 +53,18 @@ class MorphologyLib:
         )
         self._morphologies[morph_name] = morph_infos
         return morph_infos
+
+    def _guess_morph_filename(self, morph_name):
+        extensions = [".asc", ".swc", ".h5"]
+
+        for ext in extensions:
+            filename = ospath.join(self._pth, morph_name) + ext
+            if ospath.isfile(filename):
+                return filename
+
+        raise RuntimeError(
+            f"Unable to guess morphology filename. {self._pth} {morph_name}"
+        )
 
     def get(self, morph_name):
         return self._morphologies.get(morph_name) or self._load(morph_name)

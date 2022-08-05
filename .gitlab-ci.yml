@@ -72,8 +72,8 @@ test-examples:
     - srun -n3 python examples/synapse_multi_index_sonata.py
     # This should be done somewhere more appropriate, but here goes:
     - srun -n5 python tests/test_validation_FLAT.py --run-multi-index
-    - bash .ci/test_circuit_config-segments-2k.sh
-    - bash .ci/test_circuit_config-synapses-2k.sh
+    - bash .ci/test_circuit_config-circuit-2k.sh
+    - bash .ci/test_circuit_config-usecase1.sh
 
 
 test-bare-ubuntu:

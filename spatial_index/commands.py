@@ -79,17 +79,16 @@ def spatial_index_circuit(args=None):
     logging.basicConfig(level=logging.INFO)
 
     options = docopt_get_args(spatial_index_circuit, args)
-    config = _sonata_expanded_circuit_config(options["circuit_file"])
-    population = _validated_population(options)
+    circuit_config, json_config = _sonata_circuit_config(options["circuit_file"])
+    population = _validated_population(circuit_config, options)
 
     if options['segments']:
-        assert population is None, "Segment indices don't support populations."
-        nodes_file = _sonata_nodes_file(config, population)
-        morphology_dir = _sonata_morphology_dir(config)
+        nodes_file = _sonata_nodes_file(json_config, population)
+        morphology_dir = _sonata_morphology_dir(circuit_config, population)
         _run_spatial_index_nodes(morphology_dir, nodes_file, options)
 
     elif options['synapses']:
-        edges_file = _sonata_edges_file(config, population)
+        edges_file = _sonata_edges_file(json_config, population)
         _run_spatial_index_synapses(edges_file, population, options)
 
     else:
@@ -123,17 +122,30 @@ def spatial_index_compare(args=None):
         exit(-1)
 
 
-def _validated_population(options):
+def _validated_population(circuit_config, options):
     populations = options["populations"]
 
+    if options["segments"]:
+        available_populations = circuit_config.node_populations
+
+    elif options["synapses"]:
+        available_populations = circuit_config.edge_populations
+
+    else:
+        raise NotImplementedError("Missing circuit kind.")
+
+    if populations is None:
+        populations = available_populations
+
     error_msg = "At most one population is supported."
-    assert populations is None or len(populations) <= 1, error_msg
-    return populations[0] if populations else None
+    assert len(populations) == 1, error_msg
+
+    return next(iter(populations))
 
 
 def _sonata_select_by_population(iterable, key, population):
     def matches_population(n):
-        return population is None or population in n.get("populations", dict())
+        return population == "All" or population in n.get("populations", dict())
 
     selection = [n[key] for n in iterable if matches_population(n)]
     assert len(selection) == 1, "Couln't determine a unique '{}'.".format(key)
@@ -141,12 +153,14 @@ def _sonata_select_by_population(iterable, key, population):
     return selection[0]
 
 
-def _sonata_expanded_circuit_config(config_file):
+def _sonata_circuit_config(config_file):
     import libsonata
     import json
 
-    config = libsonata.CircuitConfig.from_file(config_file)
-    return json.loads(config.expanded_json)
+    circuit_config = libsonata.CircuitConfig.from_file(config_file)
+    json_config = json.loads(circuit_config.expanded_json)
+
+    return circuit_config, json_config
 
 
 def _sonata_nodes_file(config, population):
@@ -159,8 +173,9 @@ def _sonata_edges_file(config, population):
     return _sonata_select_by_population(edges, key="edges_file", population=population)
 
 
-def _sonata_morphology_dir(config):
-    return config["components"]["morphologies_dir"]
+def _sonata_morphology_dir(config, population):
+    node_prop = config.node_population_properties(population)
+    return node_prop.morphologies_dir
 
 
 def _parse_mem_map_options(options: dict) -> DiskMemMapProps:
