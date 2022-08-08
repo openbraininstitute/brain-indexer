@@ -1,14 +1,13 @@
 #!/bin/env bash
 #
-#SBATCH --job-name="syn_mmap_index"
-#SBATCH --time=48:00:00
+#SBATCH --job-name="syn_mmap_test_SI"
+#SBATCH --time=1:00:00
 #SBATCH --exclusive
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --account=proj16
 #SBATCH --partition=prod
 #SBATCH --constraint=nvme,skl
-#SBATCH --qos=longjob
 set -ex
 
 # Activate the virtualenv where SpatialIndex is installed

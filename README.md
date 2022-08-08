@@ -6,11 +6,17 @@ Spatial Index is a library for efficient Spatial queries over large sets of geom
 
 It provides a high level Python API for indexes of (1) low-level spherical geometries and (2) spherical and cylindrical geometries adapted to neuron morphologies.
 
+Spatial Index allows the user to create huge indexes via multi-indexes or memory mapping and is extremely flexible in that regard.
+
+## Where to start
+
+We included plenty of examples in the `examples` folder and there's also a `basic_tutorial.ipynb` and an `advanced_tutorial.ipynb` Jupyter Notebook which are the **recommended** way to get started with this project.
+
 ## How to install
 
 It is advisable to install Spatial Index in a Python virtualenv.
 
-You use `pip install --index https://bbpteam.epfl.ch/repository/devpi/simple spatial_index` to install Spatial Index after you created and activated your virtualenv.
+You can use `pip install --index https://bbpteam.epfl.ch/repository/devpi/simple spatial_index` to install Spatial Index after you created and activated your virtualenv.
 
 Alternatively, to create a Virtual Environment and install Spatial Index, a script is supplied that performs all the operations necessary to create a Virtual Environment and install Spatial Index. The script is available in the `scripts` folder (more info in the following section).
 
@@ -40,15 +46,14 @@ Install using pip:
 ## Examples
 
 Some examples on how to use Spatial Index are available in the `examples` folder:   
-- `segment_index.py` shows how to load a set of geometries, index them and query them using the Spatial Index APIs;
-- `segment_index_sonata.py` shows how to load a set of geometries, perform a selection using SONATA, index and query them using the Spatial Index APIs;
-- `synapse_index.py` shows how to load synapses from a EDGE file, index them and query them using the Spatial Index APIs.
-- `memory_map_index_seg.py` and `memory_map_index_seg.sh` provide some examples on how to use memory mapped files to index segments with an index that wouldn't fit in memory.
-- `memory_map_index_syn.py` and `memory_map_index_syn.sh` provide some examples on how to use memory mapped files to index synapses with an index that wouldn't fit in memory.
+- `segment_index.py`: simple indexing and querying of a segment index 
+- `synapses_index.py`: simple indexing and querying of a synapse index
+- `segment_index_sonata.py`: indexing and querying of a segment index using SONATA files
+- `segment_multi_index_sonata.py`: indexing and querying of a segment multi-index using SONATA files
+- `synapse_multi_index_sonata.py`: indexing and querying of a synapse multi-index using SONATA files
+- `memory_map_index_seg.sh`: shell script to be run with `sbatch` that shows how to properly start Memory-Mapped indexing for a segment index
+- `memory_map_index_seg.py`: Python script illustrating how to create a memory mapped index for segments, loading it from file and querying it
+- `memory_map_index_syn.sh`: shell script to be run with `sbatch` that shows how to properly start Memory-Mapped indexing for a synapse
+- `memory_map_index_syn.py`: Python script illustrating how to create a memory mapped index for synapses, loading it from file and querying it
 
 Also, the `tests` folder contains some tests that double also as examples on how to use Spatial Index.
-
-## Remarks
-
-Some initial support for multithreading and very large circuits has been added. However such functionality is still
-very premature and unsuitable for production jobs. If you are interested please inspect index_grid.hpp.

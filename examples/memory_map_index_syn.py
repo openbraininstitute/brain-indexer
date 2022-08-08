@@ -6,16 +6,18 @@
     perform spatial queries using memory mapped files
 """
 
+import os.path
+
 from spatial_index import SynapseIndexBuilder
 
 # Pre-made index locations
-PRE_MADE_INDEX = "/gpfs/bbp.cscs.ch/project/proj16/bellotta/memory_map"
-PRE_MADE_INDEX_FILE = PRE_MADE_INDEX + "/synapse_index.bin"
+PRE_MADE_INDEX_DIR = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/spatial_index/memory_map"
+PRE_MADE_INDEX_FILE = os.path.join(PRE_MADE_INDEX_DIR, "synapse_index.bin")
 
 # Test edges file location and population name
-EDGES_PATH = "/gpfs/bbp.cscs.ch/project/proj42/circuits/CA1.O1/mooc-circuit/sonata/edges"
-EDGES_FILE = EDGES_PATH + "/edges.h5"
-POPULATION = "hippocampus_neurons__hippocampus_neurons__chemical"
+EDGES_PATH = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/spatial_index/"
+EDGES_FILE = os.path.join(EDGES_PATH, "edges_2k.h5")
+POPULATION = "All"  # Or some other population
 
 
 # Loading pre-made index that you can

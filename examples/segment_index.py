@@ -52,7 +52,7 @@ def build_query_segment_index(min_corner=[-50, 0, 0], max_corner=[0, 50, 50]):
     if len(ids) > 0:
         gid, section_id, segment_id = ids[0]  # first element indices
     else:
-        # No elelemts found within the window
+        # No elements found within the window
         return
 
     # Similar, but query a spherical region
@@ -73,6 +73,13 @@ def build_query_segment_index(min_corner=[-50, 0, 0], max_corner=[0, 50, 50]):
         if i >= 20:
             print("...")
             break
+
+    # Method 4, retrieve all the information in the payload
+    # and output them as a dictionary of numpy arrays.
+    # Segment information includes: gid, section_id, segment_id
+    # radius, endpoint1/2 and kind.
+    dict_query = indexer.find_intersecting_window_np(min_corner, max_corner)
+    print(dict_query)
 
 
 if __name__ == "__main__":

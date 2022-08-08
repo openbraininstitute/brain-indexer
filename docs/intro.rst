@@ -8,11 +8,19 @@ SpatialIndex allows to create indexes and perform volumetric queries with effici
 
 SpatialIndex specializes to several core geometries, namely spheres and cylinders, and derivates: indexed spheres/segments and "unions" of them (variant). These objects are directly stored in the tree structure and have respective bounding boxes created on the fly. As such some CPU cycles were traded for substantial memory savings, aiming at near-billion indexed geometries per cluster node.
 
+Where to start
+--------------
+
+A good starting point to learn how to use SpatialIndex is to follow the `basic_tutorial.ipynb` Jupyter Notebook that you can find in the `examples` folder of the repo. There's also an `advanced_tutorial.ipynb` Jupyter Notebook for when you already know the basics.
+This should give you all the basic information regarding SpatialIndex and lots of example on how it can be useful in your workflow.
+
+**We recommend that first time users star from there!**
+
 
 Public API: C++
 ---------------
 
-The core library is implemented as a C++14 Header-Only libray and offers a wide range of possibilities.
+The core library is implemented as a C++17 Header-Only library and offers a wide range of possibilities.
 
 By including `spatial_index/index.hpp` and `spatial_index/util.hpp` the user has access to the whole API which is highly flexible due to templates. For instance the IndexTree class can be templated to any of the defined structures or new user defined geometries, providing the user with a boost index rtree object which automamtically supports serialization and higher level API functions.
 

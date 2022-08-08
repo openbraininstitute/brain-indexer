@@ -6,16 +6,18 @@
     perform spatial queries using memory mapped files
 """
 
+import os.path
+
 from spatial_index import MorphIndexBuilder
 
 # Pre-made index locations
-PRE_MADE_INDEX_2K = "/gpfs/bbp.cscs.ch/project/proj16/bellotta/memory_map"
-PRE_MADE_INDEX_FILE = PRE_MADE_INDEX_2K + "/segment_index.bin"
+PRE_MADE_INDEX_DIR = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/spatial_index/memory_map"
+PRE_MADE_INDEX_FILE = os.path.join(PRE_MADE_INDEX_DIR, "segment_index.bin")
 
 # Test node and morph file locations
 CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-2k"
-NODE_FILE = CIRCUIT_2K + "/circuit.mvd3"
-MORPH_FILE = CIRCUIT_2K + "/morphologies/ascii"
+NODE_FILE = os.path.join(CIRCUIT_2K, "circuit.mvd3")
+MORPH_FILE = os.path.join(CIRCUIT_2K, "morphologies/ascii")
 
 # Loading pre-made index that you can
 # create using the spatial-index-nodes command
@@ -38,7 +40,7 @@ print("Pre-Made Index - Number of elements within window:", len(ids))
 # please contact the HPC team or the main developers of Spatial Index.
 
 # Specify the index output filename, size and shrink on close
-disk_mem_map = MorphIndexBuilder.DiskMemMapProps("mem_map.bin", 2048, True, True)
+disk_mem_map = MorphIndexBuilder.DiskMemMapProps("seg_map.bin", 2048, True)
 
 # Then create a MorphIndexBuilder object specifying
 # the path to the morphology directory and the nodes file

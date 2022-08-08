@@ -21,23 +21,34 @@ def example_syn_index():
     indexer = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, "All", return_indexer=True)
     print("Index size:", len(indexer.index))
 
-    # Way #1 - Get the ids, then query the edge file for ANY data
-    points_in_region = indexer.index.find_intersecting_window([200, 200, 480],
-                                                              [300, 300, 520])
+    # Specify the corners for the box query
+    min_corner = [200, 200, 480]
+    max_corner = [300, 300, 520]
+
+    # Method #1 - Get the ids, then query the edge file for ANY data
+    points_in_region = indexer.index.find_intersecting_window(min_corner,
+                                                              max_corner)
     print("Found N points:", len(points_in_region))
 
     z_coords = indexer.edges.get_attribute("afferent_center_z",
                                            Selection(points_in_region))
     print("First 10 Z coordinates: ", z_coords[:10])
 
-    # Way #2, get the objects: position and id directly from index
-    objs_in_region = indexer.index.find_intersecting_window_objs([200, 200, 480],
-                                                                 [300, 300, 520])
+    # Method #2, get the objects: position and id directly from index
+    objs_in_region = indexer.index.find_intersecting_window_objs(min_corner,
+                                                                 max_corner)
     for i, obj in enumerate(objs_in_region):
         if i % 20 == 0:
             print("Sample synapse id:", obj.id, "Position", obj.centroid)
             print("Post-syn Neuron gid:", obj.post_gid,
                   "pre-syn Neuron gid:", obj.pre_gid)
+
+    # Method #3, get the information as a dictionary of numpy arrays
+    # Information for synapses includes: id, pre_gid, post_gid,
+    # centroid and kind.
+    dict_query = indexer.index.find_intersecting_window_np(min_corner,
+                                                           max_corner)
+    print(dict_query)
 
 
 if __name__ == "__main__":
