@@ -112,12 +112,19 @@ class MorphIndexBuilderBase(IndexBuilderBase):
 
         # mvd files use (x, y, z, w) representation for quaternions. npq uses (w, x, y, z)
         rotation_vector = np.roll(rotation, 1)
-        points = (npq.rotate_vectors(npq.quaternion(*rotation_vector).normalized(),
-                                     morph.points)
-                  if rotation is not None
-                  else morph.points)
 
-        points += position
+        if rotation is not None:
+            points = npq.rotate_vectors(
+                npq.quaternion(*rotation_vector).normalized(),
+                morph.points
+            )
+
+            points += position
+
+        else:
+            # Don't modify morphology-db points inplace, i.e. never `+=`.
+            points = morph.points + position
+
         return points
 
     def process_cell(self, gid, morph, points, position):
@@ -125,7 +132,7 @@ class MorphIndexBuilderBase(IndexBuilderBase):
         """
         morph = self.morph_lib.get(morph)
         soma_center, soma_rad = morph.soma
-        soma_center += position
+        soma_center = soma_center + position  # Avoid +=
         self.index.add_soma(gid, soma_center, soma_rad)
         self.index.add_neuron(
             gid, points, morph.radius, morph.branch_offsets[:-1], False
