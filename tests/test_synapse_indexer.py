@@ -3,14 +3,24 @@
 # Copyright Blue Brain Project 2020-2021. All rights reserved
 
 import h5py
+import numpy
 import os.path
+import pytest
 from libsonata import Selection
 from spatial_index import SynapseIndexBuilder
-try:
-    import pytest
-    pytest_skipif = pytest.mark.skipif
-except ImportError:
-    pytest_skipif = lambda *x, **kw: lambda y: y  # noqa
+
+_CURDIR = os.path.dirname(__file__)
+EDGE_FILE = os.path.join(_CURDIR, "data", "edges_2k.h5")
+pytest_skipif = pytest.mark.skipif
+
+
+@pytest.fixture(scope="module")
+def syn_index():
+    """Returns the extended index built from a Sonata file
+    The low-level index is avail at .raw_index
+    """
+    return SynapseIndexBuilder.from_sonata_file(EDGE_FILE, "All")
+
 
 _CURDIR = os.path.dirname(__file__)
 EDGE_FILE = os.path.join(_CURDIR, "data", "edges_2k.h5")
@@ -18,13 +28,8 @@ EDGE_FILE = os.path.join(_CURDIR, "data", "edges_2k.h5")
 
 @pytest_skipif(not os.path.exists(EDGE_FILE),
                reason="Edge file not available")
-def test_syn_index():
-    indexer = SynapseIndexBuilder.from_sonata_file(
-        EDGE_FILE, "All",
-        progress=True,
-        return_indexer=True
-    )
-    index = indexer.index
+def test_syn_index(syn_index):
+    index = syn_index
     print("Index size:", len(index))
 
     f = h5py.File(EDGE_FILE, 'r')
@@ -36,8 +41,8 @@ def test_syn_index():
     print("Found N synapses:", len(points_in_region))
     assert len(ds) > len(points_in_region) > 0
 
-    z_coords = indexer.edges.get_attribute("afferent_center_z",
-                                           Selection(points_in_region))
+    z_coords = syn_index.dataset.get_attribute("afferent_center_z",
+                                               Selection(points_in_region))
     for z in z_coords:
         assert 480 < z < 520
 
@@ -61,3 +66,16 @@ def test_syn_index():
     assert aggregated[159] == 2
     assert aggregated[473] == 4
     assert total_in_region == sum(aggregated.values())
+
+
+@pytest_skipif(not os.path.exists(EDGE_FILE),
+               reason="Edge file not available")
+def test_extended_syn_index(syn_index):
+    WINDOW = ([200, 200, 480], [300, 300, 520])
+    result = syn_index.window_q(*WINDOW)
+    assert isinstance(result, dict)
+    assert 'afferent_section_id' in result
+    assert len(result['afferent_section_id']) == len(result['id']) > 10
+
+    ids = syn_index.window_q(*WINDOW, output="ids")
+    assert numpy.array_equal(result["id"], ids)

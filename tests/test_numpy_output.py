@@ -29,14 +29,13 @@ EDGE_FILE = os.path.join(_CURDIR, "data", "edges_2k.h5")
 @pytest_skipif(not os.path.exists(EDGE_FILE),
                reason="Edge file not available")
 def test_numpy_output_syn():
-
-    indexer = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, "All", return_indexer=True)
+    index = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, "All")
 
     min_corner = [200, 200, 480]
     max_corner = [300, 300, 520]
 
-    np_out = indexer.index.find_intersecting_window_np(min_corner, max_corner)
-    obj_out = indexer.index.find_intersecting_window_objs(min_corner, max_corner)
+    np_out = index.find_intersecting_window_np(min_corner, max_corner)
+    obj_out = index.find_intersecting_window_objs(min_corner, max_corner)
 
     for i, obj in enumerate(obj_out):
         assert np.array_equal(obj.id, np_out['id'][i])
@@ -49,12 +48,13 @@ def test_numpy_output_seg():
 
     indexer = MorphIndexBuilder(MORPH_FILE, CIRCUIT_FILE)
     indexer.process_range((700, 750))  # 50 cells
+    index = indexer.index
 
     min_corner = [-50, 0, 0]
     max_corner = [0, 50, 50]
 
-    np_out = indexer.index.find_intersecting_window_np(min_corner, max_corner)
-    obj_out = indexer.index.find_intersecting_window_objs(min_corner, max_corner)
+    np_out = index.find_intersecting_window_np(min_corner, max_corner)
+    obj_out = index.find_intersecting_window_objs(min_corner, max_corner)
 
     for i, obj in enumerate(obj_out):
         assert np.array_equal(obj.gid, np_out['gid'][i])

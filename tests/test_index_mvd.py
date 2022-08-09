@@ -77,8 +77,8 @@ def test_serial_exec():
 
     m = _3DMorphology(
         morphio.Morphology(MORPHOLOGY_FILES[1]),
-        node_indexer.mvd.rotations(0)[0],
-        node_indexer.mvd.positions(0)[0],
+        node_indexer._src_data.rotations(0)[0],
+        node_indexer._src_data.positions(0)[0],
     )
     _, _, final_section_pts = m.compute_final_points()
 

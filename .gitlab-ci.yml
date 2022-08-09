@@ -64,20 +64,9 @@ test-examples:
     - module load unstable cmake gcc boost hpe-mpi py-mpi4py
     - python -m venv venv
     - source venv/bin/activate
-    - pip install ipython jupyter
+    - pip install ipython jupyter pytest
     - pip install -e .
-    - python examples/memory_map_index_seg.py
-    - python examples/memory_map_index_syn.py
-    - python examples/segment_index_sonata.py
-    - python examples/segment_index.py
-    - python examples/synapses_index.py
-    - srun -n5 python examples/segment_multi_index_sonata.py
-    - srun -n3 python examples/synapse_multi_index_sonata.py
-    # This should be done somewhere more appropriate, but here goes:
-    - srun -n5 python tests/test_validation_FLAT.py --run-multi-index
-    - bash .ci/test_circuit_config-circuit-2k.sh
-    - bash .ci/test_circuit_config-usecase1.sh
-    - bash examples/run_ipynb.sh examples/basic_tutorial.ipynb
+    - bash .ci/_run_examples.sh
 
 
 test-bare-ubuntu:

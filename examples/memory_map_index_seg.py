@@ -47,6 +47,7 @@ disk_mem_map = MorphIndexBuilder.DiskMemMapProps("seg_map.bin", 2048, True)
 index = MorphIndexBuilder.create(
     MORPH_FILE,
     NODE_FILE,
+    gids=range(700, 900),
     disk_mem_map=disk_mem_map,
     progress=True
 )

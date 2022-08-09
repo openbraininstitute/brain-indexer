@@ -21,10 +21,9 @@ import numpy as np
 import quaternion as npq
 
 from . import _spatial_index as core
-from ._spatial_index import MorphIndex, MorphIndexMemDisk
-from ._spatial_index import MorphMultiIndex
-
-from .util import ChunkedProcessingMixin, MultiIndexBuilderMixin, DiskMemMapProps
+from .index_common import DiskMemMapProps, IndexBuilderBase
+from .index_common import ExtendedIndex, ExtendedMultiIndexMixin
+from .util import ChunkedProcessingMixin, MultiIndexBuilderMixin
 
 morphio.set_ignored_warning(morphio.Warning.only_child)
 MorphInfo = namedtuple("MorphInfo", "soma, points, radius, branch_offsets")
@@ -70,8 +69,26 @@ class MorphologyLib:
         return self._morphologies.get(morph_name) or self._load(morph_name)
 
 
-class MorphIndexBuilderBase:
-    def __init__(self, morphology_dir, nodes_file, population="", gids=None):
+class MorphIndex(ExtendedIndex):
+    """
+    An extended Morphology index.
+
+    It inherits queries whose core results are extended with additional Sonata fields
+    """
+
+    CoreIndexClass = core.MorphIndex
+    IndexClassMemMap = core.MorphIndexMemDisk
+
+    @classmethod
+    def open_dataset(cls, nodes_file, population):
+        return mvdtool.open(nodes_file, population)
+
+
+class MorphIndexBuilderBase(IndexBuilderBase):
+
+    IndexClass = MorphIndex
+
+    def __init__(self, morphology_dir, nodes_file, population="", gids=None, **kw):
         """Initializes a node index builder
 
         Args:
@@ -80,15 +97,15 @@ class MorphIndexBuilderBase:
             population (str, optional): The nodes population. Defaults to "" (default).
             gids ([type], optional): A selection of gids to index. Defaults to None (All)
         """
-
-        self.morph_lib = MorphologyLib(morphology_dir)
-        self.mvd = mvdtool.open(nodes_file, population)
-        self._gids = range(0, len(self.mvd)) if gids is None else \
+        mvd = mvdtool.open(nodes_file, population)
+        gids = range(0, len(mvd)) if gids is None else \
             np.sort(np.array(gids, dtype=int))
-        logging.info("Index count: %d cells", len(self._gids))
+        super().__init__(mvd, gids, **kw)
+        self.morph_lib = MorphologyLib(morphology_dir)
+        logging.info("Index count: %d cells", len(gids))
 
     def n_elements_to_import(self):
-        return len(self._gids)
+        return len(self._selection)
 
     def rototranslate(self, morph, position, rotation):
         morph = self.morph_lib.get(morph)
@@ -120,8 +137,8 @@ class MorphIndexBuilderBase:
         :param: range_ (start, end, [step]), or (None,) [all]
         """
         slice_ = slice(*range_)
-        cur_gids = self._gids[slice_]
-        actual_indices = slice_.indices(len(self._gids))
+        cur_gids = self._selection[slice_]
+        actual_indices = slice_.indices(len(self._selection))
         assert actual_indices[2] > 0, "Step cannot be negative"
         # gid vec is sorted. check if range is contiguous
         if len(cur_gids) and cur_gids[0] + len(cur_gids) == cur_gids[-1] + 1:
@@ -129,7 +146,7 @@ class MorphIndexBuilderBase:
         else:
             index_args = (np.array(cur_gids),)  # numpy can init from a range obj
 
-        mvd = self.mvd
+        mvd = self._src_data
         morph_names = mvd.morphologies(*index_args)
         positions = mvd.positions(*index_args)
         rotations = mvd.rotations(*index_args) if mvd.rotated else itertools.repeat(None)
@@ -183,45 +200,29 @@ class MorphIndexBuilder(MorphIndexBuilderBase, ChunkedProcessingMixin):
 
     DiskMemMapProps = DiskMemMapProps  # shortcut
 
-    def __init__(self, morphology_dir, nodes_file, population="", gids=None,
-                 disk_mem_map: DiskMemMapProps = None):
-        """Initializes a node index builder
 
-        Args:
-            morphology_dir (str): The file/directory where morphologies reside
-            nodes_file (str): The Sonata/mvd nodes file
-            population (str, optional): The nodes population. Defaults to "" (default).
-            gids ([type], optional): A selection of gids to index. Defaults to None (All)
-            disk_mem_map (DiskMemMapProps, optional): In provided, specifies properties
-                of the memory-mapped-file backing this struct [experimental!]
-        """
-        if disk_mem_map:
-            self.index = MorphIndexMemDisk.create(*disk_mem_map.args)
-        else:
-            self.index = MorphIndex()
-
-        super().__init__(morphology_dir, nodes_file, population, gids)
-
-    @classmethod
-    def load_dump(cls, filename):
-        """Load the index from a dump file"""
-        return MorphIndex(filename)
-
-    @classmethod
-    def load_disk_mem_map(cls, filename):
-        """Load the index from a dump file"""
-        return MorphIndexMemDisk.open(filename)
+class MorphMultiIndex(ExtendedMultiIndexMixin, MorphIndex):
+    """
+    An extended MorphMulti index.
+    """
+    CoreIndexClass = core.MorphMultiIndex
+    IndexClassMemMap = None  # no mem maps
 
 
-class MorphMultiIndexBuilder(MorphIndexBuilderBase, MultiIndexBuilderMixin):
-    def __init__(self, morphology_dir, nodes_file, population="", gids=None,
-                 output_dir=None):
+# Only provide MPI MultiIndex builders if enabled at the core
+if hasattr(core, "MorphMultiIndexBulkBuilder"):
 
-        assert output_dir is not None, f"Invalid `output_dir`. [{output_dir}]"
-        self.index = core.MorphMultiIndexBulkBuilder(output_dir)
-        super().__init__(morphology_dir, nodes_file, population=population, gids=gids)
+    class MorphMultiIndexBuilder(MultiIndexBuilderMixin, MorphIndexBuilderBase):
+        IndexClass = MorphMultiIndex
+        CoreIndexBuilder = core.MorphMultiIndexBulkBuilder
 
-    @classmethod
-    def open_index(cls, output_dir, mem):
-        """Open a multi index with `mem` bytes of memory allowance."""
-        return MorphMultiIndex(output_dir, mem)
+        def __init__(self, morphology_dir, nodes_file, population="", gids=None,
+                     output_dir=None):
+            assert output_dir is not None, f"Invalid `output_dir`. [{output_dir}]"
+            super().__init__(
+                morphology_dir,
+                nodes_file,
+                population=population,
+                gids=gids,
+                index_ctor_args=(output_dir,)
+            )

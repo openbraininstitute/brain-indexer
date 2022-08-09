@@ -2,10 +2,10 @@
     High level command line commands
 """
 import logging
+from .index_common import DiskMemMapProps
 from .node_indexer import MorphIndexBuilder
 from .synapse_indexer import SynapseIndexBuilder
-from .util import DiskMemMapProps, check_free_space, docopt_get_args, get_dirname
-from .util import is_likely_same_index
+from .util import check_free_space, docopt_get_args, get_dirname, is_likely_same_index
 
 
 def spatial_index_nodes(args=None):
@@ -208,7 +208,7 @@ def _run_spatial_index_nodes(morphology_dir, nodes_file, options):
 
     if not disk_mem_map:
         logging.info("Writing index to file: %s", options["out"])
-        index.dump(options["out"])
+        index.index.dump(options["out"])
 
 
 def _run_spatial_index_synapses(edges_file, population, options):
@@ -222,4 +222,4 @@ def _run_spatial_index_synapses(edges_file, population, options):
 
     if not disk_mem_map:
         logging.info("Writing index to file: %s", options["out"])
-        index.dump(options["out"])
+        index.index.dump(options["out"])

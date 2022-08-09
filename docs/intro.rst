@@ -99,7 +99,7 @@ In this case SynapseIndexBuilder is the appropriate class to use:
 
     from spatial_index import SynapseIndexBuilder
     from libsonata import Selection
-    indexer = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, "All", return_indexer=True)
+    indexer = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, "All")
 
 Then one can query the synapses index by getting the gids first and then querying the edge file for the synapse data.
 Keep in mind that the resulting objects only have two properties: gid and centroid.
@@ -107,7 +107,7 @@ Keep in mind that the resulting objects only have two properties: gid and centro
 .. code-block:: python
 
     points_in_region = indexer.index.find_intersecting_window([200, 200, 480], [300, 300, 520])
-    z_coords = indexer.edges.get_attribute("afferent_center_z", Selection(points_in_region))
+    z_coords = indexer.dataset.get_attribute("afferent_center_z", Selection(points_in_region))
 
 Otherwise one can query directly from the index:
 

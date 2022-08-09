@@ -6,7 +6,9 @@ import logging
 import numpy
 
 from . import _spatial_index as core
-from .util import ChunkedProcessingMixin, DiskMemMapProps, gen_ranges
+from .index_common import DiskMemMapProps, ExtendedIndex, ExtendedMultiIndexMixin
+from .index_common import IndexBuilderBase
+from .util import ChunkedProcessingMixin, gen_ranges
 from .util import MultiIndexBuilderMixin
 
 
@@ -26,12 +28,37 @@ class PointIndex(core.SphereIndex):
         return core.SphereIndex(synapse_centers, None, synapse_ids)
 
 
-class SynapseIndexBuilderBase:
+class SynapseIndex(ExtendedIndex):
+    """An extended synapse index.
+    It inherits queries whose core results are extended with additonal Sonata fields
+    """
+
+    CoreIndexClass = core.SynapseIndex
+    IndexClassMemMap = core.SynapseIndexMemDisk
+
+    DefaultExtraFields = ("afferent_section_id", "afferent_section_pos")
+
+    @classmethod
+    def open_dataset(cls, sonata_filename, population_name):
+        storage = libsonata.EdgeStorage(sonata_filename)
+        if population_name is None:
+            if len(storage.population_names) > 1:
+                raise RuntimeError("No population chosen, multiple available")
+            population_name = next(iter(storage.population_names), None)
+            logging.info("Population not set. Auto-selecting '%s'", population_name)
+
+        return storage.open_population(population_name)
+
+
+class SynapseIndexBuilderBase(IndexBuilderBase):
+
+    IndexClass = SynapseIndex
+
     N_ELEMENTS_CHUNK = 1
     MAX_SYN_COUNT_RANGE = 100_000
 
-    def __init__(self, sonata_edges, selection):
-        self.edges = sonata_edges
+    def __init__(self, sonata_edges, selection, **kw):
+        super().__init__(sonata_edges, selection, **kw)
         self._selection = self.normalize_selection(selection)
 
     def n_elements_to_import(self):
@@ -40,12 +67,12 @@ class SynapseIndexBuilderBase:
     def process_range(self, range_):
         selection = libsonata.Selection(self._selection.ranges[slice(*range_)])
         syn_ids = selection.flatten()
-        post_gids = self.edges.target_nodes(selection)
-        pre_gids = self.edges.source_nodes(selection)
+        post_gids = self._src_data.target_nodes(selection)
+        pre_gids = self._src_data.source_nodes(selection)
         synapse_centers = numpy.dstack((
-            self.edges.get_attribute("afferent_center_x", selection),
-            self.edges.get_attribute("afferent_center_y", selection),
-            self.edges.get_attribute("afferent_center_z", selection)
+            self._src_data.get_attribute("afferent_center_x", selection),
+            self._src_data.get_attribute("afferent_center_y", selection),
+            self._src_data.get_attribute("afferent_center_z", selection)
         ))
         self.index.add_synapses(syn_ids, post_gids, pre_gids, synapse_centers)
 
@@ -76,18 +103,9 @@ class SynapseIndexBuilderBase:
             population_name: The name of the population
             target_gids: A list/array of target gids to index. Default: None
                 Warn: None will index all synapses, please mind memory limits
-            return_indexer: If True, returns the full indexer object
-                (inherited from ChunkedProcessingMixin)
 
         """
-        storage = libsonata.EdgeStorage(edge_filename)
-        if population_name is None:
-            if len(storage.population_names) > 1:
-                raise RuntimeError("No population chosen, multiple available")
-            population_name = next(iter(storage.population_names), None)
-            logging.info("Population not set. Auto-selecting '%s'", population_name)
-
-        edges = storage.open_population(population_name)
+        edges = SynapseIndex.open_dataset(edge_filename, population_name)
         return cls.from_sonata_tgids(edges, target_gids, **kw)
 
     @classmethod
@@ -112,33 +130,19 @@ class SynapseIndexBuilder(SynapseIndexBuilderBase, ChunkedProcessingMixin):
     # set in `SynapseIndexBuilderBase` not `ChunkedProcessingMixin`.
     N_ELEMENTS_CHUNK = SynapseIndexBuilderBase.N_ELEMENTS_CHUNK
 
-    def __init__(self, sonata_edges, selection, disk_mem_map: DiskMemMapProps = None):
-        if disk_mem_map:
-            self.index = core.SynapseIndexMemDisk.create(*disk_mem_map.args)
-        else:
-            self.index = core.SynapseIndex()
 
-        SynapseIndexBuilderBase.__init__(self, sonata_edges, selection)
-
-    @classmethod
-    def load_dump(cls, filename):
-        """Load the index from a dump file"""
-        return core.SynapseIndex(filename)
-
-    @classmethod
-    def load_disk_mem_map(_cls, filename):
-        """Load the index from a memory mapped file"""
-        return core.SynapseIndexMemDisk.open(filename)
+class SynapseMultiIndex(ExtendedMultiIndexMixin, SynapseIndex):
+    CoreIndexClass = core.SynapseMultiIndex
+    IndexClassMemMap = None  # no mem-maps
 
 
-class SynapseMultiIndexBuilder(SynapseIndexBuilderBase, MultiIndexBuilderMixin):
-    def __init__(self, sonata_edges, selection, output_dir=None):
-        assert output_dir is not None, f"Invalid `output_dir`. [{output_dir}]"
+# Only provide MPI MultiIndex builders if enabled at the core
+if hasattr(core, "SynapseMultiIndexBulkBuilder"):
 
-        self.index = core.SynapseMultiIndexBulkBuilder(output_dir)
-        super().__init__(sonata_edges, selection)
+    class SynapseMultiIndexBuilder(MultiIndexBuilderMixin, SynapseIndexBuilderBase):
+        IndexClass = SynapseMultiIndex
+        CoreIndexBuilder = core.SynapseMultiIndexBulkBuilder
 
-    @classmethod
-    def open_index(cls, output_dir, mem):
-        """Open a multi index with `mem` bytes of memory allowance."""
-        return core.SynapseMultiIndex(output_dir, mem)
+        def __init__(self, sonata_edges, selection, output_dir=None):
+            assert output_dir is not None, f"Invalid `output_dir`. [{output_dir}]"
+            super().__init__(sonata_edges, selection, index_ctor_args=(output_dir,))

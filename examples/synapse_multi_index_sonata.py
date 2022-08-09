@@ -11,7 +11,7 @@
         srun -n5 python synapse_multi_index_sonata.py
 """
 
-from spatial_index import SynapseMultiIndexBuilder
+from spatial_index import SynapseMultiIndex, SynapseMultiIndexBuilder
 from mpi4py import MPI
 
 import os.path
@@ -33,12 +33,12 @@ def example_create_multi_index_from_sonata():
 def example_query_multi_index():
     if MPI.COMM_WORLD.Get_rank() == 0:
         # The index may use at most roughly 1e6 bytes.
-        index = SynapseMultiIndexBuilder.open_index(OUTPUT_DIR, mem=int(1e6))
+        core_index = SynapseMultiIndex.open_core_index(OUTPUT_DIR, mem=int(1e6))
 
         # Define a query window by its two extreme corners, and run the
         # query.
         min_corner, max_corner = [200, 200, 480], [300, 300, 520]
-        found = index.find_intersecting_window_np(min_corner, max_corner)
+        found = core_index.find_intersecting_window_np(min_corner, max_corner)
 
         # Now you can start doing science:
         print(found)

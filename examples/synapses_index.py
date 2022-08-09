@@ -18,7 +18,7 @@ EDGE_FILE = os.path.join(_CURDIR, os.pardir, "tests", "data", "edges_2k.h5")
 
 def example_syn_index():
     # Creating a synapse indexer by using the `return_indexer=True` flag
-    indexer = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, "All", return_indexer=True)
+    indexer = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, "All")
     print("Index size:", len(indexer.index))
 
     # Specify the corners for the box query
@@ -30,8 +30,8 @@ def example_syn_index():
                                                               max_corner)
     print("Found N points:", len(points_in_region))
 
-    z_coords = indexer.edges.get_attribute("afferent_center_z",
-                                           Selection(points_in_region))
+    z_coords = indexer.dataset.get_attribute("afferent_center_z",
+                                             Selection(points_in_region))
     print("First 10 Z coordinates: ", z_coords[:10])
 
     # Method #2, get the objects: position and id directly from index

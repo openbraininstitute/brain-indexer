@@ -1,4 +1,5 @@
 """ spatial_index classes """
+import logging
 import pkg_resources
 
 __copyright__ = "2019 Blue Brain Project, EPFL"
@@ -10,12 +11,12 @@ except Exception:
 
 from . import _spatial_index as core  # noqa
 from ._spatial_index import *  # noqa
-from .node_indexer import MorphIndexBuilder  # noqa
 
-if hasattr(core, "MorphMultiIndexBulkBuilder"):
+try:
     from .node_indexer import MorphMultiIndexBuilder  # noqa
-
-if hasattr(core, "SynapseMultiIndexBulkBuilder"):
     from .synapse_indexer import SynapseMultiIndexBuilder  # noqa
+except ImportError:
+    logging.warning("MPI MultiIndex builders have been disabled")
 
-from .synapse_indexer import PointIndex, SynapseIndexBuilder  # noqa
+from .node_indexer import MorphIndexBuilder, MorphMultiIndex  # noqa
+from .synapse_indexer import PointIndex, SynapseIndexBuilder, SynapseMultiIndex  # noqa

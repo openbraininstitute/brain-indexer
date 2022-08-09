@@ -1,12 +1,12 @@
 import logging
 import os
 import sys
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 
 import numpy as np
 
 
-class ChunkedProcessingMixin:
+class ChunkedProcessingMixin(metaclass=ABCMeta):
 
     N_ELEMENTS_CHUNK = 100
 
@@ -25,11 +25,11 @@ class ChunkedProcessingMixin:
             self.process_range(range_)
 
     @classmethod
-    def create(cls, *args, progress=False, return_indexer=False, **kw):
+    def create(cls, *args, progress=False, **kw):
         """Interactively create, with some progress"""
-        indexer = cls(*args, **kw)
-        indexer.process_all(progress)
-        return indexer if return_indexer else indexer.index
+        index_builder = cls(*args, **kw)
+        index_builder.process_all(progress)
+        return index_builder.get_object()
 
     @classmethod
     def create_parallel(cls, *ctor_args, num_cpus=None, progress=False):
@@ -121,19 +121,6 @@ def get_dirname(path):
     return os.path.dirname(path) or "."
 
 
-class DiskMemMapProps:
-    """A class to configure memory-mapped files as the backend for spatial indices."""
-
-    def __init__(self, map_file, file_size=1024, close_shrink=False):
-        self.memdisk_file = map_file
-        self.file_size = file_size
-        self.shrink = close_shrink
-
-    @property
-    def args(self):
-        return self.memdisk_file, self.file_size, self.shrink
-
-
 def balanced_chunk(n_elements, n_chunks, k_chunk):
     chunk_size = n_elements // n_chunks
     n_large_chunks = n_elements % n_chunks
@@ -167,7 +154,7 @@ class MultiIndexBuilderMixin:
         return self.index.local_size()
 
     @classmethod
-    def create(cls, *args, output_dir=None, progress=False, return_indexer=False, **kw):
+    def create(cls, *args, output_dir=None, progress=False, **kw):
         """Interactively create, with some progress"""
         from mpi4py import MPI
         register_mpi_excepthook()
@@ -199,13 +186,18 @@ class MultiIndexBuilderMixin:
         comm.Barrier()
 
         if mpi_rank == 0:
-            indexer.index = cls.open_index(output_dir, mem=10**9)
+            # The generated index has to be re-opened as a whole
+            indexer.index = cls.IndexClass.open_core_index(output_dir, mem=10**9)
             print(f"index elements: {len(indexer.index)}")
 
-        if return_indexer:
-            return indexer
-        else:
-            return indexer.index if mpi_rank == 0 else None
+        return indexer.get_object()
+
+    @classmethod
+    def load_dir(cls, output_dir, data_file, mem=10**9):
+        """Creates an extended multi-index from a raw multi index directory
+        with `mem` bytes of memory allowance
+        """
+        return cls.IndexClass.from_dir(output_dir, mem, data_file, mem)
 
 
 class MultiIndexWorkQueue:

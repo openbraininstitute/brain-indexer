@@ -8,7 +8,7 @@
 
 from mpi4py import MPI
 
-from spatial_index import MorphMultiIndexBuilder
+from spatial_index import MorphMultiIndex, MorphMultiIndexBuilder
 
 # Loading some small circuits and morphology files on BB5
 CIRCUIT_1K = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-1k"
@@ -32,12 +32,12 @@ def example_create_multi_index_from_sonata():
 def example_query_multi_index():
     if MPI.COMM_WORLD.Get_rank() == 0:
         # The index may use at most roughly 1e6 bytes.
-        index = MorphMultiIndexBuilder.open_index(OUTPUT_DIR, mem=int(1e6))
+        core_index = MorphMultiIndex.open_core_index(OUTPUT_DIR, mem=int(1e6))
 
         # Define a query window by its two extreme corners, and run the
         # query.
         min_corner, max_corner = [-50, 0, 0], [0, 50, 50]
-        found = index.find_intersecting_window_np(min_corner, max_corner)
+        found = core_index.find_intersecting_window_np(min_corner, max_corner)
 
         # Now you're ready for the real science:
         print(found)

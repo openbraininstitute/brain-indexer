@@ -21,7 +21,9 @@ MORPH_FILE = CIRCUIT_1K + "/morphologies/ascii"
 def example_sonata_index():
     # Create a new indexer and load the nodes and morphologies
     # directly from the SONATA file
-    index = MorphIndexBuilder.from_sonata_file(MORPH_FILE, NODES_FILE, "All")
+    index = MorphIndexBuilder.from_sonata_file(MORPH_FILE, NODES_FILE, "All",
+                                               target_gids=range(700, 900),
+                                               progress=True)
     print("Index size:", len(index))
 
     # Way #1 - Get the ids, then query the node file for ANY data
@@ -37,10 +39,10 @@ def example_sonata_index():
 
     # Optionally, you can also use a SONATA selection to create a new index
     # and then query it using the usual methods
-    selection = libsonata.Selection(
-        values=[4, 8, 15, 16, 23, 42])
+    selection = libsonata.Selection(values=[4, 8, 15, 16, 23, 42])
     index_selection = MorphIndexBuilder.from_sonata_selection(
-        MORPH_FILE, NODES_FILE, "All", selection)
+        MORPH_FILE, NODES_FILE, "All", selection
+    )
     print("Index size:", len(index_selection))
     inds = index_selection.find_intersecting_window_objs([15, 900, 15], [20, 1900, 20])
     print("Found N objects:", len(inds))
