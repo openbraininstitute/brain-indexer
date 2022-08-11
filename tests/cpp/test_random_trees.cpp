@@ -384,6 +384,24 @@ BOOST_AUTO_TEST_CASE(MultiIndexQueries) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(ASANRtreeInsert) {
+    // This test is a reproducer for an ASAN `stack-use-after-scope`
+    // issue, found when running the Python tests.
+
+    if(mpi::rank(MPI_COMM_WORLD) != 0) {
+        return;
+    }
+
+    auto gen = std::default_random_engine{};
+    auto n_elements = identifier_t(1000);
+    auto domain = std::array<CoordType, 2>{-10.0, 10.0};
+
+    auto elements = random_elements<Segment>(n_elements, domain, 0, gen);
+
+    auto index = IndexTree<EveryEntry>(elements);
+    index.insert(elements.begin(), elements.end());
+}
+
 int main(int argc, char *argv[]) {
     MPI_Init(&argc, &argv);
 
