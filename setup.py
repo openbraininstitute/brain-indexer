@@ -38,7 +38,7 @@ class CMakeBuild(build_ext):
             '-DPYTHON_EXECUTABLE=' + sys.executable
         ] + ext.cmake_opts
 
-        cfg = 'Debug' if self.debug else 'Release'
+        cfg = 'Debug' if self.debug else 'RelWithDebInfo'
         cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
         build_args = ['--config', cfg, '--', '-j4']
 
