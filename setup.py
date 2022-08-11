@@ -103,6 +103,7 @@ package_info = dict(
         "morphio",
         "mvdtool>=2.4.1",
         "docopt",
+        "tqdm",
     ],
     extras_require={
         "mpi": [
