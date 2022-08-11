@@ -285,7 +285,7 @@ class MultiIndexWorkQueue:
         self._current_sizes[source] = local_count
 
 
-def is_likely_same_index(lhs, rhs, confidence=0.99, error_rate=0.001, rtol=1e-6):
+def is_likely_same_index(lhs, rhs, confidence=0.99, error_rate=0.001, rtol=1e-5):
     """Are the two indexes `lhs` and `rhs` likely the same?
 
     This will first perform a few fast, deterministic checks to check if the two
@@ -303,6 +303,7 @@ def is_likely_same_index(lhs, rhs, confidence=0.99, error_rate=0.001, rtol=1e-6)
 
     n_elements = len(lhs)
     if n_elements != len(rhs):
+        logging.info("The number of elements in the two indexes differ.")
         return False
 
     lhs_box = lhs.bounds()
@@ -315,6 +316,7 @@ def is_likely_same_index(lhs, rhs, confidence=0.99, error_rate=0.001, rtol=1e-6)
 
     for lhs_xyz, rhs_xyz in zip(lhs_box, rhs_box):
         if not np.all(np.abs(lhs_xyz - rhs_xyz) < atol):
+            logging.info("The bounding boxes of the two indexes differ.")
             return False
 
     box = lhs_box
@@ -384,31 +386,41 @@ def is_window_query_contained(lhs, rhs, min_corner, max_corner, atol):
     lhs_results = lhs.find_intersecting_window_np(min_corner, max_corner)
     rhs_results = rhs.find_intersecting_window_np(min_corner - atol, max_corner + atol)
 
-    def pack_ids(r):
-        if "gid" in r and "section_id" in r and "segment_id" in r:
-            # Morphology indexes
-            keys = ["gid", "section_id", "segment_id"]
-            dtype = "i,i,i"
+    if all(key in lhs_results for key in ["gid", "section_id", "segment_id"]):
+        # Morphology indexes
+        keys = ["gid", "section_id", "segment_id"]
+        dtype = "i,i,i"
 
-        elif "id" in r:
-            # Synapse indexes (and more).
-            keys = ["id"]
-            dtype = "i"
+    elif "id" in lhs_results:
+        # Synapse indexes (and more).
+        keys = ["id"]
+        dtype = "i"
 
-        else:
-            raise NotImplementedError(
-                "This isn't implemented yet for {} and {}".format(
-                    type(lhs),
-                    type(rhs)
-                )
+    else:
+        raise NotImplementedError(
+            "This isn't implemented yet for {} and {}".format(
+                type(lhs),
+                type(rhs)
             )
+        )
 
-        if lhs_results[keys[0]].size == 0:
-            return True
+    if lhs_results[keys[0]].size == 0:
+        return True
 
-        return np.array([ijk for ijk in zip(*[r[k] for k in keys])], dtype=dtype)
+    def pack_ids(r):
+        return np.array(sorted([ijk for ijk in zip(*[r[k] for k in keys])]), dtype=dtype)
 
     lhs_ids = pack_ids(lhs_results)
     rhs_ids = pack_ids(rhs_results)
 
-    return np.all(np.isin(lhs_ids, rhs_ids))
+    is_equal = np.all(np.isin(lhs_ids, rhs_ids))
+
+    if not is_equal:
+        print(min_corner)
+        print(max_corner)
+
+        print(lhs_results)
+        print(rhs_results)
+        logging.info(f"The two indexes diff:\n{lhs_ids}\n{rhs_ids}")
+
+    return is_equal

@@ -11,6 +11,7 @@ circuit_config_relfile="circuit_config-2k.json"
 edges_relfile=edges_2k.h5
 nodes_relfile=nodes.h5
 morphology_reldir=ascii_sonata
+n_mpi_ranks=3
 
-source ${SI_DIR}/.ci/circuit_config-synapses.sh
+# source ${SI_DIR}/.ci/circuit_config-synapses.sh
 source ${SI_DIR}/.ci/circuit_config-segments.sh

@@ -1,10 +1,13 @@
 """
     High level command line commands
 """
+
 import logging
+import os
+
 from .index_common import DiskMemMapProps
-from .node_indexer import MorphIndexBuilder
-from .synapse_indexer import SynapseIndexBuilder
+from .node_indexer import MorphIndex, MorphMultiIndex, MorphIndexBuilder
+from .synapse_indexer import SynapseIndex, SynapseMultiIndex, SynapseIndexBuilder
 from .util import check_free_space, docopt_get_args, get_dirname, is_likely_same_index
 
 
@@ -20,6 +23,7 @@ def spatial_index_nodes(args=None):
         -o, --out=<filename>     The index output filename [default: out.spi]
         --use-mem-map=<SIZE_MB>  Whether to use a mapped file instead [experimental]
         --shrink-on-close        Whether to shrink the memory file upon closing the object
+        --multi-index            Whether to create a multi-index
     """
     options = docopt_get_args(spatial_index_nodes, args)
     _run_spatial_index_nodes(options["morphology_dir"], options["nodes_file"], options)
@@ -37,6 +41,7 @@ def spatial_index_synapses(args=None):
         -o, --out=<filename>     The index output filename [default: out.spi]
         --use-mem-map=<SIZE_MB>  Whether to use a mapped file instead [experimental]
         --shrink-on-close        Whether to shrink the memory file upon closing the object
+        --multi-index            Whether to create a multi-index
     """
     options = docopt_get_args(spatial_index_synapses, args)
     _run_spatial_index_synapses(options["edges_file"], options.get("population"), options)
@@ -71,6 +76,7 @@ def spatial_index_circuit(args=None):
         -o, --out=<out_file>     The index output filename [default: out.spi]
         --use-mem-map=<SIZE_MB>  Whether to use a mapped file instead (experimental)
         --shrink-on-close        Whether to shrink the memory file upon closing the object
+        --multi-index            Whether to create a multi-index
         --populations=<populations>...  Restrict the spatial index to the listed
                                         Currently, at most one population is supported
     """
@@ -108,17 +114,48 @@ def spatial_index_compare(args=None):
     options = docopt_get_args(spatial_index_compare, args)
 
     if options["segments"]:
-        lhs = MorphIndexBuilder.load_dump(options["lhs_circuit"])
-        rhs = MorphIndexBuilder.load_dump(options["rhs_circuit"])
+        index_kind = "segments"
 
     elif options["synapses"]:
-        lhs = SynapseIndexBuilder.load_dump(options["lhs_circuit"])
-        rhs = SynapseIndexBuilder.load_dump(options["rhs_circuit"])
+        index_kind = "synapses"
 
     else:
         raise NotImplementedError("Missing subcommand.")
 
+    index_factories = {
+        "segments": {
+            "in_memory_index": MorphIndex,
+            "multi_index": MorphMultiIndex,
+        },
+        "synapses": {
+            "in_memory_index": SynapseIndex,
+            "multi_index": SynapseMultiIndex,
+        },
+    }
+
+    open_kwargs = {
+        "in_memory_index": dict(),
+        "multi_index": {"mem": int(1e9)},
+    }
+
+    # TODO remove this once a more uniform API for opening
+    #      indexes exists.
+    def open(path, kind):
+        if os.path.isfile(path):
+            index_type = "in_memory_index"
+        elif os.path.isdir(path):
+            index_type = "multi_index"
+        else:
+            raise RuntimeError(f"Invalid path: {path}")
+
+        index_factory = index_factories[kind][index_type]
+        return index_factory.open_core_index(path, **open_kwargs[index_type])
+
+    lhs = open(options["lhs_circuit"], index_kind)
+    rhs = open(options["rhs_circuit"], index_kind)
+
     if not is_likely_same_index(lhs, rhs):
+        logging.info("The two indexes differ.")
         exit(-1)
 
 
@@ -197,29 +234,56 @@ def _parse_mem_map_options(options: dict) -> DiskMemMapProps:
 
 
 def _run_spatial_index_nodes(morphology_dir, nodes_file, options):
-    disk_mem_map = _parse_mem_map_options(options)
+    try:
+        from spatial_index import MorphMultiIndexBuilder
+    except ModuleNotFoundError as e:
+        logging.error("SpatialIndex was likely not built with MPI support.")
+        raise e
 
-    index = MorphIndexBuilder.create(
-        morphology_dir,
-        nodes_file,
-        disk_mem_map=disk_mem_map,
-        progress=True
-    )
+    if options["multi_index"]:
+        MorphMultiIndexBuilder.create(
+            morphology_dir,
+            nodes_file,
+            output_dir=options["out"],
+        )
 
-    if not disk_mem_map:
-        logging.info("Writing index to file: %s", options["out"])
-        index.index.dump(options["out"])
+    else:
+        disk_mem_map = _parse_mem_map_options(options)
+        index = MorphIndexBuilder.create(
+            morphology_dir,
+            nodes_file,
+            disk_mem_map=disk_mem_map,
+            progress=True
+        )
+
+        if not disk_mem_map:
+            logging.info("Writing index to file: %s", options["out"])
+            index.index.dump(options["out"])
 
 
 def _run_spatial_index_synapses(edges_file, population, options):
-    disk_mem_map = _parse_mem_map_options(options)
-    index = SynapseIndexBuilder.from_sonata_file(
-        edges_file,
-        population,
-        disk_mem_map=disk_mem_map,
-        progress=True
-    )
+    try:
+        from spatial_index import SynapseMultiIndexBuilder
+    except ModuleNotFoundError as e:
+        logging.error("SpatialIndex was likely not built with MPI support.")
+        raise e
 
-    if not disk_mem_map:
-        logging.info("Writing index to file: %s", options["out"])
-        index.index.dump(options["out"])
+    if options["multi_index"]:
+        SynapseMultiIndexBuilder.from_sonata_file(
+            edges_file,
+            population,
+            output_dir=options["out"]
+        )
+
+    else:
+        disk_mem_map = _parse_mem_map_options(options)
+        index = SynapseIndexBuilder.from_sonata_file(
+            edges_file,
+            population,
+            disk_mem_map=disk_mem_map,
+            progress=True
+        )
+
+        if not disk_mem_map:
+            logging.info("Writing index to file: %s", options["out"])
+            index.index.dump(options["out"])
