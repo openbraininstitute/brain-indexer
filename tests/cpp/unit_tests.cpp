@@ -209,3 +209,12 @@ BOOST_AUTO_TEST_CASE(IdentifierIs64BitAndUnsigned) {
     BOOST_CHECK(sizeof(identifier_t) == 8);
     BOOST_CHECK(!std::is_signed_v<identifier_t>);
 }
+
+BOOST_AUTO_TEST_CASE(ReciproceOfSmallestFloat) {
+
+    auto float_eps = std::numeric_limits<float>::min();
+    auto double_eps = std::numeric_limits<double>::min();
+
+    BOOST_CHECK(std::isfinite(1.0f/float_eps));
+    BOOST_CHECK(std::isfinite(1.0/double_eps));
+}

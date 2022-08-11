@@ -125,6 +125,9 @@ struct Point3Dx: public Point3D {
     }
 
     /// Self operands
+    inline auto square() const {
+        return (*this) * (*this);
+    }
 
     inline auto sqrt() const {
         return Point3Dx{std::sqrt(get<0>()), std::sqrt(get<1>()), std::sqrt(get<2>())};
@@ -132,6 +135,10 @@ struct Point3Dx: public Point3D {
 
     inline CoordType norm_sq() const noexcept {
         return get<0>() * get<0>() + get<1>() * get<1>() + get<2>() * get<2>();
+    }
+
+    inline auto abs() const {
+        return Point3Dx{std::abs(get<0>()), std::abs(get<1>()), std::abs(get<2>())};
     }
 
     inline CoordType norm() const {

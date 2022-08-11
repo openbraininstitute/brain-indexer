@@ -613,3 +613,136 @@ BOOST_AUTO_TEST_CASE(SelectedCases) {
     }
 }
 BOOST_AUTO_TEST_SUITE_END()
+
+
+//////////////////////////////////////////////////////////////////
+// Bounding Boxes
+//////////////////////////////////////////////////////////////////
+BOOST_AUTO_TEST_SUITE(BoundingBoxChecks)
+BOOST_AUTO_TEST_CASE(CylinderSelectedCases) {
+    auto eps = CoordType(1e3) * std::numeric_limits<CoordType>::epsilon();
+
+    auto test_cases = std::vector<std::tuple<Cylinder, Box3D, double>>{};
+
+    // Flips the endpoints of the Cylinder.
+    auto register_pair = [&test_cases](const Cylinder &c, const Box3D&bb, double atol) {
+        test_cases.emplace_back(c, bb, atol);
+        test_cases.emplace_back(Cylinder{c.p2, c.p1, c.radius}, bb, atol);
+    };
+
+    auto a = Point3Dx{0.3, -0.1, 0.9};
+    auto b = Point3Dx{0.12, 0.34, 0.8};
+
+    auto eps_e0 = Point3Dx{std::numeric_limits<CoordType>::epsilon(), 0.0, 0.0};
+    auto a_eps_e0 = a + eps_e0;
+
+    auto eps_e1 = Point3Dx{0.0, std::numeric_limits<CoordType>::epsilon(), 0.0};
+    auto a_eps_e1 = a + eps_e1;
+
+    auto eps_e2 = Point3Dx{0.0, 0.0, std::numeric_limits<CoordType>::epsilon()};
+    auto a_eps_e2 = a + eps_e2;
+
+    CoordType radius = 0.1;
+
+    register_pair(
+        Cylinder{a, b, radius},
+        Box3D{
+            Point3Dx(min(a, b)) - CoordType(0.5*radius),
+            Point3Dx(max(a, b)) + CoordType(0.5*radius)
+        },
+        (1.0 + eps) * radius
+    );
+
+    register_pair(
+        Cylinder{a, b, 0.0},
+        Box3D{min(a, b), max(a, b)},
+        eps
+    );
+
+    register_pair(
+        Cylinder{a, a, radius},
+        Box3D{
+            Point3Dx(min(a, a)) - CoordType(0.5*radius),
+            Point3Dx(max(a, a)) + CoordType(0.5*radius)
+        },
+        (1.0 + eps) * radius
+    );
+
+    register_pair(
+        Cylinder{a, a, 0.0},
+        Box3D{a, a},
+        eps
+    );
+
+    register_pair(
+        Cylinder{a, a_eps_e0, radius},
+        Box3D{a - radius, a + radius},
+        eps
+    );
+    BOOST_CHECK((a_eps_e0 - a).maximum() > 0);
+
+    register_pair(
+        Cylinder{a, a_eps_e1, radius},
+        Box3D{a - radius, a + radius},
+        eps
+    );
+    BOOST_CHECK((a_eps_e0 - a).maximum() > 0);
+
+    register_pair(
+        Cylinder{a, a_eps_e2, radius},
+        Box3D{a - radius, a + radius},
+        eps
+    );
+    BOOST_CHECK((a_eps_e0 - a).maximum() > 0);
+
+    // This time we assume that the radius is tiny compared
+    // absolute position of `p1` and `p2`; but again `p1`
+    // and `p2` are virtually the same.
+    CoordType alpha = 1e9;
+    register_pair(
+        Cylinder{alpha*a, alpha*a_eps_e0, radius},
+        Box3D{alpha*a - radius, alpha*a + radius},
+        eps*alpha
+    );
+    BOOST_CHECK(((alpha*a_eps_e0) - (alpha*a)).maximum() > 0);
+
+    register_pair(
+        Cylinder{alpha*a, alpha*a_eps_e1, radius},
+        Box3D{alpha*a - radius, alpha*a + radius},
+        eps*alpha
+    );
+    BOOST_CHECK(((alpha*a_eps_e1) - (alpha*a)).maximum() > 0);
+
+    register_pair(
+        Cylinder{alpha*a, alpha*a_eps_e2, radius},
+        Box3D{alpha*a - radius, alpha*a + radius},
+        eps*alpha
+    );
+    BOOST_CHECK(((alpha*a_eps_e1) - (alpha*a)).maximum() > 0);
+
+
+    auto almost_equal = [](const Point3D& a, const Point3D& b, double atol) {
+        return std::abs(a.get<0>() - b.get<0>()) < atol &&
+               std::abs(a.get<1>() - b.get<1>()) < atol &&
+               std::abs(a.get<2>() - b.get<2>()) < atol;
+    };
+
+    for(const auto& [c, bb_expected, atol] : test_cases) {
+        auto bb_actual = c.bounding_box();
+
+        BOOST_CHECK_MESSAGE(
+            almost_equal(bb_expected.min_corner(), bb_actual.min_corner(), atol),
+            "min: expected = " << bb_expected.min_corner()
+                << ", actual = " << bb_actual.min_corner()
+                << ", atol = " << atol
+        );
+
+        BOOST_CHECK_MESSAGE(
+            almost_equal(bb_expected.max_corner(), bb_actual.max_corner(), atol),
+            "max: expected = " << bb_expected.max_corner()
+                << ", actual = " << bb_actual.max_corner()
+                << ", atol = " << atol
+        );
+    }
+}
+BOOST_AUTO_TEST_SUITE_END()
