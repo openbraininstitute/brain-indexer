@@ -243,11 +243,6 @@ UsageRateCache<Storage>::evict_subtrees(const SubtreeID& subtree_id,
         return;
     }
 
-    std::cout << "eviction required: "
-              << subtree_id.id << ", "
-              << n_cached_elements << " / "
-              << cache_params.max_cached_elements << "\n";
-
     auto loaded_subtree_ids = subtree_ids_sorted_by_usage_rate(query_count);
 
     auto n_evict = std::min(cache_params.max_evict, loaded_subtree_ids.size());
