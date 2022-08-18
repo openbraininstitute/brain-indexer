@@ -1,6 +1,7 @@
 #define BOOST_TEST_MODULE SpatialIndex_Benchmarks
 
 #include <algorithm>
+#include <filesystem>
 #include <iostream>
 
 #include <boost/test/unit_test.hpp>
@@ -165,6 +166,8 @@ namespace std {
 }
 
 BOOST_AUTO_TEST_CASE(TestMultiIndex) {
+    std::string index_path = "my_index";
+
     {   // Create the multi index in disk
         SpatialGrid<IndexedSphere, 10> grid;
 
@@ -177,12 +180,13 @@ BOOST_AUTO_TEST_CASE(TestMultiIndex) {
         grid.insert(IndexedSphere{4u,  Point3D{-1, 1, 0}, .9f});
         grid.insert(IndexedSphere{44u, Point3D{-1, 1, 0}, .9f});
         std::cout << grid;
-        grid.create_indexes_disk("my_index");
+
+        grid.create_indexes_disk(index_path);
 
     }
 
     {   // Open whole multi-index
-        MultiIndex<IndexedSphere> mi("my_index");
+        MultiIndex<IndexedSphere> mi(index_path);
         BOOST_CHECK_EQUAL(mi.indexes().size(), 4);  // (0 0 0), (0 0 -1), (-1 0 0), (-1 0 -1),
 
         // Doe to mirroring (into z=-1), we have double the elements
@@ -207,10 +211,12 @@ BOOST_AUTO_TEST_CASE(TestMultiIndex) {
     }
 
     {   // Open a region. Same selection as before, less results
-        MultiIndex<IndexedSphere> mi("my_index", {{-100, 0, 0}, {-0.1f, 100, 100}});
+        MultiIndex<IndexedSphere> mi(index_path, {{-100, 0, 0}, {-0.1f, 100, 100}});
         auto ids = mi.find_within(Box3D({-10, -10, -10}, {10, 10, 10}));
         // std::cout << ids << std::endl;
         BOOST_CHECK_EQUAL(ids.size(), 2);
         BOOST_CHECK((ids == std::vector<size_t>{4, 44}));
     }
+
+    std::filesystem::remove_all(index_path);
 }

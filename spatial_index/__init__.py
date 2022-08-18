@@ -20,3 +20,5 @@ except ImportError:
 
 from .node_indexer import MorphIndexBuilder, MorphMultiIndex  # noqa
 from .synapse_indexer import PointIndex, SynapseIndexBuilder, SynapseMultiIndex  # noqa
+
+from .io import open_index # noqa

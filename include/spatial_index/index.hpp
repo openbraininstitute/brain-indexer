@@ -17,6 +17,7 @@
 #include <boost/geometry/index/rtree.hpp>
 #include <boost/variant.hpp>
 
+#include <spatial_index/meta_data.hpp>
 #include "geometries.hpp"
 #include "util.hpp"
 
@@ -491,15 +492,15 @@ class MemDiskPtr {
     /// IndexTreeMemDisk are special objects which hold the managed_mapped_file
     ///    used as memory for its rtree superclass. Therefore we must initialize
     ///    in advance.
-    /// \param fname The filename to store the rtree memory
+    /// \param index_path The path of a directory where to store the index and meta data.
     /// \param size_mb The initial capacity, in MegaBytes
     /// \param close_shrink If true will shrink the mem file to contents
-    static MemDiskPtr<T> create(const std::string& filename,
+    static MemDiskPtr<T> create(const std::string& index_path,
                                 size_t size_mb,
                                 bool close_shrink);
 
     /// \brief Opens a MemDiskRtree from a memory mapped file for reading
-    static MemDiskPtr<T> open(const std::string& filename);
+    static MemDiskPtr<T> open(const std::string& index_path);
 
     /// \brief Flush and close the current object.
     /// \note The object is not usable after this function

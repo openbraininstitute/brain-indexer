@@ -66,6 +66,21 @@ inline Point3D get_endpoint(const Segment& seg, bool first) {
     }
 }
 
+template<class Value>
+std::string value_to_element_type() {
+    return "unknown";
+}
+
+template<>
+std::string value_to_element_type<MorphoEntry>() {
+    return "morpho_entry";
+}
+
+template<>
+std::string value_to_element_type<Synapse>() {
+    return "synapse";
+}
+
 
 /////////////////////////////////////////
 // class IndexTree
@@ -166,7 +181,9 @@ inline decltype(auto) IndexTreeMixin<Derived, T>::find_nearest(const ShapeT& sha
 
 // Serialization: Load ctor
 template <typename T, typename A>
-inline IndexTree<T, A>::IndexTree(const std::string& filename) {
+inline IndexTree<T, A>::IndexTree(const std::string& path) {
+    auto filename = resolve_heavy_data_path(path, MetaDataConstants::in_memory_key);
+
     std::ifstream ifs(filename, std::ios::binary);
     boost::archive::binary_iarchive ia(ifs);
     ia >> static_cast<super&>(*this);
@@ -174,10 +191,25 @@ inline IndexTree<T, A>::IndexTree(const std::string& filename) {
 
 
 template <typename T, typename A>
-inline void IndexTree<T, A>::dump(const std::string& filename) const {
+inline void IndexTree<T, A>::dump(const std::string& index_path) const {
+    util::ensure_valid_output_directory(index_path);
+
+    auto heavy_data_relpath = "index.spi";
+    auto filename = join_path(index_path, heavy_data_relpath);
     std::ofstream ofs(filename, std::ios::binary | std::ios::trunc);
     boost::archive::binary_oarchive oa(ofs);
     oa << static_cast<const super&>(*this);
+
+    auto element_type = value_to_element_type<T>();
+    auto meta_data = create_basic_meta_data(element_type);
+
+    meta_data[MetaDataConstants::in_memory_key] = {
+        // The heavy data, i.e. the relative path of the serialization
+        // of the index:
+        {"heavy_data_path", heavy_data_relpath}
+    };
+
+    write_meta_data(default_meta_data_path(index_path), meta_data);
 }
 
 

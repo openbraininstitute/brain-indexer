@@ -13,14 +13,22 @@ struct file_versioning {
 
 
 template <typename T>
-MemDiskPtr<T> MemDiskPtr<T>::create(const std::string& filename,
+MemDiskPtr<T> MemDiskPtr<T>::create(const std::string& index_path,
                                     size_t size_mb,
                                     bool close_shrink) {
-    auto status = std::remove(filename.c_str());
-    if (status != 0 && errno != ENOENT) {
-        std::cerr << "File deletion failed: " << std::strerror(errno) << '\n';
-        throw std::runtime_error("Could not delete existing file: " + filename);
-    }
+
+    util::ensure_valid_output_directory(index_path);
+    std::string heavy_data_relpath = "index.bin";
+
+    auto element_type = value_to_element_type<typename T::value_type>();
+    auto meta_data = create_basic_meta_data(element_type);
+    meta_data[MetaDataConstants::memory_mapped_key] = {
+        // The heavy data, i.e. the relative path of the memory mapped files:
+        {"heavy_data_path", heavy_data_relpath}
+    };
+    write_meta_data(default_meta_data_path(index_path), meta_data);
+
+    auto filename = join_path(index_path, heavy_data_relpath);
     auto mapped_file = std::make_unique<bip::managed_mapped_file>(bip::open_or_create,
                                                                   filename.c_str(),
                                                                   size_mb * 1024 * 1024);
@@ -30,7 +38,9 @@ MemDiskPtr<T> MemDiskPtr<T>::create(const std::string& filename,
 
 
 template <typename T>
-MemDiskPtr<T> MemDiskPtr<T>::open(const std::string& filename) {
+MemDiskPtr<T> MemDiskPtr<T>::open(const std::string& path) {
+    auto filename = resolve_heavy_data_path(path, MetaDataConstants::memory_mapped_key);
+
     auto mapped_file = std::make_unique<bip::managed_mapped_file>(bip::open_only, filename.c_str());
     auto versions = mapped_file->find<detail::file_versioning>(".version").first;
 

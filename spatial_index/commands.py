@@ -3,12 +3,12 @@
 """
 
 import logging
-import os
 
 from .index_common import DiskMemMapProps
-from .node_indexer import MorphIndex, MorphMultiIndex, MorphIndexBuilder
-from .synapse_indexer import SynapseIndex, SynapseMultiIndex, SynapseIndexBuilder
+from .node_indexer import MorphIndexBuilder
+from .synapse_indexer import SynapseIndexBuilder
 from .util import check_free_space, docopt_get_args, get_dirname, is_likely_same_index
+from .io import open_index
 
 
 def spatial_index_nodes(args=None):
@@ -108,51 +108,12 @@ def spatial_index_compare(args=None):
     if a difference was detect. Otherwise the exit code is zero.
 
     Usage:
-        spatial-index-compare segments <lhs-circuit> <rhs-circuit>
-        spatial-index-compare synapses <lhs-circuit> <rhs-circuit>
+        spatial-index-compare <lhs-circuit> <rhs-circuit>
     """
     options = docopt_get_args(spatial_index_compare, args)
 
-    if options["segments"]:
-        index_kind = "segments"
-
-    elif options["synapses"]:
-        index_kind = "synapses"
-
-    else:
-        raise NotImplementedError("Missing subcommand.")
-
-    index_factories = {
-        "segments": {
-            "in_memory_index": MorphIndex,
-            "multi_index": MorphMultiIndex,
-        },
-        "synapses": {
-            "in_memory_index": SynapseIndex,
-            "multi_index": SynapseMultiIndex,
-        },
-    }
-
-    open_kwargs = {
-        "in_memory_index": dict(),
-        "multi_index": {"mem": int(1e9)},
-    }
-
-    # TODO remove this once a more uniform API for opening
-    #      indexes exists.
-    def open(path, kind):
-        if os.path.isfile(path):
-            index_type = "in_memory_index"
-        elif os.path.isdir(path):
-            index_type = "multi_index"
-        else:
-            raise RuntimeError(f"Invalid path: {path}")
-
-        index_factory = index_factories[kind][index_type]
-        return index_factory.open_core_index(path, **open_kwargs[index_type])
-
-    lhs = open(options["lhs_circuit"], index_kind)
-    rhs = open(options["rhs_circuit"], index_kind)
+    lhs = open_index(options["lhs_circuit"])
+    rhs = open_index(options["rhs_circuit"])
 
     if not is_likely_same_index(lhs, rhs):
         logging.info("The two indexes differ.")

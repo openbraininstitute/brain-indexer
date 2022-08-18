@@ -45,11 +45,6 @@ class ExtendedIndex(metaclass=ABCMeta):
     def __len__(self):
         return len(self.index)
 
-    @classmethod
-    def open_core_index(cls, input, *args):
-        """Opens and returns a core index directly"""
-        return cls.CoreIndexClass(input, *args)
-
     @abstractmethod
     def open_dataset(self, storage_file, population_name: str):
         """Implements the opening of the source dataset, e.g. a Sonata population"""
@@ -98,37 +93,37 @@ class ExtendedIndex(metaclass=ABCMeta):
         return result
 
     @classmethod
-    def open(cls, index_conf_f: str):
-        import toml
-        conf = toml.load(index_conf_f)
-        index_path = conf["index"]
-        index_storage = conf.get("index_storage", "dump")
-        sonata_path = conf["sonata_file"]
-        sonata_pop = conf.get("sonata_population")
+    def from_meta_data(cls, meta_data, **kwargs):
+        core_index = cls._open_core_from_meta_data(meta_data, **kwargs)
 
-        if index_storage not in ("dump", "memory_map"):
-            raise Exception("Unknown index storage: " + index_storage)
+        if extended_conf := meta_data.extended:
+            return cls._from_core_index(
+                core_index,
+                extended_conf.dataset_path,
+                extended_conf.population
+            )
 
-        load_fn = cls.from_dump if index_storage == "dump" else cls.from_memory_map
-        return load_fn(index_path, sonata_path, sonata_pop)
-
-    @classmethod
-    def from_dump(cls, filename, dataset_path, population=None):
-        """Opens a Spatial index from a core index and sonata population dataset"""
-        core_index = cls.CoreIndexClass(filename)
-        return cls._from_core_index(core_index, dataset_path, population)
+        else:
+            return core_index
 
     @classmethod
-    def from_memory_map(cls, filename, dataset_path, population=None):
-        """Opens a Spatial index from a core memory map and sonata population dataset"""
-        core_index = cls.IndexClassMemMap.open(filename)
-        return cls._from_core_index(core_index, dataset_path, population)
+    def _open_core_from_meta_data(cls, meta_data, **kwargs):
+        if mem_mapped_conf := meta_data.memory_mapped:
+            return cls.IndexClassMemMap.open(mem_mapped_conf.index_path)
+
+        elif in_memory_conf := meta_data.in_memory:
+            return cls.CoreIndexClass(in_memory_conf.index_path)
+
+        else:
+            raise ValueError("Invalid 'meta_data'.")
 
     @classmethod
     def _from_core_index(cls, core_index, dataset_path, population):
+        # TODO reconsider this:
         if not dataset_path:
             logging.warning("No dataset file provided. Returning a core index")
             return core_index
+
         return cls(core_index, cls.open_dataset(dataset_path, population))
 
     # TODO: Delete this and improve API all around
@@ -137,25 +132,15 @@ class ExtendedIndex(metaclass=ABCMeta):
 
 
 class ExtendedMultiIndexMixin:
-    _DEFAULT_MEM = 1e9
+    _DEFAULT_MEM = int(1e9)
 
     @classmethod
-    def open_core_index(cls, dir, mem=_DEFAULT_MEM):
-        return cls.CoreIndexClass(dir, mem)
+    def _open_core_from_meta_data(cls, meta_data, mem=_DEFAULT_MEM, **kwargs):
+        if multi_index_conf := meta_data.multi_index:
+            return cls.CoreIndexClass(multi_index_conf.index_path, max_cached_bytes=mem)
 
-    @classmethod
-    def from_dir(cls, output_dir, dataset_path=None, population=None, mem=_DEFAULT_MEM):
-        print(cls.open_core_index)
-        core_index = cls.open_core_index(output_dir, mem)
-        return cls._from_core_index(core_index, dataset_path, population)
-
-    @classmethod
-    def from_dump(cls, *_args, **_kw):
-        raise NotImplementedError("Multi-indices don't support bare dumps.")
-
-    @classmethod
-    def from_memory_map(cls, *_args, **_kw):
-        raise NotImplementedError("Multi-indices don't support memory maps")
+        else:
+            raise ValueError("Invalid 'meta_data'.")
 
 
 class IndexBuilderBase:
@@ -192,13 +177,3 @@ class IndexBuilderBase:
 
     def get_object(self):
         return self._extended_index
-
-    @classmethod
-    def load_dump(cls, filename):
-        """Load the index from a dump file"""
-        return cls.IndexClass.from_dump(filename, None)
-
-    @classmethod
-    def load_disk_mem_map(cls, filename):
-        """Load the index from a memory mapped file"""
-        return cls.IndexClass.from_memory_map(filename, None)

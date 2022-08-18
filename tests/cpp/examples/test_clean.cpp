@@ -1,3 +1,4 @@
+#include <filesystem>
 
 #include <spatial_index/index.hpp>
 
@@ -26,15 +27,18 @@ int main() {
     printf("Num objects: %lu\n", result_s.size());
     printf("Selected gid: %lu\n", result_s.front().gid);
 
-    rtree.dump("myrtree.tree");
+    std::string index_path = "myrtree.tree";
+    rtree.dump(index_path);
 
     {
-        IndexTree<MorphoEntry> t2("myrtree.tree");
+        IndexTree<MorphoEntry> t2(index_path);
         std::vector<identifier_t> gids;
         t2.query(bgi::intersects(query_box), iter_ids_getter(gids));
         printf("Num objects: %lu\n", gids.size());
         printf("Selected gid: %lu\n", gids.front());
     }
+
+    std::filesystem::remove_all(index_path);
 
     return 0;
 }

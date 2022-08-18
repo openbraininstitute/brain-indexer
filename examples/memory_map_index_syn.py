@@ -8,21 +8,22 @@
 
 import os.path
 
+import spatial_index
 from spatial_index import SynapseIndexBuilder
 
+
+CIRCUIT_2K_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v0/circuit-2k"
 # Pre-made index locations
-PRE_MADE_INDEX_DIR = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/spatial_index/memory_map"
-PRE_MADE_INDEX_FILE = os.path.join(PRE_MADE_INDEX_DIR, "synapse_index.bin")
+PRE_MADE_INDEX_FILE = os.path.join(CIRCUIT_2K_DIR, "indexes/synapse_index.bin")
 
 # Test edges file location and population name
-EDGES_PATH = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/spatial_index/"
-EDGES_FILE = os.path.join(EDGES_PATH, "edges_2k.h5")
+EDGES_FILE = os.path.join(CIRCUIT_2K_DIR, "edges.h5")
 POPULATION = "All"  # Or some other population
 
 
 # Loading pre-made index that you can
 # create using the spatial-index-nodes command
-index_pre = SynapseIndexBuilder.load_disk_mem_map(PRE_MADE_INDEX_FILE)
+index_pre = spatial_index.open_index(PRE_MADE_INDEX_FILE)
 
 # Perform queries normally
 min_corner = [0, 0, 0]

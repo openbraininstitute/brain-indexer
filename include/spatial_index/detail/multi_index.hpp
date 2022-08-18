@@ -1,6 +1,7 @@
 #pragma once
 
 #include <spatial_index/distributed_sort_tile_recursion.hpp>
+#include <spatial_index/meta_data.hpp>
 
 namespace spatial_index {
 
@@ -327,11 +328,13 @@ MultiIndexTreeBase<SubtreeCache>::load_subtree(const SubtreeID& subtree_id) cons
     return subtree_cache.load_subtree(subtree_id, query_count);
 }
 
-
 template <typename T>
 MultiIndexTree<T>::MultiIndexTree(const std::string& output_dir, size_t max_cached_bytes)
-    : MultiIndexTree(NativeStorageT<T>(output_dir),
-                     UsageRateCacheParams(max_cached_bytes / sizeof(value_type)))
+    : MultiIndexTree(
+        NativeStorageT<T>(
+            resolve_heavy_data_path(output_dir, MetaDataConstants::multi_index_key)
+        ),
+        UsageRateCacheParams(max_cached_bytes / sizeof(value_type)))
 {}
 
 
@@ -408,9 +411,11 @@ inline CoordType get_centroid_coordinate(boost::variant<VariantArgs...> const& v
 
 template <class Value>
 MultiIndexBulkBuilder<Value>::MultiIndexBulkBuilder(std::string output_dir)
-    : output_dir_(std::move(output_dir)) {
+    : output_dir_(std::move(output_dir)),
+      index_reldir_("multi_index"),
+      index_dir_(join_path(output_dir_, index_reldir_)) {
 
-    util::ensure_valid_output_directory(output_dir_);
+    util::ensure_valid_output_directory(index_dir_);
 }
 
 
@@ -443,11 +448,24 @@ inline void MultiIndexBulkBuilder<Value>::finalize(MPI_Comm comm) {
         max_elements_per_part,
         comm_size
     );
-    auto storage = NativeStorageT<Value>(output_dir_);
+    auto storage = NativeStorageT<Value>(index_dir_);
     using GetCoordinate = GetCenterCoordinate<Value>;
     distributed_partition<GetCoordinate>(storage, values_, str_params, comm);
+
+    write_meta_data();
 }
 
+template <class Value>
+inline void MultiIndexBulkBuilder<Value>::write_meta_data() const {
+    auto element_type = value_to_element_type<Value>();
+    auto meta_data = create_basic_meta_data(element_type);
+    meta_data[MetaDataConstants::multi_index_key] = {
+        // Relative path of the heavy files.
+        {"heavy_data_path", index_reldir_}
+    };
+
+    spatial_index::write_meta_data(default_meta_data_path(output_dir_), meta_data);
+}
 
 template <class Value>
 inline void MultiIndexBulkBuilder<Value>::reserve(size_t n_local_elements) {

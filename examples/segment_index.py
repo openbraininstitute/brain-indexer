@@ -6,17 +6,20 @@
     perform spatial queries
 """
 
-import numpy as np
 import os
 import sys
+
+import numpy as np
+
+import spatial_index
 from spatial_index import MorphIndexBuilder
 
 
 # Loading some small circuits and morphology files on BB5
 
-CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-2k"
-NODE_FILE = CIRCUIT_2K + "/circuit.mvd3"
-MORPH_FILE = CIRCUIT_2K + "/morphologies/ascii"
+CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v0/circuit-2k"
+NODE_FILE = os.path.join(CIRCUIT_2K, "circuit.mvd3")
+MORPH_FILE = os.path.join(CIRCUIT_2K, "morphologies/ascii")
 INDEX_FILENAME = "example_segment_index.spi"
 
 
@@ -37,17 +40,15 @@ def build_query_segment_index(min_corner=[-50, 0, 0], max_corner=[0, 50, 50]):
         To retrieve other data of a segment it's necessary to retrieve IDs
         and query the data sources with it (method 1 below)
     """
-    if not os.path.isfile(INDEX_FILENAME):
-        indexer = build_segment_index()
-        print(type(indexer))
-    else:
-        print("Loading from existing segment index:", INDEX_FILENAME)
-        indexer = MorphIndexBuilder.load_dump(INDEX_FILENAME)
-        print(type(indexer))
+    if not os.path.exists(INDEX_FILENAME):
+        build_segment_index()
+
+    index = spatial_index.open_index(INDEX_FILENAME)
+    print(type(index))
     print("Done. Performing queries")
 
     # Method 1: Obtain the ids only (numpy Nx3)
-    ids = indexer.find_intersecting_window(min_corner, max_corner)
+    ids = index.find_intersecting_window(min_corner, max_corner)
     print("Number of elements within window:", len(ids))
     if len(ids) > 0:
         gid, section_id, segment_id = ids[0]  # first element indices
@@ -56,15 +57,15 @@ def build_query_segment_index(min_corner=[-50, 0, 0], max_corner=[0, 50, 50]):
         return
 
     # Similar, but query a spherical region
-    ids = indexer.find_nearest([.0, .0, .0], 10)
+    ids = index.find_nearest([.0, .0, .0], 10)
     print("Number of elements in spherical region:", len(ids))
 
     # Method 2: Get the position only directly from the index as numpy Nx3 (3D positions)
-    pos = indexer.find_intersecting_window_pos(min_corner, max_corner)
+    pos = index.find_intersecting_window_pos(min_corner, max_corner)
     np.savetxt("query_SI_v6.csv", pos, delimiter=",", fmt="%1.3f")
 
     # Method 3, retrieve the tree objects for ids and position
-    found_objects = indexer.find_intersecting_window_objs(min_corner, max_corner)
+    found_objects = index.find_intersecting_window_objs(min_corner, max_corner)
     for i, obj in enumerate(found_objects):
         object_ids = obj.ids  # as tuple of gid, section, segment  # noqa
         # Individual propertioes
@@ -78,7 +79,7 @@ def build_query_segment_index(min_corner=[-50, 0, 0], max_corner=[0, 50, 50]):
     # and output them as a dictionary of numpy arrays.
     # Segment information includes: gid, section_id, segment_id
     # radius, endpoint1/2 and kind.
-    dict_query = indexer.find_intersecting_window_np(min_corner, max_corner)
+    dict_query = index.find_intersecting_window_np(min_corner, max_corner)
     print(dict_query)
 
 

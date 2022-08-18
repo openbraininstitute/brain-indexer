@@ -6,18 +6,23 @@
     SONATA edge files; load the multi-index and perform some
     queries.
 
-    Must be run with MPI:
+    Must be run with MPI, e.g., one of:
         mpiexec -n5 python synapse_multi_index_sonata.py
         srun -n5 python synapse_multi_index_sonata.py
+
+    Detailed advice on picking the `srun` parameters can be found
+    in the documentation.
 """
-
-from spatial_index import SynapseMultiIndex, SynapseMultiIndexBuilder
-from mpi4py import MPI
-
 import os.path
 
-_CURDIR = os.path.dirname(__file__)
-EDGE_FILE = os.path.join(_CURDIR, os.pardir, "tests", "data", "edges_2k.h5")
+from mpi4py import MPI
+
+import spatial_index
+from spatial_index import SynapseMultiIndexBuilder
+
+
+CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v0/circuit-2k"
+EDGE_FILE = os.path.join(CIRCUIT_2K, "edges.h5")
 OUTPUT_DIR = "tmp-vnwe"
 
 
@@ -33,7 +38,7 @@ def example_create_multi_index_from_sonata():
 def example_query_multi_index():
     if MPI.COMM_WORLD.Get_rank() == 0:
         # The index may use at most roughly 1e6 bytes.
-        core_index = SynapseMultiIndex.open_core_index(OUTPUT_DIR, mem=int(1e6))
+        core_index = spatial_index.open_index(OUTPUT_DIR, mem=int(1e6))
 
         # Define a query window by its two extreme corners, and run the
         # query.

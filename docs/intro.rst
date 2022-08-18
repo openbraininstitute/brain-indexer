@@ -117,6 +117,20 @@ Otherwise one can query directly from the index:
 
 And then fetching the necessary information directly from the structure you just created.
 
+Opening An Existing Index
+-------------------------
+
+Indexes are usually stored in their own folder. This folder contains a file called ``meta_data.json``.
+In order to open an index one may simply call
+
+.. code-block:: python
+
+    index = spatial_index.open_index(path_to_index)
+
+where ``path_to_index`` is the path to the folder containing the index. This can be used for all
+variants of indexes.
+
+
 Command Line Interface
 ======================
 

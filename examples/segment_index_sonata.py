@@ -13,9 +13,9 @@ from spatial_index import MorphIndexBuilder
 
 
 # Loading some small circuits and morphology files on BB5
-CIRCUIT_1K = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-1k"
-NODES_FILE = CIRCUIT_1K + "/nodes.h5"
-MORPH_FILE = CIRCUIT_1K + "/morphologies/ascii"
+CIRCUIT_1K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v0/circuit-1k"
+NODES_FILE = os.path.join(CIRCUIT_1K, "nodes.h5")
+MORPH_FILE = os.path.join(CIRCUIT_1K, "morphologies/ascii")
 
 
 def example_sonata_index():

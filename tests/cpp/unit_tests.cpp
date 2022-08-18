@@ -1,6 +1,7 @@
 #define BOOST_TEST_MODULE SpatialIndex_UnitTests
 #include <boost/test/unit_test.hpp>
 
+#include <filesystem>
 #include <random>
 #include <vector>
 #include <spatial_index/index.hpp>
@@ -90,10 +91,12 @@ BOOST_AUTO_TEST_CASE(IndexedSphereTree) {
     TEST_INTERSECTING_IDS({2}, {}, {0}, {});
 
     // Dump and load
-    rtree.dump("sphere_index");
-    IndexTree<IndexedSphere> rtree_loaded("sphere_index");
+    std::string index_path = "sphere_index";
+    rtree.dump(index_path);
+    IndexTree<IndexedSphere> rtree_loaded(index_path);
     BOOST_CHECK(rtree.all_ids() == rtree_loaded.all_ids());
 
+    std::filesystem::remove_all(index_path);
 }
 
 

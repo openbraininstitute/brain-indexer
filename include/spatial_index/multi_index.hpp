@@ -407,9 +407,15 @@ public:
      */
     inline size_t local_size() const;
 
+
+protected:
+    inline void write_meta_data() const;
+
 private:
     std::vector<Value> values_;
     std::string output_dir_;
+    std::string index_reldir_;
+    std::string index_dir_;
 
     boost::optional<size_t> n_total_values_ = boost::none;
 };

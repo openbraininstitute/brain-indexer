@@ -4,9 +4,13 @@
     Test indexing circuits, from mvd and morphology libraries
 """
 import os
+import tempfile
 
 import numpy.testing as nptest
+
+from spatial_index import open_index
 from spatial_index.node_indexer import MorphIndexBuilder
+
 import morphio
 import quaternion as npq
 import libsonata
@@ -92,16 +96,16 @@ def test_serial_exec():
 
 
 def test_memory_mapped_file_morph_index():
-    MEM_MAP_FILE = "rtree_image.bin"
-    disk_mem_map = MorphIndexBuilder.DiskMemMapProps(MEM_MAP_FILE, 1, True)
-    node_indexer = MorphIndexBuilder(MORPHOLOGY_FILES[1], FILETEST,
-                                     disk_mem_map=disk_mem_map)
-    node_indexer.process_range((0, 1))
-    index = node_indexer.index
-    assert len(index) > 1700
-    # We can share the mem file file
-    index2 = MorphIndexBuilder.load_disk_mem_map(MEM_MAP_FILE)
-    assert len(index2) > 1700, len(index2)
+    with tempfile.TemporaryDirectory(prefix="rtree_image.bin", dir=".") as MEM_MAP_FILE:
+        disk_mem_map = MorphIndexBuilder.DiskMemMapProps(MEM_MAP_FILE, 1, True)
+        node_indexer = MorphIndexBuilder(MORPHOLOGY_FILES[1], FILETEST,
+                                         disk_mem_map=disk_mem_map)
+        node_indexer.process_range((0, 1))
+        index = node_indexer.index
+        assert len(index) > 1700
+        # We can share the mem file file
+        index2 = open_index(MEM_MAP_FILE)
+        assert len(index2) > 1700, len(index2)
 
 
 class Test2Info:

@@ -43,3 +43,23 @@ Otherwise you can also use the normal :class:`spatial_index.SynapseIndexBuilder`
 
 """
 
+ACL for memory mapped files
+---------------------------
+Memory mapping a file requires write access to the mapped file. In regular cases
+this can be confirmed through ``ls -l`` and changed with ``chmod``. On BB5
+however ACLs (the GPFS version thereof) are used. The commands to check ACLs is
+
+.. code-block:: bash
+
+    /usr/lpp/mmfs/bin/mmgetacl FILENAME
+
+Then these can be set through ``mmputacl``. One convenient way is to pipe the
+output of ``mmgetacl`` into a file, edit that file an pipe the modified file
+back into ``mmputacl``. Like so
+
+.. code-block:: bash
+
+    /usr/lpp/mmfs/bin/mmgetacl FILENAME > FILENAME.ACL
+    /usr/lpp/mmfs/bin/mmputacl FILENAME < FILENAME.ACL
+
+and then ``rm FILENAME.acl``.

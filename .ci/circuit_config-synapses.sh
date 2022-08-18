@@ -19,7 +19,7 @@ circuit_spi="${output_dir}/circuit.spi"
 spatial-index-synapses "${edges_file}" -o "${direct_spi}"
 spatial-index-circuit synapses "${circuit_config_file}" -o "${circuit_spi}"
 
-assert_indexes_are_equal synapses "${direct_spi}" "${circuit_spi}"
+assert_indexes_are_equal "${direct_spi}" "${circuit_spi}"
 
 if [[ ! -z ${n_mpi_ranks} ]]
 then
@@ -29,6 +29,6 @@ then
     srun -n${n_mpi_ranks} spatial-index-synapses "${edges_file}" -o "${multi_direct_spi}" --multi-index
     srun -n${n_mpi_ranks} spatial-index-circuit synapses "${circuit_config_file}" -o "${multi_circuit_spi}" --multi-index
 
-    assert_indexes_are_equal synapses "${direct_spi}" "${multi_direct_spi}"
-    assert_indexes_are_equal synapses "${direct_spi}" "${multi_circuit_spi}"
+    assert_indexes_are_equal "${direct_spi}" "${multi_direct_spi}"
+    assert_indexes_are_equal "${direct_spi}" "${multi_circuit_spi}"
 fi

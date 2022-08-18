@@ -2,18 +2,28 @@
 """
     Blue Brain Project - Spatial-Index
 
-    A small example script on how to create a circuit segment multi index
-    with SONATA (and perform spatial queries).
+    A small example script on how to create a circuit segment multi-index
+    with SONATA; load the multi-index and perform some queries.
+
+    Must be run with MPI, e.g., one of:
+        mpiexec -n5 python segment_multi_index_sonata.py
+        srun -n5 python segment_multi_index_sonata.py
+
+    Detailed advice on picking the `srun` parameters can be found
+    in the documentation.
 """
+
+import os
 
 from mpi4py import MPI
 
-from spatial_index import MorphMultiIndex, MorphMultiIndexBuilder
+import spatial_index
+from spatial_index import MorphMultiIndexBuilder
 
 # Loading some small circuits and morphology files on BB5
-CIRCUIT_1K = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-1k"
-NODES_FILE = CIRCUIT_1K + "/nodes.h5"
-MORPH_FILE = CIRCUIT_1K + "/morphologies/ascii"
+CIRCUIT_1K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v0/circuit-1k"
+NODES_FILE = os.path.join(CIRCUIT_1K, "nodes.h5")
+MORPH_FILE = os.path.join(CIRCUIT_1K, "morphologies/ascii")
 
 OUTPUT_DIR = "tmp-doei"
 
@@ -32,7 +42,7 @@ def example_create_multi_index_from_sonata():
 def example_query_multi_index():
     if MPI.COMM_WORLD.Get_rank() == 0:
         # The index may use at most roughly 1e6 bytes.
-        core_index = MorphMultiIndex.open_core_index(OUTPUT_DIR, mem=int(1e6))
+        core_index = spatial_index.open_index(OUTPUT_DIR, mem=int(1e6))
 
         # Define a query window by its two extreme corners, and run the
         # query.

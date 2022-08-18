@@ -1,4 +1,6 @@
 
+#include <filesystem>
+
 #include <spatial_index/index.hpp>
 
 using namespace spatial_index;
@@ -36,5 +38,7 @@ int main() {
         }
 
     }
+
+    std::filesystem::remove_all(FILENAME);
     return 0;
 }

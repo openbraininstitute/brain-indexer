@@ -1256,6 +1256,31 @@ inline py::class_<Class> create_SynapseMultiIndex_bindings(py::module& m, const 
     return c;
 }
 
+inline void create_MetaDataConstants_bindings(py::module& m) {
+    py::class_<MetaDataConstants> c = py::class_<MetaDataConstants>(m, "_MetaDataConstants");
+
+    c
+    .def_property_readonly_static("version", [](py::object /* self */) {
+        return MetaDataConstants::version;
+    })
+
+    .def_property_readonly_static("memory_mapped_key", [](py::object /* self */) {
+        return py::str(MetaDataConstants::memory_mapped_key);
+    })
+
+    .def_property_readonly_static("in_memory_key", [](py::object /* self */) {
+        return py::str(MetaDataConstants::in_memory_key);
+    })
+
+    .def_property_readonly_static("multi_index_key", [](py::object /* self */) {
+        return py::str(MetaDataConstants::multi_index_key);
+    });
+
+    // Related free functions.
+    m.def("deduce_meta_data_path", [](const std::string& path) {
+        return deduce_meta_data_path(path);
+    });
+}
 
 }  // namespace py_bindings
 }  // namespace spatial_index

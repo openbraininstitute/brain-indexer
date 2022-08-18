@@ -1,3 +1,5 @@
+import tempfile
+
 import numpy as np
 from spatial_index import MorphIndex
 from spatial_index import SphereIndex as IndexClass
@@ -24,13 +26,14 @@ def test_insert_save_restore():
             idx = idx['gid']  # Records
         assert idx == i, "{} != {}".format(idx, i)
 
-    t.dump("mytree.save")
-    t2 = IndexClass("mytree.save")
-    for i, c in enumerate(centroids):
-        idx = t2.find_nearest(c, 1)[0]
-        if len(idx.dtype) > 1:
-            idx = idx['gid']  # Records
-        assert idx == i, "{} != {}".format(idx, i)
+    with tempfile.TemporaryDirectory(prefix="mytree.save", dir=".") as index_path:
+        t.dump(index_path)
+        t2 = IndexClass(index_path)
+        for i, c in enumerate(centroids):
+            idx = t2.find_nearest(c, 1)[0]
+            if len(idx.dtype) > 1:
+                idx = idx['gid']  # Records
+            assert idx == i, "{} != {}".format(idx, i)
 
 
 def test_bulk_spheres_add():

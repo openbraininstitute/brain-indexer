@@ -34,6 +34,8 @@ PYBIND11_MODULE(_spatial_index, m) {
     .value("SEGMENT", si::detail::entry_kind::SEGMENT)
     .value("SYNAPSE", si::detail::entry_kind::SYNAPSE);
 
+    si_python::create_MetaDataConstants_bindings(m);
+
     PYBIND11_NUMPY_DTYPE(si::gid_segm_t, gid, section_id, segment_id);  // struct as numpy dtype
 
     si_python::create_Sphere_bindings(m);

@@ -6,6 +6,8 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np
 
+import spatial_index
+
 
 class ChunkedProcessingMixin(metaclass=ABCMeta):
 
@@ -147,7 +149,7 @@ class MultiIndexBuilderMixin:
 
         if mpi_rank == 0:
             # The generated index has to be re-opened as a whole
-            indexer.index = cls.IndexClass.open_core_index(output_dir, mem=10**9)
+            indexer.index = spatial_index.open_index(output_dir, mem=10**9)
             print(f"index elements: {len(indexer.index)}")
 
         return indexer.get_object()

@@ -9,15 +9,17 @@ import numpy as np
 import logging
 import os
 import sys
-from spatial_index import MorphIndexBuilder, MorphMultiIndex
+
+import spatial_index
+from spatial_index import MorphIndexBuilder
 import pytest
 pytest_skipif = pytest.mark.skipif
 pytest_long = pytest.mark.long
 
 # Loading some small circuits and morphology files on BB5
 CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-2k"
-CIRCUIT_FILE = CIRCUIT_2K + "/circuit.mvd3"
-MORPH_FILE = CIRCUIT_2K + "/morphologies/ascii"
+CIRCUIT_FILE = os.path.join(CIRCUIT_2K, "circuit.mvd3")
+MORPH_FILE = os.path.join(CIRCUIT_2K, "morphologies/ascii")
 
 
 class Options:
@@ -36,7 +38,7 @@ def do_multi_index_query_serial(min_corner, max_corner):
     )
 
     if MPI.COMM_WORLD.Get_rank() == 0:
-        index = MorphMultiIndex.open_core_index(output_dir, mem=int(1e9))
+        index = spatial_index.open_index(output_dir, mem=int(1e9))
         return index.find_intersecting_window(min_corner, max_corner)
 
 

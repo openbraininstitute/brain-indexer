@@ -1,6 +1,6 @@
 if [[ ! -z "${DATADIR}" ]]
 then
-    export SI_DATADIR="${DATADIR}/spatial_index"
+    export SI_DATADIR="${DATADIR}"
 fi
 
 if [[ -z "${SI_DATADIR}" ]]

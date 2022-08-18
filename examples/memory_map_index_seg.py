@@ -8,20 +8,22 @@
 
 import os.path
 
+import spatial_index
 from spatial_index import MorphIndexBuilder
 
+CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v0/circuit-2k"
+
 # Pre-made index locations
-PRE_MADE_INDEX_DIR = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/spatial_index/memory_map"
+PRE_MADE_INDEX_DIR = os.path.join(CIRCUIT_2K, "indexes")
 PRE_MADE_INDEX_FILE = os.path.join(PRE_MADE_INDEX_DIR, "segment_index.bin")
 
 # Test node and morph file locations
-CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-2k"
 NODE_FILE = os.path.join(CIRCUIT_2K, "circuit.mvd3")
 MORPH_FILE = os.path.join(CIRCUIT_2K, "morphologies/ascii")
 
 # Loading pre-made index that you can
 # create using the spatial-index-nodes command
-index_pre = MorphIndexBuilder.load_disk_mem_map(PRE_MADE_INDEX_FILE)
+index_pre = spatial_index.open_index(PRE_MADE_INDEX_FILE)
 
 # Perform queries normally
 min_corner = [0, 0, 0]

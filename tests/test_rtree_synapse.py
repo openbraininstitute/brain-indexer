@@ -1,5 +1,8 @@
+import tempfile
+
 import numpy as np
 
+from spatial_index import open_index
 from spatial_index._spatial_index import SynapseIndex
 
 points = np.array(
@@ -63,8 +66,9 @@ def test_synapse_save_restore():
     rtree = SynapseIndex()
     rtree.add_synapses(ids, post_gids, pre_gids, points)
 
-    rtree.dump("test_syntree.save")
-    del rtree
-    rtree2 = SynapseIndex("test_syntree.save")
+    with tempfile.TemporaryDirectory(prefix="test_syntree.save", dir=".") as index_path:
+        rtree.dump(index_path)
+        del rtree
+        rtree2 = open_index(index_path)
 
-    _test_rtree(rtree2)
+        _test_rtree(rtree2)
