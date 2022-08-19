@@ -45,10 +45,10 @@ class MorphologyLib:
 
         soma = morph.soma
         morph_infos = MorphInfo(
-            (soma.center, soma.max_distance),
-            morph.points,
-            morph.diameters,
-            morph.section_offsets,
+            soma=(soma.center, soma.max_distance),
+            points=morph.points,
+            radius=morph.diameters / 2.,
+            branch_offsets=morph.section_offsets,
         )
         self._morphologies[morph_name] = morph_infos
         return morph_infos
