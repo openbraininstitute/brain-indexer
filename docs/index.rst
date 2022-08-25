@@ -7,6 +7,7 @@ BBP Spatial Index
    :maxdepth: 1
 
    Intro <intro>
+   Developer Guide <developer_guide>
    Change Log <CHANGES>
    Python API Reference<api>
 

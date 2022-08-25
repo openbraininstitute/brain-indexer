@@ -2,8 +2,7 @@
     High level command line commands
 """
 
-import logging
-
+import spatial_index
 from .index_common import DiskMemMapProps
 from .node_indexer import MorphIndexBuilder
 from .synapse_indexer import SynapseIndexBuilder
@@ -80,10 +79,6 @@ def spatial_index_circuit(args=None):
         --populations=<populations>...  Restrict the spatial index to the listed
                                         Currently, at most one population is supported
     """
-
-    import logging
-    logging.basicConfig(level=logging.INFO)
-
     options = docopt_get_args(spatial_index_circuit, args)
     circuit_config, json_config = _sonata_circuit_config(options["circuit_file"])
     population = _validated_population(circuit_config, options)
@@ -116,7 +111,7 @@ def spatial_index_compare(args=None):
     rhs = open_index(options["rhs_circuit"])
 
     if not is_likely_same_index(lhs, rhs):
-        logging.info("The two indexes differ.")
+        spatial_index.logger.info("The two indexes differ.")
         exit(-1)
 
 
@@ -184,7 +179,7 @@ def _parse_mem_map_options(options: dict) -> DiskMemMapProps:
     if not use_mem_map:
         return
 
-    logging.warning("Using experimental memory-mapped-file")
+    spatial_index.logger.info("Using experimental memory-mapped-file")
     fsize = int(use_mem_map)
 
     if not check_free_space(fsize * 1024 * 1024, get_dirname(filename)):
@@ -198,7 +193,7 @@ def _run_spatial_index_nodes(morphology_dir, nodes_file, options):
     try:
         from spatial_index import MorphMultiIndexBuilder
     except ModuleNotFoundError as e:
-        logging.error("SpatialIndex was likely not built with MPI support.")
+        spatial_index.logger.error("SpatialIndex was likely not built with MPI support.")
         raise e
 
     if options["multi_index"]:
@@ -218,7 +213,7 @@ def _run_spatial_index_nodes(morphology_dir, nodes_file, options):
         )
 
         if not disk_mem_map:
-            logging.info("Writing index to file: %s", options["out"])
+            spatial_index.logger.info("Writing index to file: %s", options["out"])
             index.index.dump(options["out"])
 
 
@@ -226,7 +221,7 @@ def _run_spatial_index_synapses(edges_file, population, options):
     try:
         from spatial_index import SynapseMultiIndexBuilder
     except ModuleNotFoundError as e:
-        logging.error("SpatialIndex was likely not built with MPI support.")
+        spatial_index.logger.error("SpatialIndex was likely not built with MPI support.")
         raise e
 
     if options["multi_index"]:
@@ -246,5 +241,5 @@ def _run_spatial_index_synapses(edges_file, population, options):
         )
 
         if not disk_mem_map:
-            logging.info("Writing index to file: %s", options["out"])
+            spatial_index.logger.info("Writing index to file: %s", options["out"])
             index.index.dump(options["out"])

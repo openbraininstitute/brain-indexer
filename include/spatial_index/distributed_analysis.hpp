@@ -3,6 +3,7 @@
 #include <vector>
 
 #include <spatial_index/mpi_wrapper.hpp>
+#include <spatial_index/logging.hpp>
 
 namespace spatial_index {
 
@@ -71,7 +72,7 @@ void segment_length_histogram(const std::string &output_dir, MPI_Comm comm = MPI
     auto chunk = util::balanced_chunks(n_subtrees, comm_size, comm_rank);
     auto data = std::vector<CoordType>{};
     for(size_t i = chunk.low; i < chunk.high; ++i) {
-        std::cout << "loading: " + std::to_string(i) + "\n";
+        log_info(boost::format("loading: %d") % i);
         auto subtree = storage.load_subtree(i); 
 
         for(const auto &value : subtree) {

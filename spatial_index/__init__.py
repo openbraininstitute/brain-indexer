@@ -10,6 +10,21 @@ except Exception:
     __version__ = 'devel'
 
 from . import _spatial_index as core  # noqa
+
+
+# Set up logging
+def register_logger(new_logger):
+    """Register `new_logger` as the logger used by SI."""
+    global logger
+    logger = new_logger
+
+    core._register_python_logger(logger)
+
+
+register_logger(logging.getLogger(__name__))
+# --------------
+
+
 from ._spatial_index import *  # noqa
 
 try:

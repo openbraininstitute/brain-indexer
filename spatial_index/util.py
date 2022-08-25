@@ -1,4 +1,3 @@
-import logging
 import os
 import sys
 from tqdm import tqdm
@@ -97,7 +96,7 @@ def register_mpi_excepthook():
     # Credit: https://stackoverflow.com/a/16993115
 
     def handle_exception(exc_type, exc_value, exc_traceback):
-        logging.error(
+        spatial_index.logger.error(
             "Exception raised, calling MPI_Abort",
             exc_info=(exc_type, exc_value, exc_traceback)
         )
@@ -141,16 +140,20 @@ class MultiIndexBuilderMixin:
             while (chunk := work_queue.request_work(indexer.local_size())) is not None:
                 indexer.process_range(chunk)
 
-        print(f"local_size = {indexer.local_size()}", flush=True)
         comm.Barrier()
-        indexer.finalize()
+        if mpi_rank == 0:
+            spatial_index.logger.info("Starting to build distributed index.")
 
+        indexer.finalize()
         comm.Barrier()
 
         if mpi_rank == 0:
+            spatial_index.logger.info("Finished building distributed index.")
             # The generated index has to be re-opened as a whole
             indexer.index = spatial_index.open_index(output_dir, mem=10**9)
-            print(f"index elements: {len(indexer.index)}")
+            spatial_index.logger.info(
+                f"The index elements has: {len(indexer.index)} elements"
+            )
 
         return indexer.get_object()
 
@@ -305,7 +308,7 @@ def is_likely_same_index(lhs, rhs, confidence=0.99, error_rate=0.001, rtol=1e-5)
 
     n_elements = len(lhs)
     if n_elements != len(rhs):
-        logging.info("The number of elements in the two indexes differ.")
+        spatial_index.logger.info("The number of elements in the two indexes differ.")
         return False
 
     lhs_box = lhs.bounds()
@@ -318,7 +321,7 @@ def is_likely_same_index(lhs, rhs, confidence=0.99, error_rate=0.001, rtol=1e-5)
 
     for lhs_xyz, rhs_xyz in zip(lhs_box, rhs_box):
         if not np.all(np.abs(lhs_xyz - rhs_xyz) < atol):
-            logging.info("The bounding boxes of the two indexes differ.")
+            spatial_index.logger.info("The bounding boxes of the two indexes differ.")
             return False
 
     box = lhs_box
@@ -418,11 +421,6 @@ def is_window_query_contained(lhs, rhs, min_corner, max_corner, atol):
     is_equal = np.all(np.isin(lhs_ids, rhs_ids))
 
     if not is_equal:
-        print(min_corner)
-        print(max_corner)
-
-        print(lhs_results)
-        print(rhs_results)
-        logging.info(f"The two indexes diff:\n{lhs_ids}\n{rhs_ids}")
+        spatial_index.logger.info(f"The two indexes diff:\n{lhs_ids}\n{rhs_ids}")
 
     return is_equal

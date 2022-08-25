@@ -3,6 +3,8 @@
 #include <iostream>
 #include <pybind11/eval.h>
 
+#include <spatial_index/logging.hpp>
+
 namespace bg = boost::geometry;
 
 namespace spatial_index {
@@ -987,10 +989,8 @@ inline void add_MorphIndex_add_neuron_bindings(py::class_<Class>& c) {
                 if (has_soma && radii_np.size() != 1) {
                     throw py::value_error("Please provide the soma radius");
                 }
-                std::stringstream warn_cmd;
-                warn_cmd << "import logging\n"
-                         << "logging.warning('Neuron id=" << gid << " has no segments')\n";
-                py::exec(warn_cmd.str());
+
+                log_warn(boost::format("Neuron id=%d has no segments") % gid);
             }
             else {                                          // -- segments sanity check --
                 // Check that the number of points is two or more

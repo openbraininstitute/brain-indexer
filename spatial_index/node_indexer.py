@@ -10,7 +10,6 @@
 
 import itertools
 import warnings; warnings.simplefilter("ignore")  # NOQA
-import logging
 
 from collections import namedtuple
 from os import path as ospath
@@ -20,6 +19,7 @@ import mvdtool
 import numpy as np
 import quaternion as npq
 
+import spatial_index
 from . import _spatial_index as core
 from .index_common import DiskMemMapProps, IndexBuilderBase
 from .index_common import ExtendedIndex, ExtendedMultiIndexMixin
@@ -102,7 +102,7 @@ class MorphIndexBuilderBase(IndexBuilderBase):
             np.sort(np.array(gids, dtype=int))
         super().__init__(mvd, gids, **kw)
         self.morph_lib = MorphologyLib(morphology_dir)
-        logging.info("Index count: %d cells", len(gids))
+        spatial_index.logger.info("Index count: %d cells", len(gids))
 
     def n_elements_to_import(self):
         return len(self._selection)

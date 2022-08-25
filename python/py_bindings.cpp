@@ -1,6 +1,7 @@
 
 #include "rtree_index.hpp"
 #include "index_grid.hpp"
+#include <spatial_index/logging.hpp>
 
 #if SI_MPI == 1
 #include "distributed_analysis.hpp"
@@ -33,6 +34,61 @@ PYBIND11_MODULE(_spatial_index, m) {
     .value("SOMA", si::detail::entry_kind::SOMA)
     .value("SEGMENT", si::detail::entry_kind::SEGMENT)
     .value("SYNAPSE", si::detail::entry_kind::SYNAPSE);
+
+    m.def("_minimum_log_severity",
+        []() -> si::LogSeverity {
+            return si::get_global_minimum_log_severity();
+        }
+    );
+
+    m.def("_register_python_logger",
+        [](py::object python_logger) {
+            si::register_logging_callback(
+                [python_logger](si::LogSeverity log_severity, const std::string& message) {
+                    if(log_severity == si::LogSeverity::DEBUG) {
+                        python_logger.attr("debug")(py::str(message));
+                    }
+                    else if (log_severity == si::LogSeverity::INFO) {
+                        python_logger.attr("info")(py::str(message));
+                    }
+                    else if (log_severity == si::LogSeverity::WARN) {
+                        python_logger.attr("warning")(py::str(message));
+                    }
+                    else if (log_severity == si::LogSeverity::ERROR) {
+                        python_logger.attr("error")(py::str(message));
+                    }
+                    else {
+                        python_logger.attr("error")(py::str("Invalid log severity detected for message:"));
+                        python_logger.attr("error")(py::str(message));
+                        throw std::runtime_error("Invalid log severity.");
+                    }
+                }
+            );
+        }
+    );
+
+    py::enum_<si::LogSeverity>(m, "_LogSeverity")
+        .value("DEBUG", si::LogSeverity::DEBUG)
+        .value("INFO", si::LogSeverity::INFO)
+        .value("WARN", si::LogSeverity::WARN)
+        .value("ERROR", si::LogSeverity::ERROR);
+
+
+    py::module m_test = m.def_submodule("tests");
+    m_test.def("write_logs",
+        [](const std::string& debug_message,
+           const std::string& cond_debug_message,
+           const std::string& info_message,
+           const std::string& warn_message,
+           const std::string& error_message
+        ) {
+            SI_LOG_DEBUG(debug_message);
+            SI_LOG_DEBUG_IF(cond_debug_message.size() > 0, cond_debug_message);
+            si::log_info(info_message);
+            si::log_warn(warn_message);
+            si::log_error(error_message);
+        }
+    );
 
     si_python::create_MetaDataConstants_bindings(m);
 

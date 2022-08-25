@@ -3,6 +3,7 @@
 #if SI_MPI == 1
 
 #include <iostream>
+#include <spatial_index/logging.hpp>
 
 namespace spatial_index {
 namespace mpi {
@@ -20,10 +21,7 @@ int size(MPI_Comm comm) {
 }
 
 void abort(const std::string& msg, MPI_Comm comm, int exit_code) {
-    std::stringstream strstr;
-    strstr << "[ERROR] " << msg << "\n";
-
-    std::clog << strstr.str();
+    log_error(msg);
     MPI_Abort(comm, exit_code);
 }
 
@@ -145,8 +143,6 @@ compute_balance_send_counts(const std::vector<size_t>& counts_per_rank, int mpi_
     assert_counts_are_safe(send_counts, "kdwoi");
     return send_counts;
 }
-
-
 
 
 template <class Derived, class Handle>

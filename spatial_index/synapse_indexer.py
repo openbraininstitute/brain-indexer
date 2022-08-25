@@ -2,9 +2,9 @@
 # Copyright Blue Brain Project 2020-2021. All rights reserved
 
 import libsonata
-import logging
 import numpy
 
+import spatial_index
 from . import _spatial_index as core
 from .index_common import DiskMemMapProps, ExtendedIndex, ExtendedMultiIndexMixin
 from .index_common import IndexBuilderBase
@@ -45,7 +45,9 @@ class SynapseIndex(ExtendedIndex):
             if len(storage.population_names) > 1:
                 raise RuntimeError("No population chosen, multiple available")
             population_name = next(iter(storage.population_names), None)
-            logging.info("Population not set. Auto-selecting '%s'", population_name)
+            spatial_index.logger.info(
+                f"Population not set. Auto-selecting: '{population_name}'."
+            )
 
         return storage.open_population(population_name)
 

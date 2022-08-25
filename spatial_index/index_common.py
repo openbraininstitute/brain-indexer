@@ -1,8 +1,9 @@
 # This file is part of SpatialIndex, the new-gen spatial indexer for BBP
 # Copyright Blue Brain Project 2020-2021. All rights reserved
-import logging
 from abc import ABCMeta, abstractmethod
 from libsonata import Selection
+
+import spatial_index
 
 
 class DiskMemMapProps:
@@ -121,7 +122,9 @@ class ExtendedIndex(metaclass=ABCMeta):
     def _from_core_index(cls, core_index, dataset_path, population):
         # TODO reconsider this:
         if not dataset_path:
-            logging.warning("No dataset file provided. Returning a core index")
+            spatial_index.logger.warning(
+                "No dataset file provided. Returning a core index"
+            )
             return core_index
 
         return cls(core_index, cls.open_dataset(dataset_path, population))

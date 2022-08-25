@@ -6,7 +6,6 @@
 """
 
 import numpy as np
-import logging
 import os
 import sys
 
@@ -44,7 +43,7 @@ def do_multi_index_query_serial(min_corner, max_corner):
 
 def do_query_serial(min_corner, max_corner):
     if Options.use_mem_mapped_file:
-        logging.info("Using mem-mapped")
+        spatial_index.logger.info("Using mem-mapped")
         memmap_props = MorphIndexBuilder.DiskMemMapProps(
             "mapfile.bin",
             1000,   # ~1GB

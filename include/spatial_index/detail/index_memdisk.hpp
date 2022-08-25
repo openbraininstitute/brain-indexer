@@ -1,5 +1,7 @@
 #include "index.hpp"
 
+#include <spatial_index/logging.hpp>
+
 namespace spatial_index {
 
 namespace detail {
@@ -53,9 +55,15 @@ MemDiskPtr<T> MemDiskPtr<T>::open(const std::string& path) {
         );
     }
     if (versions->boost_version != BOOST_VERSION) {
-        std::cerr << "[Warning] Boost versions mismatch! Expected: " << BOOST_VERSION
-                 << " Created with: " << versions->boost_version << '\n'
-                 << " -> To ensure compatibility load a Spatial Index built with the same Boost.\n";
+        log_warn(
+            boost::format(
+                "Boost versions mismatch! Expected: %d \n"
+                " Created with: %d\n"
+                " -> To ensure compatibility load a Spatial Index built with the same Boost."
+            )
+            % BOOST_VERSION
+            % versions->boost_version
+        );
     }
     return MemDiskPtr(std::move(mapped_file));
 }
@@ -79,7 +87,7 @@ void MemDiskPtr<T>::close() {
     mapped_file_->flush();
     mapped_file_.reset();
     if (!close_shrink_fname_.empty()) {
-        std::cout << "[MemDiskPtr] Shrinking managed mapped file" << std::endl;
+        log_info("[MemDiskPtr] Shrinking managed mapped file.");
         bip::managed_mapped_file::shrink_to_fit(close_shrink_fname_.c_str());
     }
 }
