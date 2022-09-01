@@ -2,7 +2,7 @@ Change Log
 ==========
 
 Version 0.6.0
------------
+-------------
 **August 2022**
 
 **Features**

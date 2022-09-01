@@ -21,17 +21,19 @@ CIRCUIT_FILE = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-thalam
 MORPH_FILE = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-thalamus/morph_release/ascii"
 
 # Optional load of dumped index
-#indexer = spatial_index.open("/gpfs/bbp.cscs.ch/project/proj16/leite/out.spi")
+#builder = spatial_index.open("/gpfs/bbp.cscs.ch/project/proj16/leite/out.spi")
 
 #Serial Execution timing
 start_global = timer()
 start = timer()
-indexer = MorphIndexBuilder(MORPH_FILE, CIRCUIT_FILE)
-indexer.process_all(progress=True)
+builder = MorphIndexBuilder(MORPH_FILE, CIRCUIT_FILE)
+builder.process_all(progress=True)
 end = timer()
 index_time = end - start
 
-print ("Elements in indexer: ", len(indexer))
+index = builder.index
+
+print ("Elements in index: ", len(index))
 
 #Generate a numpy array of N_QUERIES 3D points and fill them with random floating numbers in a certain interval
 max_points = np.random.uniform(low=0, high=10, size=(N_QUERIES, 3)).astype(np.float32)
@@ -40,7 +42,7 @@ min_points = np.random.uniform(low=-10, high=0, size=(N_QUERIES, 3)).astype(np.f
 #Query Execution timing
 start = timer()
 for i in range(N_QUERIES):
-    idx = indexer.find_intersecting_window(min_points[i], max_points[i])
+    idx = index.window_query(min_points[i], max_points[i], fields="ids")
 end = timer()
 query_time = end - start
 global_time = timer() - start_global
@@ -52,7 +54,7 @@ print ("Total number of results: ")
 print (len(idx))
 
 # Option position retrieval for debugging purposes
-#pos = indexer.find_intersecting_window_objs(min_points[1], max_points[1])
+#pos = index.window_query(min_points[1], max_points[1], fields="raw_elements")
 #print (min_points[1], max_points[1])
 
 # Optional print position of query results for debug purposes

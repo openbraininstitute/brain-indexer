@@ -1,4 +1,4 @@
-# This file is part of SpatialIndex, the new-gen spatial indexer for BBP
+# This file is part of SpatialIndex, the new-gen spatial builder for BBP
 # Copyright Blue Brain Project 2020-2021. All rights reserved
 
 import libsonata

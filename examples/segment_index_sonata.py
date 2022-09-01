@@ -19,7 +19,7 @@ MORPH_FILE = os.path.join(CIRCUIT_1K, "morphologies/ascii")
 
 
 def example_sonata_index():
-    # Create a new indexer and load the nodes and morphologies
+    # Create a new index and load the nodes and morphologies
     # directly from the SONATA file
     index = MorphIndexBuilder.from_sonata_file(MORPH_FILE, NODES_FILE, "All",
                                                target_gids=range(700, 900),

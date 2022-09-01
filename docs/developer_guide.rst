@@ -4,6 +4,51 @@ Developer Guide
 This short guide contains information about the development process
 of SpatialIndex.
 
+Design
+------
+
+SpatialIndex allows to create indexes and perform volumetric queries with
+efficiency in mind. It was developed on top of the Boost Geometry.Index
+libraries, renown for their excellent performance.
+
+SpatialIndex specializes to several core geometries, namely spheres and
+cylinders, and derivates: indexed spheres/segments and "unions" of them
+(variant). These objects are directly stored in the tree structure and have
+respective bounding boxes created on the fly. As such some CPU cycles were
+traded for substantial memory savings, aiming at near-billion indexed geometries
+per cluster node.
+
+Public API: C++
+---------------
+
+The core library is implemented as a C++17 Header-Only library and offers a wide
+range of possibilities.
+
+By including ``spatial_index/index.hpp`` and ``spatial_index/util.hpp`` the user has
+access to the whole API which is highly flexible due to templates. For instance
+the IndexTree class can be templated to any of the defined structures or new
+user defined geometries, providing the user with a boost index rtree object
+which automamtically supports serialization and higher level API functions.
+
+Please refer to the unit tests (under ``tests/cpp/unit_tests.cpp``) to see examples
+on how to create several kinds of IndexTrees.
+
+
+Public API: Python
+------------------
+
+The Python API gives access to the most common instances of 'IndexTree's, while
+adding higher level API and IO helpers.  The user may instantiate a Spatial
+Index of Morphology Pieces (both Somas and Segments) or, for maximum efficiency,
+Spheres alone.
+
+As so, if it is enough for the user to create a Spatial Index of spherical
+geometries, like soma placement, he should rather use
+:class:`spatial_index.SphereIndex`. For the cases where Spatial Indexing of
+cylindrical or mixed geometries is required, e.g. full neuron geometries, the
+user shall use  :class:`spatial_index.MorphIndex`. Furthermore, the latter
+features higher level methods to help in the load of entire Neuron morphologies.
+
 Logging Policy
 --------------
 There are three levels of logging

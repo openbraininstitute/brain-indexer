@@ -49,7 +49,7 @@ class MultiIndexBuilderMixin:
         from mpi4py import MPI
         register_mpi_excepthook()
 
-        indexer = cls(*args, output_dir=output_dir, **kw)
+        builder = cls(*args, output_dir=output_dir, **kw)
 
         comm = MPI.COMM_WORLD
         mpi_rank = comm.Get_rank()
@@ -64,16 +64,16 @@ class MultiIndexBuilderMixin:
         work_queue = MultiIndexWorkQueue(comm)
 
         if mpi_rank == comm_size - 1:
-            work_queue.distribute_work(indexer.n_elements_to_import())
+            work_queue.distribute_work(builder.n_elements_to_import())
         else:
-            while (chunk := work_queue.request_work(indexer.local_size())) is not None:
-                indexer.process_range(chunk)
+            while (chunk := work_queue.request_work(builder.local_size())) is not None:
+                builder.process_range(chunk)
 
         comm.Barrier()
         if mpi_rank == 0:
             spatial_index.logger.info("Starting to build distributed index.")
 
-        indexer.finalize()
+        builder.finalize()
         comm.Barrier()
 
     @classmethod

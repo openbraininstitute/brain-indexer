@@ -1,46 +1,58 @@
 Introduction
 ============
 
-Design
-------
-
-SpatialIndex allows to create indexes and perform volumetric queries with efficiency in mind. It was developed on top of the Boost Geometry.Index libraries, renown for their excellent performance.
-
-SpatialIndex specializes to several core geometries, namely spheres and cylinders, and derivates: indexed spheres/segments and "unions" of them (variant). These objects are directly stored in the tree structure and have respective bounding boxes created on the fly. As such some CPU cycles were traded for substantial memory savings, aiming at near-billion indexed geometries per cluster node.
-
-Where to start
---------------
-
-A good starting point to learn how to use SpatialIndex is to follow the `basic_tutorial.ipynb` Jupyter Notebook that you can find in the `examples` folder of the repo. There's also an `advanced_tutorial.ipynb` Jupyter Notebook for when you already know the basics.
-This should give you all the basic information regarding SpatialIndex and lots of example on how it can be useful in your workflow.
-
-**We recommend that first time users start from there!**
+If you prefer a hands-on approach you might like to start with the Jupyter
+Notebook ``basic_tutorial.ipynb`` or any of the examples in ``examples/``.
 
 
-Public API: C++
----------------
+Using Existing Indexes
+----------------------
 
-The core library is implemented as a C++17 Header-Only library and offers a wide range of possibilities.
+Given an index stored at ``index_path``, one may want to open the index and
+perform queries.
 
-By including `spatial_index/index.hpp` and `spatial_index/util.hpp` the user has access to the whole API which is highly flexible due to templates. For instance the IndexTree class can be templated to any of the defined structures or new user defined geometries, providing the user with a boost index rtree object which automamtically supports serialization and higher level API functions.
+Opening An Existing Index
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Please refer to the unit tests (under `tests/cpp/unit_tests.cpp` to see examples on how to create several kinds of IndexTrees.
+Indexes are usually stored in their own folder. This folder contains a file called ``meta_data.json``.
+In order to open an index one may simply call
+
+.. code-block:: python
+
+    index = spatial_index.open_index(path_to_index)
+
+where ``path_to_index`` is the path to the folder containing the index. This can be used for all
+variants of indexes.
+
+Performing Simple Queries
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+After opening the index one may query it as follows:
+
+.. code-block:: python
+
+    results = index.window_query(min_points, max_points)
+    results = index.vicinity_query(center, radius)
+
+The former returns all elements that intersect with the box defined by the
+corners ``min_points`` and ``max_points``. The latter is used when the query
+shape is a sphere. The detailed documentation of :ref:`queries <Queries>` contains several
+examples.
 
 
-Public API: Python
-------------------
+Creating Index on the Fly
+-------------------------
+Work loads the required repeated queries will benefit from using a spatial
+index, even for quite small number of indexed elements. Therefore, it is useful
+to create small indexes on the fly. This section describes the available API for
+this task.
 
-The Python API gives access to the most common instances of 'IndexTree's, while adding higher level API and IO helpers.
-The user may instantiate a Spatial Index of Morphology Pieces (both Somas and Segments) or, for maximum efficiency, Spheres alone.
+If you're trying to pre-compute an index for later use, you might prefer the :ref`CLI
+applications <CLI Interface>`. 
 
-As so, if it is enough for the user to create a Spatial Index of spherical geometries, like soma placement, he should rather use :class:`spatial_index.SphereIndex`. For the cases where Spatial Indexing of cylindrical or mixed geometries is required, e.g. full neuron geometries, the user shall use  :class:`spatial_index.MorphIndex`. Furthermore, the latter features higher level methods to help in the load of entire Neuron morphologies.
-
-
-Indexing BBP Node and Edge files
-================================
 
 Indexing Nodes
---------------
+~~~~~~~~~~~~~~
 
 A common case is to create a spatial index of spheres which have an id (e.g. somas identified by their gid).
 SphereIndex is, in this case, the most appropriate class.
@@ -56,73 +68,56 @@ The constructor accepts all the components (gids, points, and radii) as individu
     radius = np.ones(3, dtype=np.float32)
     index = SphereIndex(centroids, radius, ids)
 
-You can also build the segment index using `MorphIndexBuilder` specifying the morphology and circuit file to load and then starting the processing via the `process_range` method.
+Indexing Morphologies
+~~~~~~~~~~~~~~~~~~~~~
+In SI the term *morphologies* refers to discrete neurons consisting of somas and segments.
+
+Morphology indexes can be build directly from mvd3 and SONATA input files. For example by using
+`MorphIndexBuilder` as follows:
 
 .. code-block:: python
 
-    from spatial_index import MorphIndexBuilder
-    indexer = MorphIndexBuilder(MORPH_FILE, CIRCUIT_FILE)
-    indexer.process_range(()) ## process all nodes
+    index = MorphIndexBuilder.from_sonata_file(morph_dir, nodes_h5)
+    index = MorphIndexBuilder.from_mvd_file(morph_dir, nodes_mvd)
 
-**Note:** *By using a constructor which initializes the index to some data, internally the "pack" algorithm is used. This results in optimal tree balance and faster queries.*
+where ``morph_dir`` is the path of the directory containing the morphologies in
+either ASCII, SWC or HDF5 format. Both function have a keyword argument which
+allows one to optionally specify the GIDs of all neurons to be indexed.
 
-Once the index is constructed one can make queries, e.g.:
+By passing the keyword argument ``output_dir`` the index is stored at the
+specified location and can be opened/reused at later point in time.
 
-    >>> index.find_nearest(2.2, 0, 0, 1)
-    array([2], dtype=uint64)
-
-Or even save it for later reuse:
-
-    >>> index.dump("myindex.spi")
-    >>> del index
-    >>> other_index = SphereIndex("myindex.spi")
-    >>> other_index.find_nearest(2.2, 0, 0, 1)
-    array([2], dtype=uint64)
-
-Indexing Edge files
--------------------
+Indexing Synapses
+~~~~~~~~~~~~~~~~~
 
 Another common example is to create a spatial index of synapses imported from a sonata file.
-In this case SynapseIndexBuilder is the appropriate class to use:
+In this case ``SynapseIndexBuilder`` is the appropriate class to use:
 
 .. code-block:: python
 
     from spatial_index import SynapseIndexBuilder
     from libsonata import Selection
-    indexer = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, "All")
+    index = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, "All")
 
-Then one can query the synapses index by getting the gids first and then querying the edge file for the synapse data.
-Keep in mind that the resulting objects only have two properties: gid and centroid.
+Building a synapse index through this API enables queries to fetch any
+attributes of the synapse stored in the SONATA file. Please see :ref:`Queries`_ for
+more information about how to perform queries.
 
-.. code-block:: python
+Passing the keyword argument ``output_dir`` ensures that the index is also
+stored to disk.
 
-    points_in_region = indexer.index.find_intersecting_window([200, 200, 480], [300, 300, 520])
-    z_coords = indexer.dataset.get_attribute("afferent_center_z", Selection(points_in_region))
+Precomputing Indexes For Later Use
+----------------------------------
+When the number of indexed elements is large, considerable resources are needed
+to compute the index. Therefore, it can make sense to precompute the index once
+and store it for later (frequent) reuse. The most conventient way is through the
+CLI applications. Note that indexes can exceed the amount of available RAM, in
+this case please consult `Large Indexes`_.
 
-Otherwise one can query directly from the index:
-
-.. code-block:: python
-
-    objs_in_region = indexer.index.find_intersecting_window_objs([200, 200, 480], [300, 300, 520])
-
-And then fetching the necessary information directly from the structure you just created.
-
-Opening An Existing Index
--------------------------
-
-Indexes are usually stored in their own folder. This folder contains a file called ``meta_data.json``.
-In order to open an index one may simply call
-
-.. code-block:: python
-
-    index = spatial_index.open_index(path_to_index)
-
-where ``path_to_index`` is the path to the folder containing the index. This can be used for all
-variants of indexes.
-
+.. _`CLI Interface`:
 
 Command Line Interface
-======================
+~~~~~~~~~~~~~~~~~~~~~~
 
 There are three executables
 
@@ -144,10 +139,10 @@ There are three executables
     .. command-output:: spatial-index-synapses --help
 
 
-
 Large Indexes
-=============
+~~~~~~~~~~~~~
 SpatialIndex implements two means for indexing large circuits:
+
 * memory mapped files,
 * multi indexes.
 
@@ -161,10 +156,3 @@ performant when memory mapping file on GPFS. Please read the detailed
 Multi indexes subdivide the volume to be indexed into small subvolumes and uses
 MPI to create subindexes for each of these subvolumes. More information can be
 found :ref:`here <Multi Index>`.
-
-
-More examples
-=============
-
-In the `examples` folder there are some more examples on how to use Spatial Index. Please check them out.
-Also some interesting snippets on how to use a specific function can be found in the various python files found in the `tests` folder.

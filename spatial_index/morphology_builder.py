@@ -3,11 +3,6 @@
 # This file is part of SpatialIndex, the new-gen spatial indexer for BBP
 # Copyright Blue Brain Project 2020-2021. All rights reserved
 
-"""
-    Implementation of MvdMorphIndexer which, builds a MorphologyIndex
-    and indexes all cells contained in an MVD/SONATA file
-"""
-
 import itertools
 import warnings; warnings.simplefilter("ignore")  # NOQA
 
@@ -125,12 +120,12 @@ class MorphIndexBuilderBase:
             gid, points, morph.radius, morph.branch_offsets[:-1], False
         )
 
-    def process_range(self, range_=(None,)):
+    def process_range(self, sub_range=(None,)):
         """ Process a range of cells.
 
-        :param: range_ (start, end, [step]), or (None,) [all]
+        :param: sub_range (start, end, [step]), or (None,) [all]
         """
-        slice_ = slice(*range_)
+        slice_ = slice(*sub_range)
         cur_gids = self._gids[slice_]
         actual_indices = slice_.indices(len(self._gids))
         assert actual_indices[2] > 0, "Step cannot be negative"

@@ -19,14 +19,14 @@ MORPH_FILE = os.path.join(CIRCUIT_2K, "morphologies/ascii")
 
 
 def do_query_serial(min_corner, max_corner):
-    indexer = MorphIndexBuilder(MORPH_FILE, CIRCUIT_FILE)
-    indexer.process_range((700, 100))
-    idx = indexer.find_intersecting_window(min_corner, max_corner)
+    builder = MorphIndexBuilder(MORPH_FILE, CIRCUIT_FILE)
+    builder.process_range((700, 100))
+    idx = builder.find_intersecting_window(min_corner, max_corner)
     assert len(idx) > 0
     print("Number of elements within window:", len(idx))
-    indexer.find_nearest(center, 10)
-    pos = indexer.find_intersecting_window_pos(min_corner, max_corner)
-    indexer.find_intersecting_window_objs(min_corner, max_corner)
+    builder.find_nearest(center, 10)
+    pos = builder.find_intersecting_window_pos(min_corner, max_corner)
+    builder.find_intersecting_window_objs(min_corner, max_corner)
     return idx, pos
 
 

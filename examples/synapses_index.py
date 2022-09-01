@@ -19,7 +19,7 @@ EDGE_FILE = os.path.join(CIRCUIT_2K, "edges.h5")
 
 
 def example_syn_index():
-    # Creating a synapse indexer by using the `return_indexer=True` flag
+    # Creating a synapse index from SONATA input files:
     index = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, "All")
     print("Index size:", len(index))
 

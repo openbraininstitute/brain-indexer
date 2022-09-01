@@ -1,3 +1,5 @@
+.. _`Queries`:
+
 Queries
 =======
 The strength of a spatial index is that one can query it to get all elements
