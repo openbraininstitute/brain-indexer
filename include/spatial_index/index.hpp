@@ -341,7 +341,7 @@ class IndexTreeMixin {
      * the query shape; or if the 'exact' shape intersects with the query shape. Note,
      * that exact isn't true for cylinders which are often treated as capsules instead.
      *
-     * \tparam GeometryMode: Selects between exact (`ExactGeometry`) and bounding
+     * \tparam GeometryMode: Selects between best-effort (`BestEffortGeometry`) and bounding
      *   box geometry (`BoundingBoxGeometry`).
      *
      * \param iter: An iterator object used to collect matching entries.

@@ -29,7 +29,7 @@ def build_segment_index():
     indexer.process_range((700, 750))  # 50 cells
     # indexer.process_all()  # Warning: Might exhaust memory
     print("Index contains", len(indexer.index), "elements. Saving to disk")
-    indexer.index.dump(INDEX_FILENAME)
+    indexer.index.write(INDEX_FILENAME)
     return indexer.index
 
 
@@ -48,7 +48,7 @@ def build_query_segment_index(min_corner=[-50, 0, 0], max_corner=[0, 50, 50]):
     print("Done. Performing queries")
 
     # Method 1: Obtain the ids only (numpy Nx3)
-    ids = index.find_intersecting_window(min_corner, max_corner)
+    ids = index.window_query(min_corner, max_corner, fields="ids")
     print("Number of elements within window:", len(ids))
     if len(ids) > 0:
         gid, section_id, segment_id = ids[0]  # first element indices
@@ -57,15 +57,15 @@ def build_query_segment_index(min_corner=[-50, 0, 0], max_corner=[0, 50, 50]):
         return
 
     # Similar, but query a spherical region
-    ids = index.find_nearest([.0, .0, .0], 10)
+    ids = index._core_index.find_nearest([.0, .0, .0], 10)  # FIXME modernize
     print("Number of elements in spherical region:", len(ids))
 
     # Method 2: Get the position only directly from the index as numpy Nx3 (3D positions)
-    pos = index.find_intersecting_window_pos(min_corner, max_corner)
+    pos = index.window_query(min_corner, max_corner, fields="positions")
     np.savetxt("query_SI_v6.csv", pos, delimiter=",", fmt="%1.3f")
 
     # Method 3, retrieve the tree objects for ids and position
-    found_objects = index.find_intersecting_window_objs(min_corner, max_corner)
+    found_objects = index.window_query(min_corner, max_corner, fields="raw_elements")
     for i, obj in enumerate(found_objects):
         object_ids = obj.ids  # as tuple of gid, section, segment  # noqa
         # Individual propertioes
@@ -79,7 +79,7 @@ def build_query_segment_index(min_corner=[-50, 0, 0], max_corner=[0, 50, 50]):
     # and output them as a dictionary of numpy arrays.
     # Segment information includes: gid, section_id, segment_id
     # radius, endpoint1/2 and kind.
-    dict_query = index.find_intersecting_window_np(min_corner, max_corner)
+    dict_query = index.window_query(min_corner, max_corner)
     print(dict_query)
 
 

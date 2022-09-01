@@ -8,7 +8,9 @@
 
 import numpy as np
 import os.path
+
 from spatial_index import MorphIndexBuilder, SynapseIndexBuilder
+
 try:
     import pytest
     pytest_skipif = pytest.mark.skipif
@@ -34,8 +36,8 @@ def test_numpy_output_syn():
     min_corner = [200, 200, 480]
     max_corner = [300, 300, 520]
 
-    np_out = index.find_intersecting_window_np(min_corner, max_corner)
-    obj_out = index.find_intersecting_window_objs(min_corner, max_corner)
+    np_out = index.window_query(min_corner, max_corner)
+    obj_out = index.window_query(min_corner, max_corner, fields="raw_elements")
 
     for i, obj in enumerate(obj_out):
         assert np.array_equal(obj.id, np_out['id'][i])
@@ -45,16 +47,18 @@ def test_numpy_output_syn():
 
 
 def test_numpy_output_seg():
+    builder = MorphIndexBuilder(MORPH_FILE, CIRCUIT_FILE)
+    builder.process_range((700, 750))  # 50 cells
+    index = builder.index
 
-    indexer = MorphIndexBuilder(MORPH_FILE, CIRCUIT_FILE)
-    indexer.process_range((700, 750))  # 50 cells
-    index = indexer.index
+    print(f"{type(builder)}")
+    print(f"{type(index)}")
 
     min_corner = [-50, 0, 0]
     max_corner = [0, 50, 50]
 
-    np_out = index.find_intersecting_window_np(min_corner, max_corner)
-    obj_out = index.find_intersecting_window_objs(min_corner, max_corner)
+    np_out = index.window_query(min_corner, max_corner)
+    obj_out = index.window_query(min_corner, max_corner, fields="raw_elements")
 
     for i, obj in enumerate(obj_out):
         assert np.array_equal(obj.gid, np_out['gid'][i])

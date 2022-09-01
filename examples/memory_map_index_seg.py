@@ -9,7 +9,7 @@
 import os.path
 
 import spatial_index
-from spatial_index import MorphIndexBuilder
+from spatial_index import MorphIndexMemDiskBuilder
 
 CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v0/circuit-2k"
 
@@ -29,7 +29,7 @@ index_pre = spatial_index.open_index(PRE_MADE_INDEX_FILE)
 min_corner = [0, 0, 0]
 max_corner = [50, 50, 50]
 
-ids = index_pre.find_intersecting_window(min_corner, max_corner)
+ids = index_pre.window_query(min_corner, max_corner, fields="ids")
 print("Pre-Made Index - Number of elements within window:", len(ids))
 
 # Otherwise you can create the index from scratch.
@@ -42,11 +42,11 @@ print("Pre-Made Index - Number of elements within window:", len(ids))
 # please contact the HPC team or the main developers of Spatial Index.
 
 # Specify the index output filename, size and shrink on close
-disk_mem_map = MorphIndexBuilder.DiskMemMapProps("seg_map.bin", 2048, True)
+disk_mem_map = spatial_index.index_common.DiskMemMapProps("seg_map.bin", 2048, True)
 
 # Then create a MorphIndexBuilder object specifying
 # the path to the morphology directory and the nodes file
-index = MorphIndexBuilder.create(
+index = MorphIndexMemDiskBuilder.create(
     MORPH_FILE,
     NODE_FILE,
     gids=range(700, 900),
@@ -60,6 +60,6 @@ index = MorphIndexBuilder.create(
 min_corner = [0, 0, 0]
 max_corner = [50, 50, 50]
 
-ids = index.find_intersecting_window(min_corner, max_corner)
+ids = index.window_query(min_corner, max_corner, fields="ids")
 
 print("New Index - Number of elements within window:", len(ids))

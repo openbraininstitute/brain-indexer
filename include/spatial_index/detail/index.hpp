@@ -272,7 +272,7 @@ inline bool IndexTree<T, A>::place(const Box3D& region, ShapeT& shape) {
 
             for (int z_i = 0; z_i < nsteps[2]; z_i++) {
                 shape.translate(offset - previous_offset);
-                if (!is_intersecting<ExactGeometry>(shape)) {
+                if (!is_intersecting<BestEffortGeometry>(shape)) {
                     this->insert(shape);
                     return true;
                 }

@@ -1,6 +1,8 @@
 import numpy as np
 import sys
-from spatial_index import node_indexer
+
+import spatial_index
+from spatial_index import MorphIndexBuilder
 from spatial_index import SphereIndex as IndexClass
 from timeit import default_timer as timer
 from random import uniform
@@ -19,12 +21,12 @@ CIRCUIT_FILE = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-thalam
 MORPH_FILE = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-thalamus/morph_release/ascii"
 
 # Optional load of dumped index
-#indexer = node_indexer.MorphIndex("/gpfs/bbp.cscs.ch/project/proj16/leite/out.spi")
+#indexer = spatial_index.open("/gpfs/bbp.cscs.ch/project/proj16/leite/out.spi")
 
 #Serial Execution timing
 start_global = timer()
 start = timer()
-indexer = node_indexer.MorphIndexBuilder(MORPH_FILE, CIRCUIT_FILE)
+indexer = MorphIndexBuilder(MORPH_FILE, CIRCUIT_FILE)
 indexer.process_all(progress=True)
 end = timer()
 index_time = end - start

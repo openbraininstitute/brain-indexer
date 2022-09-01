@@ -3,11 +3,12 @@ Python tests to the SpatialGrid
 
 """
 import numpy as np
-from spatial_index import SphereGrid
+
+from spatial_index import core
 
 
 def test_insert_check_size():
-    c1 = SphereGrid()
+    c1 = core.SphereGrid()
     # Spheres take 4 floats: (x,y,z) and radius
     c1.insert(np.array([1, 1, 1, 0.5], dtype='float'), [1])
     print(c1)
@@ -15,7 +16,7 @@ def test_insert_check_size():
 
 
 def test_insert_array():
-    c1 = SphereGrid()
+    c1 = core.SphereGrid()
     c1.insert(np.array([[1, 1, 1, 0.5],
                         [2, 2, 2, 0.5],
                         [3, 3, 3, 0.5]], dtype='float'),
@@ -35,11 +36,11 @@ def test_serialization():
 
 
 def test_iadd():
-    c1 = SphereGrid()
+    c1 = core.SphereGrid()
     c1.insert(np.array([[1, 1, 1, 0.5],
                         [6, 6, 6, 0.5]], dtype='float'),
               [1, 2])
-    c2 = SphereGrid()
+    c2 = core.SphereGrid()
     c2.insert(np.array([[2, 2, 2, 0.5],
                         [11, 11, 11, 0.5]], dtype='float'),
               [3, 4])

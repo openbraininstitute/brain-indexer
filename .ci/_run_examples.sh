@@ -6,6 +6,10 @@ set -euxo pipefail
 cd ${SI_DIR:-"."}
 pwd
 
+rm -r seg_map.bin || true
+rm -r syn_map.bin || true
+rm -r usecase1.spi || true
+rm -r circuit2k.spi || true
 rm -rf tmp-*
 
 python examples/memory_map_index_seg.py

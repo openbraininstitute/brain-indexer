@@ -9,7 +9,8 @@
 import os.path
 
 import spatial_index
-from spatial_index import SynapseIndexBuilder
+from spatial_index import SynapseIndexMemDiskBuilder
+from spatial_index.index_common import DiskMemMapProps
 
 
 CIRCUIT_2K_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v0/circuit-2k"
@@ -29,7 +30,7 @@ index_pre = spatial_index.open_index(PRE_MADE_INDEX_FILE)
 min_corner = [0, 0, 0]
 max_corner = [50, 50, 50]
 
-ids = index_pre.find_intersecting_window(min_corner, max_corner)
+ids = index_pre.window_query(min_corner, max_corner, fields="ids")
 print("Pre-Made Index - Number of elements within window:", len(ids))
 
 # Otherwise you can create the index from scratch.
@@ -42,12 +43,12 @@ print("Pre-Made Index - Number of elements within window:", len(ids))
 # please contact the HPC team or the main developers of Spatial Index.
 
 # Specify the index output filename, size and shrink on close
-disk_mem_map = SynapseIndexBuilder.DiskMemMapProps("syn_map.bin", 2048, True)
+disk_mem_map = DiskMemMapProps("syn_map.bin", 2048, True)
 
 # Then create a SynapseIndexBuilder object specifying
 # the path to the edges file and the population name
 
-index = SynapseIndexBuilder.from_sonata_file(
+index = SynapseIndexMemDiskBuilder.from_sonata_file(
     EDGES_FILE,
     POPULATION,
     disk_mem_map=disk_mem_map,
@@ -60,6 +61,6 @@ index = SynapseIndexBuilder.from_sonata_file(
 min_corner = [0, 0, 0]
 max_corner = [50, 50, 50]
 
-ids = index.find_intersecting_window(min_corner, max_corner)
+ids = index.window_query(min_corner, max_corner, fields="ids")
 
 print("New Index - Number of elements within window:", len(ids))

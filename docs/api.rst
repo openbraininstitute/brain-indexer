@@ -20,12 +20,6 @@ SynapseIndexBuilder
    :members:
    :inherited-members:
 
-PointIndex
-----------
-.. autoclass:: PointIndex
-   :members:
-   :inherited-members:
-
 
 Core Index API
 ==============

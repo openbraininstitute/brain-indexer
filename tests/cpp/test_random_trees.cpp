@@ -315,7 +315,7 @@ void check_with_all_query_shapes(
         auto query_shapes = random_shapes<Sphere>(20, domain, {-2.0, 1.0}, gen);
         for(const auto& query_shape : query_shapes) {
             check_queries_against_geometric_primitives<BoundingBoxGeometry>(all_elements, index, query_shape);
-            check_queries_against_geometric_primitives<ExactGeometry>(all_elements, index, query_shape);
+            check_queries_against_geometric_primitives<BestEffortGeometry>(all_elements, index, query_shape);
         }
     }
 
@@ -323,7 +323,7 @@ void check_with_all_query_shapes(
         auto query_shapes = random_shapes<Box3D>(20, domain, {-2.0, 1.0}, gen);
         for(const auto& query_shape : query_shapes) {
             check_queries_against_geometric_primitives<BoundingBoxGeometry>(all_elements, index, query_shape);
-            check_queries_against_geometric_primitives<ExactGeometry>(all_elements, index, query_shape);
+            check_queries_against_geometric_primitives<BestEffortGeometry>(all_elements, index, query_shape);
         }
     }
 
@@ -331,7 +331,7 @@ void check_with_all_query_shapes(
         auto query_shapes = random_shapes<Cylinder>(20, domain, {-2.0, 1.0}, gen);
         for(const auto& query_shape : query_shapes) {
             check_queries_against_geometric_primitives<BoundingBoxGeometry>(all_elements, index, query_shape);
-            check_queries_against_geometric_primitives<ExactGeometry>(all_elements, index, query_shape);
+            check_queries_against_geometric_primitives<BestEffortGeometry>(all_elements, index, query_shape);
         }
     }
 

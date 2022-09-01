@@ -38,12 +38,12 @@ def example_create_multi_index_from_sonata():
 def example_query_multi_index():
     if MPI.COMM_WORLD.Get_rank() == 0:
         # The index may use at most roughly 1e6 bytes.
-        core_index = spatial_index.open_index(OUTPUT_DIR, mem=int(1e6))
+        core_index = spatial_index.open_index(OUTPUT_DIR, max_cache_size_mb=100)
 
         # Define a query window by its two extreme corners, and run the
         # query.
         min_corner, max_corner = [200, 200, 480], [300, 300, 520]
-        found = core_index.find_intersecting_window_np(min_corner, max_corner)
+        found = core_index.window_query(min_corner, max_corner)
 
         # Now you can start doing science:
         print(found)

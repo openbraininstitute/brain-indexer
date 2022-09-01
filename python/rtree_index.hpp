@@ -171,8 +171,8 @@ is_intersecting(Class& obj, const Shape& query_shape, const std::string& geometr
         return obj.template is_intersecting<BoundingBoxGeometry>(query_shape);
     }
 
-    if(geometry == "exact") {
-        return obj.template is_intersecting<ExactGeometry>(query_shape);
+    if(geometry == "best_effort") {
+        return obj.template is_intersecting<BestEffortGeometry>(query_shape);
     }
 
     throw std::runtime_error("Invalid geometry: " + geometry + ".");
@@ -185,8 +185,8 @@ find_intersecting(Class& obj, const Shape& query_shape, const std::string& geome
         return obj.template find_intersecting<BoundingBoxGeometry>(query_shape);
     }
 
-    if(geometry == "exact") {
-        return obj.template find_intersecting<ExactGeometry>(query_shape);
+    if(geometry == "best_effort") {
+        return obj.template find_intersecting<BestEffortGeometry>(query_shape);
     }
 
     throw std::runtime_error("Invalid geometry: " + geometry + ".");
@@ -199,8 +199,8 @@ find_intersecting_pos(Class& obj, const Shape& query_shape, const std::string& g
         return obj.template find_intersecting_pos<BoundingBoxGeometry>(query_shape);
     }
 
-    if(geometry == "exact") {
-        return obj.template find_intersecting_pos<ExactGeometry>(query_shape);
+    if(geometry == "best_effort") {
+        return obj.template find_intersecting_pos<BestEffortGeometry>(query_shape);
     }
 
     throw std::runtime_error("Invalid geometry: " + geometry + ".");
@@ -213,8 +213,8 @@ find_intersecting_objs(Class& obj, const Shape& query_shape, const std::string& 
         return obj.template find_intersecting_objs<BoundingBoxGeometry>(query_shape);
     }
 
-    if(geometry == "exact") {
-        return obj.template find_intersecting_objs<ExactGeometry>(query_shape);
+    if(geometry == "best_effort") {
+        return obj.template find_intersecting_objs<BestEffortGeometry>(query_shape);
     }
 
     throw std::runtime_error("Invalid geometry: " + geometry + ".");
@@ -227,8 +227,8 @@ find_intersecting_np(Class& obj, const Shape& query_shape, const std::string& ge
         return obj.template find_intersecting_np<BoundingBoxGeometry>(query_shape);
     }
 
-    if(geometry == "exact") {
-        return obj.template find_intersecting_np<ExactGeometry>(query_shape);
+    if(geometry == "best_effort") {
+        return obj.template find_intersecting_np<BestEffortGeometry>(query_shape);
     }
 
     throw std::runtime_error("Invalid geometry: " + geometry + ".");
@@ -241,8 +241,22 @@ count_intersecting(Class& obj, const Shape& query_shape, const std::string& geom
         return obj.template count_intersecting<BoundingBoxGeometry>(query_shape);
     }
 
-    if(geometry == "exact") {
-        return obj.template count_intersecting<ExactGeometry>(query_shape);
+    if(geometry == "best_effort") {
+        return obj.template count_intersecting<BestEffortGeometry>(query_shape);
+    }
+
+    throw std::runtime_error("Invalid geometry: " + geometry + ".");
+}
+
+template<typename Class, typename Shape>
+inline decltype(auto)
+count_intersecting_agg_gid(Class& obj, const Shape& query_shape, const std::string& geometry) {
+    if(geometry == "bounding_box") {
+        return obj.template count_intersecting_agg_gid<BoundingBoxGeometry>(query_shape);
+    }
+
+    if(geometry == "best_effort") {
+        return obj.template count_intersecting_agg_gid<BestEffortGeometry>(query_shape);
     }
 
     throw std::runtime_error("Invalid geometry: " + geometry + ".");
@@ -266,7 +280,7 @@ inline void add_IndexTree_is_intersecting_bindings(py::class_<Class>& c) {
         Args:
             point(array): A len-3 list or np.array[float32] with the center point
             radius(float): The radius of the sphere
-            geometry(str): Either 'bounding_box' or 'exact' (default: bounding_box).
+            geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
         )"
     );
 }
@@ -288,7 +302,7 @@ inline void add_IndexTree_find_intersecting_bindings(py::class_<Class>& c) {
         Args:
             point(array): A len-3 list or np.array[float32] with the center point
             radius(float): The radius of the sphere
-            geometry(str): Either 'bounding_box' or 'exact' (default: bounding_box).
+            geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
         )"
     );
 }
@@ -312,8 +326,8 @@ inline void add_IndexTree_find_intersecting_window_bindings(py::class_<Class>& c
         Searches objects intersecting the given window, and returns their ids.
 
         Args:
-            min_corner, max_corner(float32) : min/max corners of the query window
-            geometry(str): Either 'bounding_box' or 'exact' (default: bounding_box).
+            min_corner, max_corner(array) : min/max corners of the query window
+            geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
         )"
     );
 }
@@ -338,8 +352,31 @@ inline void add_IndexTree_find_intersecting_window_pos_bindings(py::class_<Class
         Searches objects intersecting the given window, and returns their position.
 
         Args:
-            min_corner, max_corner(float32) : min/max corners of the query window
-            geometry(str): Either 'bounding_box' or 'exact' (default: bounding_box).
+            min_corner, max_corner(array) : min/max corners of the query window
+            geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
+        )"
+    )
+
+    .def("find_intersecting_pos",
+        [](Class& obj, const array_t& center, CoordType radius, const std::string& geometry) {
+            auto vec = detail::find_intersecting_pos(
+                obj,
+                si::Sphere{mk_point(center), radius},
+                geometry
+            );
+            return py::array(std::array<unsigned long, 2>{vec.size(), 3},
+                             reinterpret_cast<const si::CoordType*>(vec.data()));
+        },
+        py::arg("center"),
+        py::arg("radius"),
+        py::arg("geometry") = std::string("bounding_box"),
+        R"(
+        Searches objects intersecting the given window, and returns their position.
+
+        Args:
+            center(array): The center of the query shape.
+            radius(float): The radius of the query shape.
+            geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
         )"
     );
 }
@@ -362,7 +399,7 @@ inline void add_IndexTree_find_intersecting_objs_bindings(py::class_<Class>& c) 
         Args:
             point(array): A len-3 list or np.array[float32] with the center point
             radius(float): The radius of the sphere
-            geometry(str): Either 'bounding_box' or 'exact' (default: bounding_box).
+            geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
         )"
     );
 }
@@ -383,35 +420,41 @@ inline void add_IndexTree_find_intersecting_window_objs_bindings(py::class_<Clas
         Searches objects intersecting the given Box3D, and returns the full objects.
 
         Args:
-            min_corner, max_corner(float32) : min/max corners of the query window
-            geometry(str): Either 'bounding_box' or 'exact' (default: bounding_box).
+            min_corner, max_corner(array) : min/max corners of the query window
+            geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
         )"
     );
 }
 
 template<typename Class>
 inline void add_MorphIndex_find_intersecting_window_np(py::class_<Class>& c) {
+    auto wrap_results_in_dict = [](const auto& results) {
+        auto endpoint1 = py::array_t<CoordType>({results.endpoint1.size(), 3ul},
+                                                (CoordType*)results.endpoint1.data());
+        auto endpoint2 = py::array_t<CoordType>({results.endpoint2.size(), 3ul},
+                                                (CoordType*)results.endpoint2.data());
+        return py::dict("gid"_a=pyutil::to_pyarray(results.gid), 
+                        "section_id"_a=pyutil::to_pyarray(results.id1),
+                        "segment_id"_a=pyutil::to_pyarray(results.id2),
+                        "radius"_a=pyutil::to_pyarray(results.radius),
+                        "endpoint1"_a=endpoint1,
+                        "endpoint2"_a=endpoint2,
+                        "kind"_a=pyutil::to_pyarray(results.kind)
+                        );
+    };
+
     c
     .def("find_intersecting_window_np",
-            [](Class& obj, const array_t& min_corner, const array_t& max_corner, const std::string& geometry) {
+            [wrap_results_in_dict](Class& obj,
+                                   const array_t& min_corner, const array_t& max_corner,
+                                   const std::string& geometry) {
                 auto results = detail::find_intersecting_np(
                     obj,
                     si::Box3D{mk_point(min_corner), mk_point(max_corner)},
                     geometry
                 );
 
-                auto endpoint1 = py::array_t<CoordType>({results.endpoint1.size(), 3ul},
-                                                       (CoordType*)results.endpoint1.data());
-                auto endpoint2 = py::array_t<CoordType>({results.endpoint2.size(), 3ul},
-                                                       (CoordType*)results.endpoint2.data());
-                return py::dict("gid"_a=pyutil::to_pyarray(results.gid), 
-                                "section_id"_a=pyutil::to_pyarray(results.id1),
-                                "segment_id"_a=pyutil::to_pyarray(results.id2),
-                                "radius"_a=pyutil::to_pyarray(results.radius),
-                                "endpoint1"_a=endpoint1,
-                                "endpoint2"_a=endpoint2,
-                                "kind"_a=pyutil::to_pyarray(results.kind)
-                                );
+                return wrap_results_in_dict(results);
             },
             py::arg("min_corner"),
             py::arg("max_corner"),
@@ -420,8 +463,39 @@ inline void add_MorphIndex_find_intersecting_window_np(py::class_<Class>& c) {
             Searches objects intersecting the given Box3D, and returns them as a dict of numpy arrays.
 
             Args:
-                min_corner, max_corner(float32) : min/max corners of the query window
-                geometry(str): Either 'bounding_box' or 'exact' (default: bounding_box).
+                min_corner, max_corner(array) : min/max corners of the query window
+                geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
+            Returns:
+                a dict of numpy arrays contaning the data of the objects that intersecting the given 3D box.
+                The fields are the following: 'gid', 'section_id', 'segment_id', 'radius', 'endpoints', 'kind'.
+                The 'endpoints' field contains a tuple of arrays containing both the endpoints of the segment.
+                The 'kind' field returns an integer indicating the kind of object for that entry: 0 for Soma, 1 for Segment, 2 for Synapse.
+                In the case of Somas, the 'endpoint2' field returns a NaN, while 'endpoint1' returns the centroid of the object.
+            )"
+        )
+
+    .def("find_intersecting_np",
+            [wrap_results_in_dict](Class& obj,
+                                   const array_t& center, CoordType radius,
+                                   const std::string& geometry) {
+                auto results = detail::find_intersecting_np(
+                    obj,
+                    si::Sphere{mk_point(center), radius},
+                    geometry
+                );
+
+                return wrap_results_in_dict(results);
+            },
+            py::arg("center"),
+            py::arg("radius"),
+            py::arg("geometry") = std::string("bounding_box"),
+            R"(
+            Searches objects intersecting the given sphere, and returns them as a dict of numpy arrays.
+
+            Args:
+                center: The center of the query shape.
+                radius: The radius of the query shape.
+                geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
             Returns:
                 a dict of numpy arrays contaning the data of the objects that intersecting the given 3D box.
                 The fields are the following: 'gid', 'section_id', 'segment_id', 'radius', 'endpoints', 'kind'.
@@ -449,8 +523,27 @@ inline void add_IndexTree_count_intersecting_bindings(py::class_<Class>& c) {
          Count the number of objects intersecting the given Box3D.
 
          Args:
-             min_corner, max_corner(float32) : min/max corners of the query window
-             geometry(str): Either 'bounding_box' or 'exact' (default: bounding_box).
+             min_corner, max_corner(array) : min/max corners of the query window
+             geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
+         )"
+    )
+    .def("count_intersecting_vicinity",
+         [](Class& obj, const array_t& center, CoordType radius, const std::string& geometry) {
+             return detail::count_intersecting(
+                obj,
+                si::Sphere{mk_point(center), radius},
+                geometry);
+         },
+         py::arg("center"),
+         py::arg("radius"),
+         py::arg("geometry") = std::string("bounding_box"),
+         R"(
+         Count the number of objects intersecting the given sphere.
+
+         Args:
+             center(array) : The center of the query shape.
+             radius(float) : The radius of the query shape.
+             geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
          )"
     );
 }
@@ -710,25 +803,67 @@ inline void create_Synapse_bindings(py::module& m) {
 
 template<typename Class>
 inline void add_SynapseIndex_find_intersecting_window_np(py::class_<Class>& c) {
+    auto wrap_as_dict = [](const auto& results) {
+        return py::dict("id"_a=pyutil::to_pyarray(results.gid),
+                        "pre_gid"_a=pyutil::to_pyarray(results.id1),
+                        "post_gid"_a=pyutil::to_pyarray(results.id2),
+                        "centroid"_a=py::array_t<CoordType>({results.centroid.size(), 3ul},
+                                                            (CoordType*)results.centroid.data())
+                        );
+    };
+
     c
     .def("find_intersecting_window_np",
-            [](Class& obj, const array_t& min_corner, const array_t& max_corner) {
-                const auto& results = obj.find_intersecting_np(si::Box3D{mk_point(min_corner),
-                                                        mk_point(max_corner)});
+            [wrap_as_dict](Class& obj,
+                           const array_t& min_corner, const array_t& max_corner,
+                           const std::string& geometry) {
 
-                return py::dict("id"_a=pyutil::to_pyarray(results.gid),
-                                "pre_gid"_a=pyutil::to_pyarray(results.id1),
-                                "post_gid"_a=pyutil::to_pyarray(results.id2),
-                                "centroid"_a=py::array_t<CoordType>({results.centroid.size(), 3ul},
-                                                                    (CoordType*)results.centroid.data()),
-                                "kind"_a=pyutil::to_pyarray(results.kind)
-                                );
+                const auto& results = detail::find_intersecting_np(
+                    obj,
+                    si::Box3D{mk_point(min_corner), mk_point(max_corner)},
+                    geometry
+                );
+                return wrap_as_dict(results);
             },
+            py::arg("min_corner"),
+            py::arg("max_corner"),
+            py::arg("geometry") = std::string("bounding_box"),
             R"(
             Searches objects intersecting the given Box3D, and returns them as a dict of numpy arrays.
 
             Args:
-                min_corner, max_corner(float32) : min/max corners of the query window
+                min_corner, max_corner(array) : min/max corners of the query window
+                geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
+            Returns:
+                a dict of numpy arrays contaning the data of the objects that intersecting the given 3D box.
+                The fields are the following: 'gid', 'pre_gid', 'post_gid', 'centroid', 'kind'.
+                The 'kind' field returns an integer indicating the kind of object of that entry: 0 for Soma, 1 for Segment, 2 for Synapse.
+            )"
+        );
+
+    c
+    .def("find_intersecting_np",
+            [wrap_as_dict](Class& obj,
+                           const array_t& center, CoordType radius,
+                           const std::string& geometry) {
+                const auto& results = detail::find_intersecting_np(
+                    obj,
+                    si::Sphere{mk_point(center), radius},
+                    geometry
+                );
+
+                return wrap_as_dict(results); 
+            },
+            py::arg("center"),
+            py::arg("radius"),
+            py::arg("geometry") = std::string("bounding_box"),
+            R"(
+            Searches objects intersecting the given sphere and returns them as a dict of numpy arrays.
+
+            Args:
+                center(array) : The center of the query shape.
+                radius(float) : The radius of the query shape.
+                geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
             Returns:
                 a dict of numpy arrays contaning the data of the objects that intersecting the given 3D box.
                 The fields are the following: 'gid', 'pre_gid', 'post_gid', 'centroid', 'kind'.
@@ -736,6 +871,24 @@ inline void add_SynapseIndex_find_intersecting_window_np(py::class_<Class>& c) {
             )"
         );
 }
+
+template <typename Class>
+inline void add_SynapseIndex_fields_bindings(py::class_<Class>& c) {
+    c.def_property_readonly_static(
+        "AVAILABLE_FIELDS",
+        [](py::object& /* self */) {
+            return std::vector<std::string>{
+                "id",
+                "pre_gid",
+                "post_gid",
+                "centroid"
+            };
+        },
+        "List of fields that are builtin."
+    );
+}
+
+
 
 template<class Class>
 inline void add_SynapseIndex_add_synapses_bindings(py::class_<Class>& c) {
@@ -761,16 +914,47 @@ template<class Class>
 inline void add_SynapseIndex_count_intersecting_agg_gid_bindings(py::class_<Class>& c) {
     c
     .def("count_intersecting_agg_gid",
-        [](Class& obj, const array_t& min_corner, const array_t& max_corner) {
-            return obj.count_intersecting_agg_gid(
-                si::Box3D{mk_point(min_corner), mk_point(max_corner)}
+        [](Class& obj,
+           const array_t& min_corner, const array_t& max_corner,
+           const std::string& geometry) {
+
+            return detail::count_intersecting_agg_gid(obj, 
+                si::Box3D{mk_point(min_corner), mk_point(max_corner)},
+                geometry
             );
         },
+        py::arg("min_corner"),
+        py::arg("max_corner"),
+        py::arg("geometry") = std::string("bounding_box"),
         R"(
         Finds the points inside a given window and aggregated them by gid
 
         Args:
-            min_corner, max_corner(float32) : min/max corners of the query window
+            min_corner, max_corner(array) : min/max corners of the query window
+            geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
+        )"
+    )
+
+    .def("count_intersecting_vicinity_agg_gid",
+        [](Class& obj,
+           const array_t& center, CoordType radius,
+           const std::string& geometry) {
+
+            return detail::count_intersecting_agg_gid(obj, 
+                si::Sphere{mk_point(center), radius},
+                geometry
+            );
+        },
+        py::arg("point"),
+        py::arg("radius"),
+        py::arg("geometry") = std::string("bounding_box"),
+        R"(
+        Finds the points inside a given window and aggregated them by gid
+
+        Args:
+            center(array): The center of the query shape.
+            radius(float): The radius of the query shape.
+            geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
         )"
     );
 }
@@ -784,6 +968,7 @@ inline void create_SynapseIndex_bindings(py::module& m, const char* class_name) 
     add_SynapseIndex_add_synapses_bindings(c);
     add_SynapseIndex_count_intersecting_agg_gid_bindings(c);
     add_SynapseIndex_find_intersecting_window_np(c);
+    add_SynapseIndex_fields_bindings(c);
 }
 
 
@@ -1082,6 +1267,27 @@ inline void add_MorphIndex_add_neuron_bindings(py::class_<Class>& c) {
     );
 }
 
+
+template <typename Class>
+inline void add_MorphIndex_fields_bindings(py::class_<Class>& c) {
+    c.def_property_readonly_static(
+        "AVAILABLE_FIELDS",
+        [](py::object& /* self */) {
+            return std::vector<std::string>{
+                "gid",
+                "section_id",
+                "segment_id",
+                "endpoint1",
+                "endpoint2",
+                "radius",
+                "kind"
+            };
+        },
+        "List of fields that are builtin."
+    );
+}
+
+
 /// Bindings to index si::IndexTree<MorphoEntry>
 template <typename Class = si::IndexTree<MorphoEntry>>
 inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
@@ -1095,6 +1301,8 @@ inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
     add_MorphIndex_add_soma_bindings<Class>(c);
 
     add_MorphIndex_find_intersecting_window_np<Class>(c);
+
+    add_MorphIndex_fields_bindings<Class>(c);
 }
 
 #if SI_MPI == 1
@@ -1241,6 +1449,7 @@ inline py::class_<Class> create_MorphMultiIndex_bindings(py::module& m, const ch
     auto c = create_MultiIndex_bindings<value_type>(m, class_name);
 
     add_MorphIndex_find_intersecting_window_np(c);
+    add_MorphIndex_fields_bindings(c);
 
     return c;
 }
@@ -1252,6 +1461,7 @@ inline py::class_<Class> create_SynapseMultiIndex_bindings(py::module& m, const 
     auto c = create_MultiIndex_bindings<value_type>(m, class_name);
 
     add_SynapseIndex_find_intersecting_window_np(c);
+    add_SynapseIndex_fields_bindings(c);
 
     return c;
 }

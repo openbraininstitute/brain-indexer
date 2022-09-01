@@ -1,18 +1,56 @@
 import os
 import json
 
-import spatial_index
-from .node_indexer import MorphIndex, MorphMultiIndex
-from .synapse_indexer import SynapseIndex, SynapseMultiIndex
+import libsonata
+
+from spatial_index import logger
+from spatial_index import core
 
 
-def load_json(filename):
-    with open(filename, "r") as f:
-        return json.load(f)
+def read_something(filename, command, mode="r", **kwargs):
+    with open(filename, mode, **kwargs) as f:
+        return command(f)
+
+
+def write_something(filename, command, mode="w", **kwargs):
+    with open(filename, mode=mode, **kwargs) as f:
+        command(f)
+
+
+def read_json(filename):
+    return read_something(filename, lambda f: json.load(f))
+
+
+class NumpyEncoder(json.JSONEncoder):
+    # credit: https://stackoverflow.com/a/47626762
+
+    def default(self, obj):
+        import numpy as np
+
+        transforms = [
+            (np.ndarray, lambda obj: obj.tolist()),
+            (np.float16, lambda obj: float(obj)),
+            (np.float32, lambda obj: float(obj)),
+            (np.float64, lambda obj: float(obj)),
+            (np.float128, lambda obj: float(obj)),
+            (np.int16, lambda obj: int(obj)),
+            (np.int32, lambda obj: int(obj)),
+            (np.int64, lambda obj: int(obj)),
+        ]
+
+        for T, f in transforms:
+            if isinstance(obj, T):
+                return f(obj)
+
+        return json.JSONEncoder.default(self, obj)
+
+
+def write_json(filename, obj):
+    write_something(filename, lambda f: json.dump(obj, f, indent=2, cls=NumpyEncoder))
 
 
 class MetaData:
-    _Constants = spatial_index.core._MetaDataConstants
+    _Constants = core._MetaDataConstants
 
     class _SubConfig:
         def __init__(self, meta_data, sub_config_name):
@@ -23,13 +61,16 @@ class MetaData:
         def index_path(self):
             return self._meta_data._meta_data_filename
 
+        def value(self, key):
+            return self._raw_sub_config[key]
+
         def path(self, name):
             # expand path somehow
             return self._meta_data.resolve_path(self._raw_sub_config[name])
 
     def __init__(self, path):
         self._meta_data_filename = self._deduce_meta_data_filename(path)
-        self._raw_meta_data = load_json(self._meta_data_filename)
+        self._raw_meta_data = read_json(self._meta_data_filename)
         self._dirname = os.path.dirname(self._meta_data_filename)
 
     @property
@@ -75,56 +116,47 @@ class MetaData:
             return MetaData._SubConfig(self, sub_config_name)
 
     def _deduce_meta_data_filename(self, path):
-        return spatial_index.core.deduce_meta_data_path(path)
+        return core.deduce_meta_data_path(path)
 
 
-class IndexResolver:
-    @staticmethod
-    def from_meta_data(meta_data):
-        return IndexResolver.get(
-            element_type=meta_data.element_type,
-            index_variant=meta_data.index_variant
+def open_core_from_meta_data(meta_data, *, max_cache_size_mb=None, resolver=None):
+    if in_memory_conf := meta_data.in_memory:
+        return resolver.core_class("in_memory")(in_memory_conf.index_path)
+
+    elif mem_mapped_conf := meta_data.memory_mapped:
+        return resolver.core_class("memory_mapped").open(mem_mapped_conf.index_path)
+
+    elif multi_index_conf := meta_data.multi_index:
+        max_cache_size_mb = max_cache_size_mb or 1024
+        mem = 1024 ** 2 * max_cache_size_mb
+
+        return resolver.core_class("multi_index")(
+            multi_index_conf.index_path, max_cached_bytes=mem
         )
 
-    @staticmethod
-    def get(element_type, index_variant):
-        if element_type == "morpho_entry":
-            if IndexResolver._is_regular_index(index_variant):
-                return MorphIndex
-            elif IndexResolver._is_multi_index(index_variant):
-                return MorphMultiIndex
-            else:
-                raise ValueError(f"Invalid index_variant: {index_variant}")
-
-        elif element_type == "synapse":
-            if IndexResolver._is_regular_index(index_variant):
-                return SynapseIndex
-            elif IndexResolver._is_multi_index(index_variant):
-                return SynapseMultiIndex
-            else:
-                raise ValueError(f"Invalid index_variant: {index_variant}")
-
-        else:
-            raise ValueError(f"Invalid element_type: {element_type}")
-
-    @staticmethod
-    def _is_regular_index(index_variant):
-        regular_index_keys = [
-            MetaData._Constants.in_memory_key,
-            MetaData._Constants.memory_mapped_key
-        ]
-        return index_variant in regular_index_keys
-
-    @staticmethod
-    def _is_multi_index(index_variant):
-        return index_variant == MetaData._Constants.multi_index_key
+    else:
+        raise ValueError("Invalid 'meta_data'.")
 
 
-def _open_single_population_index(meta_data, **kwargs):
-    Index = IndexResolver.from_meta_data(meta_data)
-    return Index.from_meta_data(meta_data, **kwargs)
+def open_sonata_edges(sonata_filename, population_name):
+    storage = libsonata.EdgeStorage(sonata_filename)
+    if population_name is None:
+        if len(storage.population_names) > 1:
+            raise RuntimeError("No population chosen, multiple available")
+        population_name = next(iter(storage.population_names), None)
+        logger.info(
+            f"Population not set. Auto-selecting: '{population_name}'."
+        )
+
+    return storage.open_population(population_name)
 
 
-def open_index(path, **kwargs):
-    meta_data = MetaData(path)
-    return _open_single_population_index(meta_data, **kwargs)
+def write_sonata_meta_data_section(index_path, edge_filename, population_name):
+    meta_data_path = core.deduce_meta_data_path(index_path)
+    meta_data = read_json(meta_data_path)
+    meta_data["extended"] = {
+        "dataset_path": os.path.abspath(edge_filename),
+        "population": population_name,
+    }
+
+    write_json(meta_data_path, meta_data)

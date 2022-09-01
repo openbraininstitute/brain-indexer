@@ -1,8 +1,10 @@
 import tempfile
 
 import numpy as np
-from spatial_index import MorphIndex
-from spatial_index import SphereIndex as IndexClass
+
+from spatial_index import core
+
+IndexClass = core.SphereIndex
 
 
 def arange_centroids(N=10):
@@ -87,7 +89,7 @@ def test_intersection_none():
     centroid = np.array([0., 0., 0.], dtype=np.float32)
     radius = np.random.uniform(low=0.0, high=0.49)
 
-    idx = t.find_intersecting(centroid, radius, geometry="exact")
+    idx = t.find_intersecting(centroid, radius, geometry="best_effort")
     assert len(idx) == 0, "Should be empty, but {} were found instead.".format(idx)
 
 
@@ -104,8 +106,8 @@ def test_intersection_all():
     centroid = np.array([0., 0., 0.], dtype=np.float32)
     radius = np.random.uniform(low=0.5, high=1.0)
 
-    idx = t.find_intersecting(centroid, radius, geometry="exact")
-    objs = t.find_intersecting_objs(centroid, radius, geometry="exact")
+    idx = t.find_intersecting(centroid, radius, geometry="best_effort")
+    objs = t.find_intersecting_objs(centroid, radius, geometry="best_effort")
     expected_result = np.arange(3, dtype=np.uintp)
 
     if len(idx.dtype) > 1:
@@ -113,7 +115,7 @@ def test_intersection_all():
     assert np.all(idx == expected_result), (idx, expected_result, centroids, radii)
 
     # New API: retrieve object references
-    use_gid_field = IndexClass is MorphIndex  # MorphIndex raw ids are meaningless
+    use_gid_field = IndexClass is core.MorphIndex  # MorphIndex raw ids are meaningless
     for obj, exp_id in zip(objs, expected_result):
         assert (obj.gid if use_gid_field else obj.id) == exp_id
 
@@ -135,7 +137,7 @@ def test_intersection_random():
 
     t = IndexClass(centroids, radii)
 
-    idx = t.find_intersecting(q_centroid, q_radius, geometry="exact")
+    idx = t.find_intersecting(q_centroid, q_radius, geometry="best_effort")
     if len(idx.dtype) > 1:
         idx = idx['gid']  # Records
     assert len(np.setdiff1d(idx, expected_result)) == 0, (idx, expected_result)
@@ -175,7 +177,7 @@ def test_intersection_window():
     assert np.all(idx == expected_result), (idx, expected_result)
     assert np.allclose(pos, expected_pos)
 
-    use_gid_field = IndexClass is MorphIndex  # MorphIndex raw ids are meaningless
+    use_gid_field = IndexClass is core.MorphIndex  # MorphIndex raw ids are meaningless
     for obj in t.find_intersecting_window_objs(min_corner, max_corner):
         id_ = obj.gid if use_gid_field else obj.id
         i = expected_result.index(id_)  # asserts gid is in the list

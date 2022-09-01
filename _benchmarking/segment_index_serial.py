@@ -8,7 +8,7 @@
 import os
 
 import numpy as np
-from spatial_index import node_indexer
+from spatial_index import MorphIndexBuilder
 from line_profiler import LineProfiler
 
 
@@ -19,7 +19,7 @@ MORPH_FILE = os.path.join(CIRCUIT_2K, "morphologies/ascii")
 
 
 def do_query_serial(min_corner, max_corner):
-    indexer = node_indexer.MorphIndexBuilder(MORPH_FILE, CIRCUIT_FILE)
+    indexer = MorphIndexBuilder(MORPH_FILE, CIRCUIT_FILE)
     indexer.process_range((700, 100))
     idx = indexer.find_intersecting_window(min_corner, max_corner)
     assert len(idx) > 0

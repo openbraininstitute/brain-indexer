@@ -8,8 +8,9 @@ import tempfile
 
 import numpy.testing as nptest
 
-from spatial_index import open_index
-from spatial_index.node_indexer import MorphIndexBuilder
+import spatial_index
+from spatial_index.morphology_builder import MorphIndexBuilder, MorphIndexMemDiskBuilder
+from spatial_index.morphology_builder import DiskMemMapProps
 
 import morphio
 import quaternion as npq
@@ -72,17 +73,20 @@ def test_morph_loading():
 
 
 def test_serial_exec():
-    node_indexer = MorphIndexBuilder(MORPHOLOGY_FILES[1], FILETEST)
-    node_indexer.process_range((0, 1))  # Process first neuron
-    index = node_indexer.index
+    builder = MorphIndexBuilder(MORPHOLOGY_FILES[1], FILETEST)
+    builder.process_range((0, 1))  # Process first neuron
+    index = builder.index
     assert len(index) > 1700
-    objs_in_region = index.find_intersecting_window_objs([100, 50, 100], [200, 100, 200])
+    objs_in_region = index.window_query(
+        [100, 50, 100], [200, 100, 200],
+        fields="raw_elements"
+    )
     assert len(objs_in_region) > 0
 
     m = _3DMorphology(
         morphio.Morphology(MORPHOLOGY_FILES[1]),
-        node_indexer._src_data.rotations(0)[0],
-        node_indexer._src_data.positions(0)[0],
+        builder._mvd.rotations(0)[0],
+        builder._mvd.positions(0)[0],
     )
     _, _, final_section_pts = m.compute_final_points()
 
@@ -96,16 +100,18 @@ def test_serial_exec():
 
 
 def test_memory_mapped_file_morph_index():
-    with tempfile.TemporaryDirectory(prefix="rtree_image.bin", dir=".") as MEM_MAP_FILE:
-        disk_mem_map = MorphIndexBuilder.DiskMemMapProps(MEM_MAP_FILE, 1, True)
-        node_indexer = MorphIndexBuilder(MORPHOLOGY_FILES[1], FILETEST,
-                                         disk_mem_map=disk_mem_map)
-        node_indexer.process_range((0, 1))
-        index = node_indexer.index
+    with tempfile.TemporaryDirectory(prefix="rtree_image.bin", dir=".") as index_path:
+        disk_mem_map = DiskMemMapProps(index_path, 1, True)
+        builder = MorphIndexMemDiskBuilder(
+            MORPHOLOGY_FILES[1], FILETEST, disk_mem_map=disk_mem_map
+        )
+        builder.process_range((0, 1))
+        index = builder.index
         assert len(index) > 1700
         # We can share the mem file file
-        index2 = open_index(MEM_MAP_FILE)
+        index2 = spatial_index.open_index(index_path)
         assert len(index2) > 1700, len(index2)
+        assert len(index) == len(index2)
 
 
 class Test2Info:
@@ -120,9 +126,15 @@ def test_sonata_index():
         Test2Info.MORPHOLOGY_DIR, Test2Info.SONATA_NODES, "All", range(700, 800)
     )
     assert len(index) == 588961
-    points_in_region = index.find_intersecting_window([200, 200, 480], [300, 300, 520])
+    points_in_region = index.window_query(
+        [200, 200, 480], [300, 300, 520],
+        fields="raw_elements"
+    )
     assert len(points_in_region) > 0
-    obj_in_region = index.find_intersecting_window_objs([0, 0, 0], [10, 10, 10])
+    obj_in_region = index.window_query(
+        [0, 0, 0], [10, 10, 10],
+        fields="raw_elements"
+    )
     assert len(obj_in_region) > 0
     for obj in obj_in_region:
         assert -1 <= obj.centroid[0] <= 11
@@ -133,10 +145,14 @@ def test_sonata_index():
 def test_sonata_selection():
     selection = libsonata.Selection([4, 8, 15, 16, 23, 42])
     index = MorphIndexBuilder.from_sonata_selection(
-        Test2Info.MORPHOLOGY_DIR, Test2Info.SONATA_NODES, "All", selection
+        Test2Info.MORPHOLOGY_DIR, Test2Info.SONATA_NODES, "All", selection,
     )
+
     assert len(index) == 25618
-    obj_in_region = index.find_intersecting_window_objs([15, 900, 15], [20, 1900, 20])
+    obj_in_region = index.window_query(
+        [15, 900, 15], [20, 1900, 20],
+        fields="raw_elements"
+    )
     assert len(obj_in_region) > 0
     for obj in obj_in_region:
         assert 13 <= obj.centroid[0] <= 22

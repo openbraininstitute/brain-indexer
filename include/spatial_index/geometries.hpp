@@ -235,8 +235,8 @@ inline CoordType characteristic_length(const boost::variant<V...> &v) {
 /// Flag to tell queries to treat the indexed elements by their bounding boxes.
 class BoundingBoxGeometry{};
 
-/// Flag to tell queries to consider the 'exact' shape of the indexed elements.
-class ExactGeometry{};
+/// Flag to tell queries to consider the 'best_effort' shape of the indexed elements.
+class BestEffortGeometry{};
 
 template<class Shape>
 constexpr bool is_sphere_or_cylinder() {
@@ -282,11 +282,11 @@ inline bool geometry_intersects(const QueryShape& query_shape,
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Exact Geometry
+// Best-effort Geometry
 ///////////////////////////////////////////////////////////////////////////////
 inline bool geometry_intersects(const Box3D& query_shape,
                                 const Box3D& element_shape,
-                                ExactGeometry) {
+                                BestEffortGeometry) {
     return bg::intersects(query_shape, element_shape);
 }
 
@@ -295,7 +295,7 @@ template<class ElementShape,
 >
 inline bool geometry_intersects(const Box3D& query_shape,
                                 const ElementShape& element_shape,
-                                ExactGeometry) {
+                                BestEffortGeometry) {
     return element_shape.intersects(query_shape);
 }
 
@@ -308,7 +308,7 @@ template<class QueryShape,
 >
 inline bool geometry_intersects(const QueryShape& query_shape,
                                 const ElementShape& element_shape,
-                                ExactGeometry) {
+                                BestEffortGeometry) {
     return query_shape.intersects(element_shape);
 }
 

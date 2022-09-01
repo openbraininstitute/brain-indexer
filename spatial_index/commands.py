@@ -4,10 +4,8 @@
 
 import spatial_index
 from .index_common import DiskMemMapProps
-from .node_indexer import MorphIndexBuilder
-from .synapse_indexer import SynapseIndexBuilder
 from .util import check_free_space, docopt_get_args, get_dirname, is_likely_same_index
-from .io import open_index
+from .resolver import open_index, MorphIndexResolver, SynapseIndexResolver
 
 
 def spatial_index_nodes(args=None):
@@ -186,60 +184,46 @@ def _parse_mem_map_options(options: dict) -> DiskMemMapProps:
         raise Exception(
             f"Not enough free space to create a memory-mapped file of size {fsize} MB")
 
-    return MorphIndexBuilder.DiskMemMapProps(filename, fsize, options["shrink_on_close"])
+    return DiskMemMapProps(filename, fsize, options["shrink_on_close"])
 
 
 def _run_spatial_index_nodes(morphology_dir, nodes_file, options):
-    try:
-        from spatial_index import MorphMultiIndexBuilder
-    except ModuleNotFoundError as e:
-        spatial_index.logger.error("SpatialIndex was likely not built with MPI support.")
-        raise e
+    disk_mem_map = _parse_mem_map_options(options)
 
     if options["multi_index"]:
-        MorphMultiIndexBuilder.create(
-            morphology_dir,
-            nodes_file,
-            output_dir=options["out"],
-        )
+        index_kind = "multi_index"
+        index_kwargs = {}
+
+    elif disk_mem_map is not None:
+        index_kind = "memory_mapped"
+        index_kwargs = {"disk_mem_map": disk_mem_map, "progress": True}
 
     else:
-        disk_mem_map = _parse_mem_map_options(options)
-        index = MorphIndexBuilder.create(
-            morphology_dir,
-            nodes_file,
-            disk_mem_map=disk_mem_map,
-            progress=True
-        )
+        index_kind = "in_memory"
+        index_kwargs = {"progress": True}
 
-        if not disk_mem_map:
-            spatial_index.logger.info("Writing index to file: %s", options["out"])
-            index.index.dump(options["out"])
+    Builder = MorphIndexResolver.builder_class(index_kind)
+    Builder.create(
+        morphology_dir, nodes_file, output_dir=options["out"], **index_kwargs
+    )
 
 
 def _run_spatial_index_synapses(edges_file, population, options):
-    try:
-        from spatial_index import SynapseMultiIndexBuilder
-    except ModuleNotFoundError as e:
-        spatial_index.logger.error("SpatialIndex was likely not built with MPI support.")
-        raise e
+    disk_mem_map = _parse_mem_map_options(options)
 
     if options["multi_index"]:
-        SynapseMultiIndexBuilder.from_sonata_file(
-            edges_file,
-            population,
-            output_dir=options["out"]
-        )
+        index_kind = "multi_index"
+        index_kwargs = {}
+
+    elif disk_mem_map is not None:
+        index_kind = "memory_mapped"
+        index_kwargs = {"disk_mem_map": disk_mem_map, "progress": True}
 
     else:
-        disk_mem_map = _parse_mem_map_options(options)
-        index = SynapseIndexBuilder.from_sonata_file(
-            edges_file,
-            population,
-            disk_mem_map=disk_mem_map,
-            progress=True
-        )
+        index_kind = "in_memory"
+        index_kwargs = {"progress": True}
 
-        if not disk_mem_map:
-            spatial_index.logger.info("Writing index to file: %s", options["out"])
-            index.index.dump(options["out"])
+    Builder = SynapseIndexResolver.builder_class(index_kind)
+    Builder.from_sonata_file(
+        edges_file, population, output_dir=options["out"], **index_kwargs
+    )

@@ -7,7 +7,7 @@ Version 0.6.0
 
 **Features**
   * Introduced MultiIndex for parallel indexing
-  * Queries can now be performed in bounding box or exact mode
+  * Queries can now be performed in bounding box or best-effort mode
   * Bulk return of values from queries as a dictionary of numpy arrays
   * Support for .json file for CLI tools
   * A full-fledged tutorial written in a Jupyter Notebook

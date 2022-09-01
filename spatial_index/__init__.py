@@ -25,15 +25,18 @@ register_logger(logging.getLogger(__name__))
 # --------------
 
 
-from ._spatial_index import *  # noqa
-
 try:
-    from .node_indexer import MorphMultiIndexBuilder  # noqa
-    from .synapse_indexer import SynapseMultiIndexBuilder  # noqa
+    from .morphology_builder import MorphMultiIndexBuilder  # noqa
+    from .synapse_builder import SynapseMultiIndexBuilder  # noqa
 except ImportError:
     logging.warning("MPI MultiIndex builders have been disabled")
 
-from .node_indexer import MorphIndexBuilder, MorphMultiIndex  # noqa
-from .synapse_indexer import PointIndex, SynapseIndexBuilder, SynapseMultiIndex  # noqa
+from .morphology_builder import MorphIndexMemDiskBuilder, MorphIndexBuilder  # noqa
 
-from .io import open_index # noqa
+from .synapse_builder import SynapseIndexMemDiskBuilder, SynapseIndexBuilder  # noqa
+
+from .index import SynapseIndex, SynapseIndexMemDisk, SynapseMultiIndex  # noqa
+from .index import MorphIndex, MorphIndexMemDisk, MorphMultiIndex  # noqa
+
+from .resolver import IndexResolver, SynapseIndexResolver, MorphIndexResolver  # noqa
+from .resolver import open_index # noqa

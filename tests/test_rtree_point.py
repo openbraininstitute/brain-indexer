@@ -1,6 +1,7 @@
 import numpy as np
 
-from spatial_index import SphereIndex as PointIndex
+from spatial_index import core
+
 
 points = np.array(
     [
@@ -17,8 +18,8 @@ ids = np.arange(len(points), dtype=np.intp)
 
 
 def test_add_points():
-    print("Running tests with class " + PointIndex.__name__)
-    t = PointIndex()
+    print("Running tests with class " + core.SphereIndex.__name__)
+    t = core.SphereIndex()
     t.add_points(points, ids)
     min_corner = [-1, -1, -1]
     max_corner = [1, 1, 1]
@@ -36,15 +37,15 @@ def test_add_points():
 
 
 def test_init_points():
-    p = PointIndex(points, radii=None)  # or p = PointIndex(points, None)
+    p = core.SphereIndex(points, radii=None)  # or p = core.SphereIndex(points, None)
     idx = p.find_nearest([5, 0, 0], 3)
     expected_result = np.array([0, 2, 6], dtype=np.uintp)
     assert np.all(idx == expected_result), (idx, expected_result)
 
 
 def test_init_points_with_ids():
-    p = PointIndex(points, radii=None, py_ids=ids)
-    # or p = PointIndex(points, None, ids)
+    p = core.SphereIndex(points, radii=None, py_ids=ids)
+    # or p = core.SphereIndex(points, None, ids)
     idx = p.find_nearest([5, 0, 0], 3)
     expected_result = np.array([0, 2, 6], dtype=np.uintp)
     assert np.all(idx == expected_result), (idx, expected_result)
@@ -57,7 +58,7 @@ def test_print_rtree():
             [-0.5, -0.5456, 0],
             [0.5, -0.5, 0],
         ], dtype=np.float32)
-    p = PointIndex(points[0:3], radii=None)
+    p = core.SphereIndex(points[0:3], radii=None)
     str_expect = (
         'IndexTree([\n'
         '  IShape(id=0, Sphere(centroid=[1e-05 1 0], radius=0))\n'

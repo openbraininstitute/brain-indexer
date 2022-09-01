@@ -1,4 +1,4 @@
-from spatial_index import call_some_mpi_from_cxx
+import spatial_index
 from mpi4py import MPI
 
 
@@ -9,6 +9,6 @@ def call_some_mpi_from_python():
 
 if __name__ == "__main__":
     call_some_mpi_from_python()
-    call_some_mpi_from_cxx()
+    spatial_index.core.call_some_mpi_from_cxx()
 
     print("Seems like MPI and mpi4py are compatible.")

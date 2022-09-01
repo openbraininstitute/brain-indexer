@@ -4,15 +4,17 @@ Python tests to the morphology spatial index.
 It reuses tests from test_rthree_sphere
 """
 import numpy as np
-from spatial_index import MorphIndex
 import os.path
 import sys
 import pytest
 
+from spatial_index import core
+from spatial_index.index import MorphIndex
+
 # Add this dir to path so we can import the other tests
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 import test_rtree_sphere  # NOQA
-test_rtree_sphere.IndexClass = MorphIndex
+test_rtree_sphere.IndexClass = core.MorphIndex
 from test_rtree_sphere import *  # NOQA  # Tests collected for pytest
 
 
@@ -22,7 +24,7 @@ def test_morphos_insert():
     c2[:, 1] += 2
     radii = np.full(10, 0.5, dtype=np.float32)
 
-    t = MorphIndex()
+    t = core.MorphIndex()
     for i in range(len(c1)):
         t.insert(i // 4, i % 4, i % 4, c1[i], c2[i], radii[i])
 
@@ -47,7 +49,7 @@ def test_bulk_neuron_add():
     points[10:, 1] = 1
     radius = np.ones(N, dtype=np.float32)
 
-    rtree = MorphIndex()
+    rtree = core.MorphIndex()
     rtree.add_neuron(nrn_id, points, radius, [1, 10])
 
     # around a point, expect 4 segments, 2 from branch 1, 2 from branch 2
@@ -60,8 +62,12 @@ def test_bulk_neuron_add():
         assert out_id in idx
 
     # New API
-    objs = rtree.find_intersecting_window_objs([COORD_SEARCH[0] - 0.9, -.1, -.1],
-                                               [COORD_SEARCH[0] + 0.9, .1, .1])
+    index = MorphIndex(rtree)
+    objs = index.window_query(
+        [COORD_SEARCH[0] - 0.9, -.1, -.1],
+        [COORD_SEARCH[0] + 0.9, .1, .1],
+        fields="raw_elements"
+    )
     assert len(objs) == len(EXPECTED_IDS)
     for obj in objs:
         assert (obj.gid, obj.section_id, obj.segment_id) in EXPECTED_IDS
@@ -76,7 +82,7 @@ def test_add_neuron_with_soma_and_toString():
     ]
     radius = [3, 2, 2, 1]
     offsets = [0, 2]
-    rtree = MorphIndex()
+    rtree = core.MorphIndex()
     rtree.add_neuron(1, points, radius, offsets)
     str_expect = (
         'IndexTree([\n'
@@ -97,7 +103,7 @@ def test_add_neuron_without_soma_and_toString():
     ]
     radius = [3, 2, 2, 1]
     offsets = [0, 2]
-    rtree = MorphIndex()
+    rtree = core.MorphIndex()
     # add segments
     rtree.add_neuron(1, points, radius, offsets, has_soma=False)
     str_expect = (
@@ -134,10 +140,12 @@ def test_endpoints_retrieval():
     offsets = [0, 2]
     min_corner = [-50, 0, 0]
     max_corner = [0, 50, 50]
-    rtree = MorphIndex()
+    rtree = core.MorphIndex()
     rtree.add_neuron(1, points, radius, offsets)
     array_expect = np.array([[1, 3, 5], [2, 4, 6]])
-    idx = rtree.find_intersecting_window_objs(min_corner, max_corner)
+
+    index = MorphIndex(rtree)
+    idx = index.window_query(min_corner, max_corner, fields="raw_elements")
     assert idx[0].endpoints is None
     np.testing.assert_allclose(idx[1].endpoints, array_expect)
 
@@ -147,7 +155,7 @@ def test_endpoints_retrieval():
     ([[0, 0, 0]], [], [0], "Please provide the soma radius")
 ))
 def test_add_neuron_exc_with_soma(points, radius, offsets, exc_msg):
-    rtree = MorphIndex()
+    rtree = core.MorphIndex()
     with pytest.raises(ValueError) as excinfo:
         rtree.add_neuron(1, points, radius, offsets, has_soma=True)
     assert exc_msg in str(excinfo.value)
@@ -166,7 +174,7 @@ def test_add_neuron_exc_with_soma(points, radius, offsets, exc_msg):
                           "Please provide at least two points for segments")]
                          )
 def test_add_neuron_exc_without_soma(points, radius, offsets, exc_msg):
-    rtree = MorphIndex()
+    rtree = core.MorphIndex()
     with pytest.raises(ValueError) as excinfo:
         rtree.add_neuron(1, points, radius, offsets, has_soma=False)
     assert exc_msg in str(excinfo.value)

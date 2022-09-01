@@ -11,6 +11,7 @@ import sys
 
 import spatial_index
 from spatial_index import MorphIndexBuilder
+
 import pytest
 pytest_skipif = pytest.mark.skipif
 pytest_long = pytest.mark.long
@@ -19,10 +20,6 @@ pytest_long = pytest.mark.long
 CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-2k"
 CIRCUIT_FILE = os.path.join(CIRCUIT_2K, "circuit.mvd3")
 MORPH_FILE = os.path.join(CIRCUIT_2K, "morphologies/ascii")
-
-
-class Options:
-    use_mem_mapped_file = False
 
 
 def do_multi_index_query_serial(min_corner, max_corner):
@@ -37,28 +34,16 @@ def do_multi_index_query_serial(min_corner, max_corner):
     )
 
     if MPI.COMM_WORLD.Get_rank() == 0:
-        index = spatial_index.open_index(output_dir, mem=int(1e9))
-        return index.find_intersecting_window(min_corner, max_corner)
+        index = spatial_index.open_index(output_dir, max_cache_size_mb=1000)
+        return index.window_query(min_corner, max_corner, fields="ids")
 
 
 def do_query_serial(min_corner, max_corner):
-    if Options.use_mem_mapped_file:
-        spatial_index.logger.info("Using mem-mapped")
-        memmap_props = MorphIndexBuilder.DiskMemMapProps(
-            "mapfile.bin",
-            1000,   # ~1GB
-            True    # Truncate
-        )
-    else:
-        memmap_props = None
-
     index = MorphIndexBuilder.from_mvd_file(MORPH_FILE, CIRCUIT_FILE,
-                                            disk_mem_map=memmap_props,
                                             target_gids=range(700, 1200),
                                             progress=True)
-    idx = index.find_intersecting_window(min_corner, max_corner)
-    index.find_intersecting_window_pos(min_corner, max_corner)
-    index.find_intersecting_window_objs(min_corner, max_corner)
+
+    idx = index.window_query(min_corner, max_corner, fields="ids")
     return idx
 
 
