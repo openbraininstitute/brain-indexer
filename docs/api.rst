@@ -43,20 +43,3 @@ SynapseIndex
 .. autoclass:: SynapseIndex
    :members:
    :inherited-members:
-
-
-Core IndexGrid API
-==================
-
-SphereGrid
-----------
-.. autoclass:: SphereGrid
-   :members:
-   :inherited-members:
-
-MorphGrid
----------
-.. autoclass:: MorphGrid
-   :members:
-   :inherited-members:
-

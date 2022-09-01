@@ -27,7 +27,6 @@ endfunction()
 
 si_unit_test("test_input_iters")
 si_unit_test("unit_tests")
-si_unit_test("test_grid")
 si_unit_test("test_geometry")
 
 if(SI_MPI)
