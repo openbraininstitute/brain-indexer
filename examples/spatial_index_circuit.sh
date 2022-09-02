@@ -18,7 +18,7 @@ pushd ${SI_DIR}/tests/data
 circuit_config_seg="circuit_config-2k.json"
 
 # One-liner to generate an index of segments.
-spatial-index-circuit segments "${circuit_config_seg}" -o "${output_dir}/circuit.spi"
+spatial-index-circuit segments "${circuit_config_seg}" -o "${output_dir}/circuit"
 
 # One-liner to generate an index of synapses.
-spatial-index-circuit synapses "${circuit_config_seg}" -o "${output_dir}/circuit.spi"
+spatial-index-circuit synapses "${circuit_config_seg}" -o "${output_dir}/circuit"

@@ -66,6 +66,10 @@ def check_vs_FLAT(si_ids):
         dtype=[('gid', np.uint64), ('section_id', np.uint32), ('segment_id', np.uint32)]
     )
 
+    # Add 1 to every element of si_ids gid field.
+    # This is done because FLAT is 1-indexed.
+    si_ids['gid'] += 1
+
     si_ids.sort()
     flat_ids.sort()
 

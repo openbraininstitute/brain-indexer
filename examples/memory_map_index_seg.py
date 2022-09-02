@@ -11,11 +11,11 @@ import os.path
 import spatial_index
 from spatial_index import MorphIndexMemDiskBuilder
 
-CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v0/circuit-2k"
+CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v1/circuit-2k"
 
 # Pre-made index locations
 PRE_MADE_INDEX_DIR = os.path.join(CIRCUIT_2K, "indexes")
-PRE_MADE_INDEX_FILE = os.path.join(PRE_MADE_INDEX_DIR, "segment_index.bin")
+PRE_MADE_INDEX_FILE = os.path.join(PRE_MADE_INDEX_DIR, "segment_index")
 
 # Test node and morph file locations
 NODE_FILE = os.path.join(CIRCUIT_2K, "circuit.mvd3")
@@ -42,7 +42,7 @@ print("Pre-Made Index - Number of elements within window:", len(ids))
 # please contact the HPC team or the main developers of Spatial Index.
 
 # Specify the index output filename, size and shrink on close
-disk_mem_map = spatial_index.index_common.DiskMemMapProps("seg_map.bin", 2048, True)
+disk_mem_map = spatial_index.index_common.DiskMemMapProps("seg_map", 2048, True)
 
 # Then create a MorphIndexBuilder object specifying
 # the path to the morphology directory and the nodes file

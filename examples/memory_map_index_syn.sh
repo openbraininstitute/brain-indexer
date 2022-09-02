@@ -13,10 +13,10 @@ set -ex
 # Activate the virtualenv where SpatialIndex is installed
 . venv/bin/activate
 
-SI_DATADIR=/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v0/circuit-2k
+SI_DATADIR=/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v1/circuit-2k
 
 # Set the paths to the nodes, morphology and output files
-TMP_FILE="/nvme/$USER/$SLURM_JOB_ID/synapse_index.bin"
+TMP_FILE="/nvme/$USER/$SLURM_JOB_ID/synapse_index"
 POPULATION="All"
 EDGES_FILE=${SI_DATADIR}/edges.h5
 

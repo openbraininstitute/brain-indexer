@@ -20,8 +20,6 @@ CIRCUIT_FILE = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-thalam
 #MORPH_FILE = "/gpfs/bbp.cscs.ch/project/proj42/entities/morphologies/20180215/ascii"
 MORPH_FILE = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-thalamus/morph_release/ascii"
 
-# Optional load of dumped index
-#builder = spatial_index.open("/gpfs/bbp.cscs.ch/project/proj16/leite/out.spi")
 
 #Serial Execution timing
 start_global = timer()

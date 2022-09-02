@@ -17,7 +17,7 @@ def spatial_index_nodes(args=None):
 
     Options:
         -v, --verbose            Increase verbosity level
-        -o, --out=<filename>     The index output filename [default: out.spi]
+        -o, --out=<folder>       The index output folder [default: out]
         --use-mem-map=<SIZE_MB>  Whether to use a mapped file instead [experimental]
         --shrink-on-close        Whether to shrink the memory file upon closing the object
         --multi-index            Whether to create a multi-index
@@ -35,7 +35,7 @@ def spatial_index_synapses(args=None):
 
     Options:
         -v, --verbose            Increase verbosity level
-        -o, --out=<filename>     The index output filename [default: out.spi]
+        -o, --out=<folder>       The index output folder [default: out]
         --use-mem-map=<SIZE_MB>  Whether to use a mapped file instead [experimental]
         --shrink-on-close        Whether to shrink the memory file upon closing the object
         --multi-index            Whether to create a multi-index
@@ -70,7 +70,7 @@ def spatial_index_circuit(args=None):
         spatial-index-circuit --help
 
     Options:
-        -o, --out=<out_file>     The index output filename [default: out.spi]
+        -o, --out=<out_file>     The index output folder [default: out]
         --use-mem-map=<SIZE_MB>  Whether to use a mapped file instead (experimental)
         --shrink-on-close        Whether to shrink the memory file upon closing the object
         --multi-index            Whether to create a multi-index

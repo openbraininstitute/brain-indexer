@@ -73,7 +73,7 @@ std::string value_to_element_type() {
 
 template<>
 std::string value_to_element_type<MorphoEntry>() {
-    return "morpho_entry";
+    return "morphology";
 }
 
 template<>

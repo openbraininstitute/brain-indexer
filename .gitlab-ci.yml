@@ -58,7 +58,7 @@ test-examples:
     bb5_ntasks: 5
     bb5_cpus_per_task: 1
     SLURM_OVERLAP: 1
-    DATADIR: /gpfs/bbp.cscs.ch/project/proj12/spatial_index/v0
+    DATADIR: /gpfs/bbp.cscs.ch/project/proj12/spatial_index/v1
 
   script:
     - module load unstable cmake gcc boost hpe-mpi py-mpi4py
@@ -102,7 +102,7 @@ test-spack:
     - !reference [.define-functions]
   script:
     - source $SPACK_ROOT/share/spack/setup-env.sh
-    - module load unstable git
+    - module load unstable git py-bluepy
     - spack dev-build spatial-index@develop
     - !reference [.bb5, load-python-39]
     - !reference [.setup-venv]
@@ -117,7 +117,7 @@ test-bb5-py39:
   variables:
     TOXENV: flake8, py39  # boost depends on py38
     PRE_BUILD_COMMAND: |
-      module load unstable boost hpe-mpi
+      module load unstable boost hpe-mpi py-bluepy
     EXTRA_MODULES:
       unstable:gcc
 

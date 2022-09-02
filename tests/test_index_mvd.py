@@ -100,7 +100,7 @@ def test_serial_exec():
 
 
 def test_memory_mapped_file_morph_index():
-    with tempfile.TemporaryDirectory(prefix="rtree_image.bin", dir=".") as index_path:
+    with tempfile.TemporaryDirectory(prefix="rtree_image", dir=".") as index_path:
         disk_mem_map = DiskMemMapProps(index_path, 1, True)
         builder = MorphIndexMemDiskBuilder(
             MORPHOLOGY_FILES[1], FILETEST, disk_mem_map=disk_mem_map

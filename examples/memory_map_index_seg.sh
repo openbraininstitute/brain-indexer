@@ -14,8 +14,8 @@ set -ex
 . venv/bin/activate
 
 # Set the paths to the nodes, morphology and output files
-TMP_FILE="/nvme/$USER/$SLURM_JOB_ID/segment_index.bin"
-SI_DATADIR=/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v0
+TMP_FILE="/nvme/$USER/$SLURM_JOB_ID/segment_index"
+SI_DATADIR=/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v1
 NODES_FILE=${SI_DATADIR}/circuit-2k/circuit.mvd3
 MORPHOLOGY_LIB=${SI_DATADIR}/circuit-2k/morphologies/ascii
 

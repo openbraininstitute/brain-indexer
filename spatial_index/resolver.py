@@ -91,7 +91,7 @@ class IndexResolver:
     its used to cover both synapse and morphology indexes.
     """
     _resolver_classes = {
-        "morpho_entry": MorphIndexResolver,
+        "morphology": MorphIndexResolver,
         "synapse": SynapseIndexResolver
     }
 

@@ -13,9 +13,9 @@ from spatial_index import SynapseIndexMemDiskBuilder
 from spatial_index.index_common import DiskMemMapProps
 
 
-CIRCUIT_2K_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v0/circuit-2k"
+CIRCUIT_2K_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v1/circuit-2k"
 # Pre-made index locations
-PRE_MADE_INDEX_FILE = os.path.join(CIRCUIT_2K_DIR, "indexes/synapse_index.bin")
+PRE_MADE_INDEX_FILE = os.path.join(CIRCUIT_2K_DIR, "indexes/synapse_index")
 
 # Test edges file location and population name
 EDGES_FILE = os.path.join(CIRCUIT_2K_DIR, "edges.h5")
@@ -43,7 +43,7 @@ print("Pre-Made Index - Number of elements within window:", len(ids))
 # please contact the HPC team or the main developers of Spatial Index.
 
 # Specify the index output filename, size and shrink on close
-disk_mem_map = DiskMemMapProps("syn_map.bin", 2048, True)
+disk_mem_map = DiskMemMapProps("syn_map", 2048, True)
 
 # Then create a SynapseIndexBuilder object specifying
 # the path to the edges file and the population name

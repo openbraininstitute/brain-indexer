@@ -10,8 +10,8 @@ from spatial_index import open_index
 from spatial_index.index import is_non_string_iterable
 
 
-CIRCUIT_10_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v0/circuit-10"
-CIRCUIT_1K_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v0/circuit-1k"
+CIRCUIT_10_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v1/circuit-10"
+CIRCUIT_1K_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v1/circuit-1k"
 
 
 def assert_valid_dict_result(results, expected_fields):

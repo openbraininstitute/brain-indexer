@@ -141,8 +141,6 @@ class MorphIndexBuilderBase:
         rotations = mvd.rotations(*index_args) if mvd.rotated else itertools.repeat(None)
 
         for gid, morph, pos, rot in zip(cur_gids, morph_names, positions, rotations):
-            # GIDs in files are zero-based, while they're typically 1-based in application
-            gid += 1
             rotopoints = self.rototranslate(morph, pos, rot)
             self.process_cell(gid, morph, rotopoints, pos)
 

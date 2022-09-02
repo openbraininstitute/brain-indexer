@@ -20,9 +20,10 @@
 #include <spatial_index/meta_data.hpp>
 #include "geometries.hpp"
 #include "util.hpp"
+#include <spatial_index/logging.hpp>
 
 /// Bump the top-level structure version when serialized data structures change
-#define SPATIAL_INDEX_STRUCT_VERSION 1
+#define SPATIAL_INDEX_STRUCT_VERSION 2
 
 namespace spatial_index {
 
@@ -31,7 +32,7 @@ using identifier_t = unsigned long;
 
 
 // Constants for packing identifiers.
-static constexpr int N_SEGMENT_BITS = 10;
+static constexpr int N_SEGMENT_BITS = 14;
 static constexpr int N_SECTION_BITS = 14;
 static constexpr int N_TOTAL_BITS = N_SEGMENT_BITS + N_SECTION_BITS;
 static constexpr int N_GID_BITS = 64 - N_TOTAL_BITS;
@@ -159,9 +160,18 @@ struct MorphPartId : public ShapeId {
     inline MorphPartId(identifier_t gid, unsigned section_id = 0, unsigned segment_id = 0)
         : ShapeId{(gid << N_TOTAL_BITS) + (section_id << N_SEGMENT_BITS) + segment_id}
     {
-        assert(is_gid_safe(gid));
-        assert(is_section_id_safe(section_id));
-        assert(is_segment_id_safe(segment_id));
+        if (!(is_gid_safe(gid) && is_section_id_safe(section_id) && is_segment_id_safe(segment_id))) {
+            
+            log_error("One of the IDs is too large to be encoded in the current data structure!");
+
+            if(!is_gid_safe(gid)) {
+                throw std::runtime_error("Invalid gid.");
+            } else if (!is_section_id_safe(section_id)) {
+                throw std::runtime_error("Invalid section_id.");
+            } else {
+                throw std::runtime_error("Invalid segment_id.");
+            }
+        }
     }
 
     inline MorphPartId(const std::tuple<const identifier_t&, const unsigned&, const unsigned&>& ids)

@@ -14,7 +14,7 @@ import os.path
 import sys
 
 _CURDIR = os.path.dirname(__file__)
-CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v0/circuit-2k"
+CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v1/circuit-2k"
 EDGE_FILE = os.path.join(CIRCUIT_2K, "edges.h5")
 
 

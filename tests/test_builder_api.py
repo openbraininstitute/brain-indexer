@@ -11,8 +11,8 @@ from spatial_index import open_index
 from spatial_index import IndexResolver
 
 
-CIRCUIT_10_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v0/circuit-10"
-CIRCUIT_1K_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v0/circuit-1k"
+CIRCUIT_10_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v1/circuit-10"
+CIRCUIT_1K_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v1/circuit-1k"
 
 
 def small_synpase_sonata_conf():
@@ -34,7 +34,7 @@ def small_sonata_conf(element_kind):
     if element_kind == "synapse":
         return small_synpase_sonata_conf()
 
-    elif element_kind == "morpho_entry":
+    elif element_kind == "morphology":
         return small_morphology_sonata_conf()
 
     else:
@@ -42,7 +42,7 @@ def small_sonata_conf(element_kind):
 
 
 @pytest.mark.skipif(not os.path.exists(CIRCUIT_10_DIR), reason="Missing data file.")
-@pytest.mark.parametrize("element_kind", ["synapse", "morpho_entry"])
+@pytest.mark.parametrize("element_kind", ["synapse", "morphology"])
 def test_morphology_in_memory_from_sonata_file(element_kind):
     # This test also exercises:
     #    - from_sonata_tgids
