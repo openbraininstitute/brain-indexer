@@ -6,7 +6,7 @@ Spatial Index is a library for efficient Spatial queries over large sets of geom
 
 It provides a high level Python API for indexes of (1) low-level spherical geometries and (2) spherical and cylindrical geometries adapted to neuron morphologies.
 
-Spatial Index allows the user to create huge indexes via multi-indexes or memory mapping and is extremely flexible in that regard.
+Spatial Index allows the user to create huge indexes via multi-indexes and is extremely flexible in that regard.
 
 ## Where to start
 
@@ -51,9 +51,5 @@ Some examples on how to use Spatial Index are available in the `examples` folder
 - `segment_index_sonata.py`: indexing and querying of a segment index using SONATA files
 - `segment_multi_index_sonata.py`: indexing and querying of a segment multi-index using SONATA files
 - `synapse_multi_index_sonata.py`: indexing and querying of a synapse multi-index using SONATA files
-- `memory_map_index_seg.sh`: shell script to be run with `sbatch` that shows how to properly start Memory-Mapped indexing for a segment index
-- `memory_map_index_seg.py`: Python script illustrating how to create a memory mapped index for segments, loading it from file and querying it
-- `memory_map_index_syn.sh`: shell script to be run with `sbatch` that shows how to properly start Memory-Mapped indexing for a synapse
-- `memory_map_index_syn.py`: Python script illustrating how to create a memory mapped index for synapses, loading it from file and querying it
 
 Also, the `tests` folder contains some tests that double also as examples on how to use Spatial Index.

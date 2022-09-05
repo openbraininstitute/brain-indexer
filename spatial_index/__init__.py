@@ -31,12 +31,12 @@ try:
 except ImportError:
     logging.warning("MPI MultiIndex builders have been disabled")
 
-from .morphology_builder import MorphIndexMemDiskBuilder, MorphIndexBuilder  # noqa
+from .morphology_builder import MorphIndexBuilder  # noqa
 
-from .synapse_builder import SynapseIndexMemDiskBuilder, SynapseIndexBuilder  # noqa
+from .synapse_builder import SynapseIndexBuilder  # noqa
 
-from .index import SynapseIndex, SynapseIndexMemDisk, SynapseMultiIndex  # noqa
-from .index import MorphIndex, MorphIndexMemDisk, MorphMultiIndex  # noqa
+from .index import SynapseIndex, SynapseMultiIndex  # noqa
+from .index import MorphIndex, MorphMultiIndex  # noqa
 
 from .resolver import IndexResolver, SynapseIndexResolver, MorphIndexResolver  # noqa
 from .resolver import open_index # noqa

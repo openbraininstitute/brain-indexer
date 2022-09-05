@@ -1,13 +1,11 @@
 from spatial_index import core
 
 from .morphology_builder import MorphIndexBuilder, MorphMultiIndexBuilder
-from .morphology_builder import MorphIndexMemDiskBuilder
 
 from .synapse_builder import SynapseIndexBuilder, SynapseMultiIndexBuilder
-from .synapse_builder import SynapseIndexMemDiskBuilder
 
-from .index import MorphIndex, MorphIndexMemDisk, MorphMultiIndex
-from .index import SynapseIndex, SynapseIndexMemDisk, SynapseMultiIndex
+from .index import MorphIndex, MorphMultiIndex
+from .index import SynapseIndex, SynapseMultiIndex
 
 from .io import MetaData
 
@@ -43,19 +41,16 @@ class SynapseIndexResolver(_SingleKindIndexResolverBase):
     """
     _core_classes = {
         core._MetaDataConstants.in_memory_key: core.SynapseIndex,
-        core._MetaDataConstants.memory_mapped_key: core.SynapseIndexMemDisk,
         core._MetaDataConstants.multi_index_key: core.SynapseMultiIndex,
     }
 
     _index_classes = {
         core._MetaDataConstants.in_memory_key: SynapseIndex,
-        core._MetaDataConstants.memory_mapped_key: SynapseIndexMemDisk,
         core._MetaDataConstants.multi_index_key: SynapseMultiIndex,
     }
 
     _builder_classes = {
         core._MetaDataConstants.in_memory_key: SynapseIndexBuilder,
-        core._MetaDataConstants.memory_mapped_key: SynapseIndexMemDiskBuilder,
         core._MetaDataConstants.multi_index_key: SynapseMultiIndexBuilder,
     }
 
@@ -67,19 +62,16 @@ class MorphIndexResolver(_SingleKindIndexResolverBase):
     """
     _core_classes = {
         core._MetaDataConstants.in_memory_key: core.MorphIndex,
-        core._MetaDataConstants.memory_mapped_key: core.MorphIndexMemDisk,
         core._MetaDataConstants.multi_index_key: core.MorphMultiIndex,
     }
 
     _index_classes = {
         core._MetaDataConstants.in_memory_key: MorphIndex,
-        core._MetaDataConstants.memory_mapped_key: MorphIndexMemDisk,
         core._MetaDataConstants.multi_index_key: MorphMultiIndex,
     }
 
     _builder_classes = {
         core._MetaDataConstants.in_memory_key: MorphIndexBuilder,
-        core._MetaDataConstants.memory_mapped_key: MorphIndexMemDiskBuilder,
         core._MetaDataConstants.multi_index_key: MorphMultiIndexBuilder,
     }
 

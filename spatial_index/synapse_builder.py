@@ -7,7 +7,7 @@ import numpy
 import spatial_index
 from . import _spatial_index as core
 from .util import gen_ranges
-from .index import SynapseIndex, SynapseIndexMemDisk
+from .index import SynapseIndex
 from .chunked_builder import ChunkedProcessingMixin, MultiIndexBuilderMixin
 
 
@@ -123,30 +123,6 @@ class SynapseIndexBuilder(SynapseIndexBuilderBase, ChunkedProcessingMixin):
 
     def _write_extended_meta_data_section(*a, **kw):
         spatial_index.io.write_sonata_meta_data_section(*a, **kw)
-
-
-class SynapseIndexMemDiskBuilder(SynapseIndexBuilderBase, ChunkedProcessingMixin):
-    """Builder for memory mapped synapse indexes."""
-    def __init__(self, sonata_edges, selection, disk_mem_map):
-        super().__init__(sonata_edges, selection)
-        self._core_builder = core.SynapseIndexMemDisk.create(*disk_mem_map.args)
-
-    @property
-    def _index_if_loaded(self):
-        return self.index
-
-    @property
-    def index(self):
-        return SynapseIndexMemDisk(self._core_builder, self._sonata_edges)
-
-    def _write_index_if_needed(self, output_dir):
-        pass
-
-    def _write_extended_meta_data_section(*a, **kw):
-        from mpi4py import MPI
-
-        if MPI.COMM_WORLD.Get_rank() == 0:
-            spatial_index.io.write_sonata_meta_data_section(*a, **kw)
 
 
 # Only provide MPI MultiIndex builders if enabled at the core

@@ -3,8 +3,7 @@
 """
 
 import spatial_index
-from .index_common import DiskMemMapProps
-from .util import check_free_space, docopt_get_args, get_dirname, is_likely_same_index
+from .util import docopt_get_args, is_likely_same_index
 from .resolver import open_index, MorphIndexResolver, SynapseIndexResolver
 
 
@@ -18,8 +17,6 @@ def spatial_index_nodes(args=None):
     Options:
         -v, --verbose            Increase verbosity level
         -o, --out=<folder>       The index output folder [default: out]
-        --use-mem-map=<SIZE_MB>  Whether to use a mapped file instead [experimental]
-        --shrink-on-close        Whether to shrink the memory file upon closing the object
         --multi-index            Whether to create a multi-index
     """
     options = docopt_get_args(spatial_index_nodes, args)
@@ -36,8 +33,6 @@ def spatial_index_synapses(args=None):
     Options:
         -v, --verbose            Increase verbosity level
         -o, --out=<folder>       The index output folder [default: out]
-        --use-mem-map=<SIZE_MB>  Whether to use a mapped file instead [experimental]
-        --shrink-on-close        Whether to shrink the memory file upon closing the object
         --multi-index            Whether to create a multi-index
     """
     options = docopt_get_args(spatial_index_synapses, args)
@@ -71,8 +66,6 @@ def spatial_index_circuit(args=None):
 
     Options:
         -o, --out=<out_file>     The index output folder [default: out]
-        --use-mem-map=<SIZE_MB>  Whether to use a mapped file instead (experimental)
-        --shrink-on-close        Whether to shrink the memory file upon closing the object
         --multi-index            Whether to create a multi-index
         --populations=<populations>...  Restrict the spatial index to the listed
                                         Currently, at most one population is supported
@@ -169,35 +162,11 @@ def _sonata_morphology_dir(config, population):
     return node_prop.morphologies_dir
 
 
-def _parse_mem_map_options(options: dict) -> DiskMemMapProps:
-    """Builds the disk memory-map properties object from CLI args"""
-
-    use_mem_map = options.get("use_mem_map")
-    filename = options["out"]
-    if not use_mem_map:
-        return
-
-    spatial_index.logger.info("Using experimental memory-mapped-file")
-    fsize = int(use_mem_map)
-
-    if not check_free_space(fsize * 1024 * 1024, get_dirname(filename)):
-        raise Exception(
-            f"Not enough free space to create a memory-mapped file of size {fsize} MB")
-
-    return DiskMemMapProps(filename, fsize, options["shrink_on_close"])
-
-
 def _run_spatial_index_nodes(morphology_dir, nodes_file, options):
-    disk_mem_map = _parse_mem_map_options(options)
 
     if options["multi_index"]:
         index_kind = "multi_index"
         index_kwargs = {}
-
-    elif disk_mem_map is not None:
-        index_kind = "memory_mapped"
-        index_kwargs = {"disk_mem_map": disk_mem_map, "progress": True}
-
     else:
         index_kind = "in_memory"
         index_kwargs = {"progress": True}
@@ -209,16 +178,10 @@ def _run_spatial_index_nodes(morphology_dir, nodes_file, options):
 
 
 def _run_spatial_index_synapses(edges_file, population, options):
-    disk_mem_map = _parse_mem_map_options(options)
 
     if options["multi_index"]:
         index_kind = "multi_index"
         index_kwargs = {}
-
-    elif disk_mem_map is not None:
-        index_kind = "memory_mapped"
-        index_kwargs = {"disk_mem_map": disk_mem_map, "progress": True}
-
     else:
         index_kind = "in_memory"
         index_kwargs = {"progress": True}

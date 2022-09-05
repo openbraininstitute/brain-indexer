@@ -4,13 +4,10 @@
     Test indexing circuits, from mvd and morphology libraries
 """
 import os
-import tempfile
 
 import numpy.testing as nptest
 
-import spatial_index
-from spatial_index.morphology_builder import MorphIndexBuilder, MorphIndexMemDiskBuilder
-from spatial_index.morphology_builder import DiskMemMapProps
+from spatial_index.morphology_builder import MorphIndexBuilder
 
 import morphio
 import quaternion as npq
@@ -97,21 +94,6 @@ def test_serial_exec():
         point_built_from_mvd = final_section_pts[seq_point_i]
         # The point is the start of the segment, hence give good tolerance
         nptest.assert_allclose(obj.centroid, point_built_from_mvd, atol=0.5)
-
-
-def test_memory_mapped_file_morph_index():
-    with tempfile.TemporaryDirectory(prefix="rtree_image", dir=".") as index_path:
-        disk_mem_map = DiskMemMapProps(index_path, 1, True)
-        builder = MorphIndexMemDiskBuilder(
-            MORPHOLOGY_FILES[1], FILETEST, disk_mem_map=disk_mem_map
-        )
-        builder.process_range((0, 1))
-        index = builder.index
-        assert len(index) > 1700
-        # We can share the mem file file
-        index2 = spatial_index.open_index(index_path)
-        assert len(index2) > 1700, len(index2)
-        assert len(index) == len(index2)
 
 
 class Test2Info:

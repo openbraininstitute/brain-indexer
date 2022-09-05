@@ -16,9 +16,8 @@ import quaternion as npq
 
 import spatial_index
 from . import _spatial_index as core
-from .index_common import DiskMemMapProps  # noqa
 from .chunked_builder import ChunkedProcessingMixin, MultiIndexBuilderMixin
-from .index import MorphIndex, MorphIndexMemDisk
+from .index import MorphIndex
 
 morphio.set_ignored_warning(morphio.Warning.only_child)
 MorphInfo = namedtuple("MorphInfo", "soma, points, radius, branch_offsets")
@@ -194,29 +193,6 @@ class MorphIndexBuilder(MorphIndexBuilderBase, ChunkedProcessingMixin):
         if output_dir is not None:
             spatial_index.logger.info("Writing index to file: %s", output_dir)
             self._core_builder.dump(output_dir)
-
-
-class MorphIndexMemDiskBuilder(MorphIndexBuilderBase, ChunkedProcessingMixin):
-    """A MorphIndexBuilder is a helper class to create a `MorphIndexDiskMemMap`
-    from a node file (mvd or Sonata) and a morphology library.
-    """
-    def __init__(self, morphology_dir, nodes_file, population="", gids=None,
-                 disk_mem_map=None):
-        super().__init__(morphology_dir, nodes_file, population, gids)
-
-        assert disk_mem_map is not None
-        self._core_builder = core.MorphIndexMemDisk.create(*disk_mem_map.args)
-
-    @property
-    def _index_if_loaded(self):
-        return self.index
-
-    @property
-    def index(self):
-        return MorphIndexMemDisk(self._core_builder)
-
-    def _write_index_if_needed(self, output_dir):
-        pass
 
 
 # Only provide MPI MultiIndex builders if enabled at the core

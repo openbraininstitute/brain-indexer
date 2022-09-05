@@ -141,17 +141,7 @@ There are three executables
 
 Large Indexes
 ~~~~~~~~~~~~~
-SpatialIndex implements two means for indexing large circuits:
-
-* memory mapped files,
-* multi indexes.
-
-Memory mapped files are a seamless extension of regular in-memory indexes.
-However, after running out of memory the hard-drive is used a backup RAM. This
-works well when combined with fast storage media such as NVME SSDs; and
-probably to a lesser extent regular SSDs and hard-drives. It definitely isn't
-performant when memory mapping file on GPFS. Please read the detailed
-:ref:`documentation <Memory Mapped Files>`.
+SpatialIndex implements Multi-Indexing for indexing large circuits.
 
 Multi indexes subdivide the volume to be indexed into small subvolumes and uses
 MPI to create subindexes for each of these subvolumes. More information can be

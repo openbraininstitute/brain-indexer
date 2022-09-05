@@ -42,15 +42,6 @@ def docopt_get_args(func, extra_args=None):
     return opts
 
 
-def check_free_space(size, path):
-    """
-    Check if there's enough free space on the drive where the
-    memory mapped file is allocated. Size is in bytes.
-    """
-    st = os.statvfs(path)
-    return st.f_bavail * st.f_frsize >= size
-
-
 def get_dirname(path):
     return os.path.dirname(path) or "."
 

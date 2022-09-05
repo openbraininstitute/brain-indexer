@@ -81,7 +81,6 @@ class MetaData:
     def index_variant(self):
         known_index_variants = [
             MetaData._Constants.in_memory_key,
-            MetaData._Constants.memory_mapped_key,
             MetaData._Constants.multi_index_key
         ]
 
@@ -101,10 +100,6 @@ class MetaData:
         return self._sub_config(MetaData._Constants.in_memory_key)
 
     @property
-    def memory_mapped(self):
-        return self._sub_config(MetaData._Constants.memory_mapped_key)
-
-    @property
     def multi_index(self):
         return self._sub_config(MetaData._Constants.multi_index_key)
 
@@ -122,9 +117,6 @@ class MetaData:
 def open_core_from_meta_data(meta_data, *, max_cache_size_mb=None, resolver=None):
     if in_memory_conf := meta_data.in_memory:
         return resolver.core_class("in_memory")(in_memory_conf.index_path)
-
-    elif mem_mapped_conf := meta_data.memory_mapped:
-        return resolver.core_class("memory_mapped").open(mem_mapped_conf.index_path)
 
     elif multi_index_conf := meta_data.multi_index:
         max_cache_size_mb = max_cache_size_mb or 1024

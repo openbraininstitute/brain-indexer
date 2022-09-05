@@ -139,13 +139,11 @@ def check_counts(counts_method, query_shape, query_kwargs):
 def expected_builtin_fields(index):
     synapse_index_classes = (
         spatial_index.core.SynapseIndex,
-        spatial_index.core.SynapseIndexMemDisk,
         spatial_index.core.SynapseMultiIndex
     )
 
     morph_index_classes = (
         spatial_index.core.MorphIndex,
-        spatial_index.core.MorphIndexMemDisk,
         spatial_index.core.MorphMultiIndex
     )
 

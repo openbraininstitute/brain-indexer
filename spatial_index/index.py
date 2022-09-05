@@ -341,10 +341,6 @@ class SynapseMultiIndex(SynapseIndexBase):
     pass
 
 
-class SynapseIndexMemDisk(SynapseIndexBase):
-    pass
-
-
 class MorphIndexBase(Index):
     @classmethod
     def from_meta_data(cls, meta_data, **kwargs):
@@ -366,10 +362,6 @@ class MorphIndex(MorphIndexBase):
 
 
 class MorphMultiIndex(MorphIndexBase):
-    pass
-
-
-class MorphIndexMemDisk(MorphIndexBase):
     pass
 
 

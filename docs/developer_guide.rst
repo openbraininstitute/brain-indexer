@@ -126,3 +126,17 @@ While nobody admits using ``printf`` debugging, here's a trick:
 
 This is interesting because you can break up the output by MPI rank; and
 therefore get a clean stream of messages from each MPI rank.
+
+Memory mapping
+--------------
+
+At the moment, the Python interface for memory mapped files has been removed.
+However the underlying C++ APIs are still available for development and testing purposes.
+Since most of the functionalities of memory mapping has been superseded by the Multi-Index,
+please expect this feature to be removed completely in the future.
+
+Memory mapped files are a seamless extension of regular in-memory indexes.
+However, after running out of memory the hard-drive is used a backup RAM. This
+works well when combined with fast storage media such as NVME SSDs; and
+probably to a lesser extent regular SSDs and hard-drives. It definitely isn't
+performant when memory mapping file on GPFS.
