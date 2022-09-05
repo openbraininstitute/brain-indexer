@@ -93,9 +93,6 @@ class SynapseIndexBuilderBase:
 
         return libsonata.Selection(new_ranges)
 
-    def _write_extended_meta_data_section(*a, **kw):
-        spatial_index.io.write_sonata_meta_data_section(*a, **kw)
-
 
 class SynapseIndexBuilder(SynapseIndexBuilderBase, ChunkedProcessingMixin):
     """Builder for in-memory synapse indexes."""
@@ -146,3 +143,9 @@ if hasattr(core, "SynapseMultiIndexBulkBuilder"):
 
         def _write_index_if_needed(self, output_dir):
             pass
+
+        def _write_extended_meta_data_section(*a, **kw):
+            from mpi4py import MPI
+
+            if MPI.COMM_WORLD == 0:
+                spatial_index.io.write_sonata_meta_data_section(*a, **kw)
