@@ -120,7 +120,7 @@ inline decltype(auto)
 IndexTreeMixin<Derived, T>::find_intersecting_np(const ShapeT& shape) const {
     using exp_getter = typename detail::exp_getter_for<T>::type;
     detail::query_result result;
-    find_intersecting(shape, exp_getter(result));
+    find_intersecting<GeometryMode>(shape, exp_getter(result));
     return result;
 }
 
