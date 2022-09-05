@@ -1,6 +1,23 @@
 Change Log
 ==========
 
+Version 0.7.0
+-------------
+**September 2022**
+
+**Features**
+  * Overhaul of the Python APIs: API v2 (more info here: https://bbpteam.epfl.ch/project/spaces/x/MBStBg)
+  * Aligns internal identifier packing with TouchDetector. Requires rebuilding of existing indexes.
+  * Opening indexes from disk now requires a single command for every kind of index
+  * New Python logging infrastructure
+
+**Improvements**
+  * Fixed issue in radius calculation
+  * Clean-up of the code base from unused code
+  * Improved validation using BluePy cross-checks
+  * Lots of bug fixes
+
+
 Version 0.6.0
 -------------
 **August 2022**
@@ -18,6 +35,7 @@ Version 0.6.0
   * C++ backend now upgraded to C++17
   * Improved documentation
   * Lots of bug fixes
+
 
 Version 0.5.x
 -------------
