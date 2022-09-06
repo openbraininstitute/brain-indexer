@@ -26,7 +26,7 @@ def test_syn_index():
     assert len(ds) == len(index)
 
     # Way #1 - Get the ids, then query the edge file for ANY data
-    ids_in_region = index.window_query([200, 200, 480], [300, 300, 520], fields="ids")
+    ids_in_region = index.window_query([200, 200, 480], [300, 300, 520], fields="id")
     print("Found N synapses:", len(ids_in_region))
     assert len(ds) > len(ids_in_region) > 0
 

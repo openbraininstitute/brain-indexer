@@ -41,18 +41,21 @@ To allow retrieving multiple attributes in a single query, a (non-string)
 iterable can be passed to ``fields``. In this case a dictionary of the
 retrieved attributes is returned.
 
-Currently, some attributes are fully supported and other we will call partially
-supported. The difference is that any combination of fully supported fields is
-valid. While partially supported fields may not appear together with other
-fields (fully or partially supported).
+With very few and clearly documented exceptions, all fields can be combined
+together as desired. The fields that don't play nicely will be called
+*partially supported*. Please note that partially supported fields are
+intended for internal debugging purposes only, if you find yourself relying on
+them a lot please report it as an issue.
 
 Morphology Indexes
 ^^^^^^^^^^^^^^^^^^
-For morphology indexes the fully supported fields are:
+For morphology indexes the supported fields are:
 
 * ``"gid"`` which is the GID of the neuron,
 * ``"section_id"`` which is the section ID of the neuron,
 * ``"segement_id"`` which is the segment ID of the neuron,
+* ``"ids"`` the three ids as a numpy structured array,
+* ``"centroid"`` the center of the sphere or cylinder,
 * ``endpoint1`` which for somas is the center of the sphere, for segments its
   the center of one of the caps of the cylinder,
 * ``endpoint2`` which for somas is ``nan``, for segments its
@@ -61,12 +64,11 @@ For morphology indexes the fully supported fields are:
 * ``kind`` an integer that can be compared against ``int(EntryKind.soma)``
   to know if one is dealing with a soma or a segment.
 
-Partially supported fields:
+The partially supported field is:
 
-* ``"position"`` the center of the sphere or cylinder.
-* ``"ids"`` the three ids packed into a single struct.
 * ``"raw_elements"`` in rare cases one may be interested in a list
-  of Python objects, i.e., either ``core.Soma`` or ``core.Segment``.
+  of Python objects, i.e., a ``core.MorphoEntry`` which is a C++
+  variant that represents either a soma or a segment.
 
 
 Examples
@@ -101,19 +103,33 @@ Examples
 
 Synapse Indexes
 ^^^^^^^^^^^^^^^
-For synapse indexes the fully supported fields are:
+For synapse indexes the supported fields are:
 
 * ``"id"`` which is the ID of the synapse,
 * ``"post_gid"`` which is the GID of the post-synaptic neuron,
 * ``"pre_gid"`` which is the GID of the pre-synaptic neuron,
-* ``centroid`` which is the coordinates of the synapse.
-
-Partially supported fields:
-
+* ``"ids"`` the three ids packed into a single struct,
 * ``"position"`` the center of the sphere or cylinder.
-* ``"ids"`` the three ids packed into a single struct.
+
+The partially supported field is:
+
 * ``"raw_elements"`` in rare cases one may be interested in a list
-  of Python objects, i.e., either ``core.Soma`` or ``core.Segment``.
+  of Python objects, i.e., ``core.Synapse``.
+
+
+Sphere Indexes
+^^^^^^^^^^^^^^^
+Indexes of Spheres support the following fields:
+
+* ``"id"`` which is the ID of the synapse,
+* ``"centroid"`` which is the GID of the post-synaptic neuron,
+* ``"radius"`` which is the GID of the pre-synaptic neuron,
+
+The partially supported field is:
+
+* ``"raw_elements"`` in rare cases one may be interested in a list
+  of Python objects, i.e. ``core.IndexedSphere``.
+
 
 
 SONATA Fields

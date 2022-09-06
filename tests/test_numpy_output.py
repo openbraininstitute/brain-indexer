@@ -43,7 +43,7 @@ def test_numpy_output_syn():
         assert np.array_equal(obj.id, np_out['id'][i])
         assert np.array_equal(obj.pre_gid, np_out['pre_gid'][i])
         assert np.array_equal(obj.post_gid, np_out['post_gid'][i])
-        assert np.array_equal(obj.centroid, np_out['centroid'][i])
+        assert np.array_equal(obj.centroid, np_out['position'][i])
 
 
 def test_numpy_output_seg():

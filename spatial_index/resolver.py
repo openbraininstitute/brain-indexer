@@ -3,9 +3,11 @@ from spatial_index import core
 from .morphology_builder import MorphIndexBuilder, MorphMultiIndexBuilder
 
 from .synapse_builder import SynapseIndexBuilder, SynapseMultiIndexBuilder
+from .builder import SphereIndexBuilder
 
 from .index import MorphIndex, MorphMultiIndex
 from .index import SynapseIndex, SynapseMultiIndex
+from .index import SphereIndex
 
 from .io import MetaData
 
@@ -32,6 +34,24 @@ class _SingleKindIndexResolverBase:
     def builder_class(cls, index_variant):
         """The builder required to build the index."""
         return cls._resolve(index_variant, classes=cls._builder_classes)
+
+
+class SphereIndexResolver(_SingleKindIndexResolverBase):
+    """Provides string to class mapping.
+
+    This class is for all classes related to indexes of synapses.
+    """
+    _core_classes = {
+        core._MetaDataConstants.in_memory_key: core.SphereIndex,
+    }
+
+    _index_classes = {
+        core._MetaDataConstants.in_memory_key: SphereIndex,
+    }
+
+    _builder_classes = {
+        core._MetaDataConstants.in_memory_key: SphereIndexBuilder,
+    }
 
 
 class SynapseIndexResolver(_SingleKindIndexResolverBase):
@@ -83,6 +103,7 @@ class IndexResolver:
     its used to cover both synapse and morphology indexes.
     """
     _resolver_classes = {
+        "sphere": SphereIndexResolver,
         "morphology": MorphIndexResolver,
         "synapse": SynapseIndexResolver
     }

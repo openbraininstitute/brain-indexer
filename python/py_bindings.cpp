@@ -90,7 +90,7 @@ PYBIND11_MODULE(_spatial_index, m) {
     si_python::create_Synapse_bindings(m);
     si_python::create_MorphoEntry_bindings(m);
 
-    si_python::create_IndexTree_bindings<si::IndexedSphere>(m, "SphereIndex");
+    si_python::create_SphereIndex_bindings(m, "SphereIndex");
     si_python::create_SynapseIndex_bindings(m, "SynapseIndex");
     si_python::create_MorphIndex_bindings(m, "MorphIndex");
 

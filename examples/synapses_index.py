@@ -13,7 +13,6 @@ from libsonata import Selection
 import os.path
 import sys
 
-_CURDIR = os.path.dirname(__file__)
 CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v1/circuit-2k"
 EDGE_FILE = os.path.join(CIRCUIT_2K, "edges.h5")
 
@@ -28,7 +27,7 @@ def example_syn_index():
     max_corner = [300, 300, 520]
 
     # Method #1 - Get the ids, then query the edge file for ANY data
-    ids_in_region = index.window_query(min_corner, max_corner, fields="ids")
+    ids_in_region = index.window_query(min_corner, max_corner, fields="id")
     print("Found N points:", len(ids_in_region))
 
     # additional SONATA attributes can be retrieved during a query:

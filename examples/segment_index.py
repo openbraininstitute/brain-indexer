@@ -61,7 +61,7 @@ def build_query_segment_index(min_corner=[-50, 0, 0], max_corner=[0, 50, 50]):
     print("Number of elements in spherical region:", len(ids))
 
     # Method 2: Get the position only directly from the index as numpy Nx3 (3D positions)
-    pos = index.window_query(min_corner, max_corner, fields="positions")
+    pos = index.window_query(min_corner, max_corner, fields="centroid")
     np.savetxt("query_SI_v6.csv", pos, delimiter=",", fmt="%1.3f")
 
     # Method 3, retrieve the tree objects for ids and position

@@ -32,7 +32,7 @@ def assert_valid_single_result(result):
 
 
 def check_query(query, query_shape, query_kwargs, builtin_fields):
-    special_fields = ["ids", "positions", "raw_elements"]
+    special_fields = ["raw_elements"]
     all_fields = builtin_fields + special_fields
 
     for field in all_fields:
@@ -54,6 +54,14 @@ def check_query(query, query_shape, query_kwargs, builtin_fields):
 
     results = query(*query_shape, fields=None, **query_kwargs)
     assert_valid_dict_result(results, builtin_fields)
+
+
+def check_all_regular_query_api(index, window, sphere, accuracy):
+    query_kwargs = {"accuracy": accuracy}
+    builtin_fields = index._core_index.AVAILABLE_FIELDS
+
+    check_query(index.window_query, window, query_kwargs, builtin_fields)
+    check_query(index.vicinity_query, sphere, query_kwargs, builtin_fields)
 
 
 def check_sonata_query(query, query_shape, query_kwargs, builtin_fields):
@@ -91,6 +99,17 @@ def circuit_10_config(index_kind, element_kind):
     return index, window, sphere
 
 
+def spheres_config(index_kind):
+    centroids = np.random.uniform(size=(10, 3)).astype(np.float32)
+    radii = np.random.uniform(size=10).astype(np.float32)
+    index = spatial_index.SphereIndexBuilder.from_numpy(centroids, radii)
+
+    window = [0.0, 0.0, 0.0], [1.0, 1.0, 1.0]
+    sphere = [0.5, 0.5, 0.5], 0.5
+
+    return index, window, sphere
+
+
 @pytest.mark.skipif(not os.path.exists(CIRCUIT_10_DIR),
                     reason="Circuit directory not available")
 @pytest.mark.parametrize(
@@ -102,13 +121,8 @@ def circuit_10_config(index_kind, element_kind):
     )
 )
 def test_index_query_api(element_kind, index_kind, accuracy):
-    query_kwargs = {"accuracy": accuracy}
-
     index, window, sphere = circuit_10_config(index_kind, element_kind)
-    builtin_fields = index._core_index.AVAILABLE_FIELDS
-
-    check_query(index.window_query, window, query_kwargs, builtin_fields)
-    check_query(index.vicinity_query, sphere, query_kwargs, builtin_fields)
+    check_all_regular_query_api(index, window, sphere, accuracy)
 
 
 @pytest.mark.skipif(not os.path.exists(CIRCUIT_10_DIR),
@@ -131,6 +145,23 @@ def test_index_sonata_query_api(element_kind, index_kind, accuracy):
     check_sonata_query(index.vicinity_query, sphere, query_kwargs, builtin_fields)
 
 
+@pytest.mark.parametrize(
+    "element_kind,index_kind,accuracy",
+    itertools.product(
+        ["sphere"],
+        ["in_memory"],
+        [None, "bounding_box", "best_effort"]
+    )
+)
+def test_sphere_index_query_api(element_kind, index_kind, accuracy):
+
+    index, window, sphere = spheres_config(index_kind)
+    check_all_regular_query_api(index, window, sphere, accuracy)
+
+    check_index_bounds_api(index)
+    check_counts_api(index, window, sphere, accuracy)
+
+
 def check_counts(counts_method, query_shape, query_kwargs):
     counts = counts_method(*query_shape, group_by=None, **query_kwargs)
     assert counts > 0
@@ -147,13 +178,21 @@ def expected_builtin_fields(index):
         spatial_index.core.MorphMultiIndex
     )
 
+    sphere_index_classes = (
+        spatial_index.core.SphereIndex,
+    )
+
     if isinstance(index._core_index, synapse_index_classes):
-        return ["id", "pre_gid", "post_gid", "centroid"]
+        return ["id", "pre_gid", "post_gid", "position"]
 
     elif isinstance(index._core_index, morph_index_classes):
         return ["gid", "section_id", "segment_id",
+                "ids", "centroid",
                 "radius", "endpoint1", "endpoint2",
                 "kind"]
+
+    elif isinstance(index._core_index, sphere_index_classes):
+        return ["id", "centroid", "radius"]
 
     else:
         raise RuntimeError(f"Broken test logic. [{type(index._core_index)}]")
@@ -164,6 +203,13 @@ def check_builtin_fields(index):
     actual = index._core_index.AVAILABLE_FIELDS
 
     assert sorted(expected) == sorted(actual)
+
+
+def check_counts_api(index, window, sphere, accuracy):
+    query_kwargs = {"accuracy": accuracy}
+    check_builtin_fields(index)
+    check_counts(index.window_counts, window, query_kwargs)
+    check_counts(index.vicinity_counts, sphere, query_kwargs)
 
 
 @pytest.mark.skipif(not os.path.exists(CIRCUIT_10_DIR),
@@ -177,26 +223,11 @@ def check_builtin_fields(index):
     )
 )
 def test_index_counts_api(element_kind, index_kind, accuracy):
-    query_kwargs = {"accuracy": accuracy}
     index, window, sphere = circuit_10_config(index_kind, element_kind)
-
-    check_builtin_fields(index)
-    check_counts(index.window_counts, window, query_kwargs)
-    check_counts(index.vicinity_counts, sphere, query_kwargs)
+    check_counts_api(index, window, sphere, accuracy)
 
 
-@pytest.mark.skipif(not os.path.exists(CIRCUIT_10_DIR),
-                    reason="Circuit directory not available")
-@pytest.mark.parametrize(
-    "element_kind,index_kind",
-    itertools.product(
-        ["synapse", "synapse_no_sonata", "morphology"],
-        ["in_memory", "multi_index"],
-    )
-)
-def test_index_bounds_api(element_kind, index_kind):
-    index, _, _ = circuit_10_config(index_kind, element_kind)
-
+def check_index_bounds_api(index):
     min_corner, max_corner = index.bounds()
     assert isinstance(min_corner, np.ndarray)
     assert min_corner.dtype == np.float32
@@ -213,12 +244,15 @@ def test_index_bounds_api(element_kind, index_kind):
     "element_kind,index_kind",
     itertools.product(
         ["synapse", "synapse_no_sonata", "morphology"],
-        ["in_memory"],
+        ["in_memory", "multi_index"],
     )
 )
-def test_index_write_api(element_kind, index_kind):
+def test_index_bounds_api(element_kind, index_kind):
     index, _, _ = circuit_10_config(index_kind, element_kind)
+    check_index_bounds_api(index)
 
+
+def check_index_write_api(index):
     with tempfile.TemporaryDirectory(prefix="api_write_test") as d:
         index_path = os.path.join(d, "foo")
 
@@ -226,6 +260,20 @@ def test_index_write_api(element_kind, index_kind):
         loaded_index = spatial_index.open_index(index_path)
 
         assert isinstance(loaded_index, type(index))
+
+
+@pytest.mark.skipif(not os.path.exists(CIRCUIT_10_DIR),
+                    reason="Circuit directory not available")
+@pytest.mark.parametrize(
+    "element_kind,index_kind",
+    itertools.product(
+        ["synapse", "synapse_no_sonata", "morphology"],
+        ["in_memory"],
+    )
+)
+def test_index_write_api(element_kind, index_kind):
+    index, _, _ = circuit_10_config(index_kind, element_kind)
+    check_index_bounds_api(index)
 
 
 @pytest.mark.skipif(not os.path.exists(CIRCUIT_10_DIR),

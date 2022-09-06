@@ -76,13 +76,6 @@ class MultiIndexBuilderMixin:
         builder.finalize()
         comm.Barrier()
 
-    @classmethod
-    def load_dir(cls, output_dir, data_file, mem=10**9):
-        """Creates an extended multi-index from a raw multi index directory
-        with `mem` bytes of memory allowance
-        """
-        return cls.IndexClass.from_dir(output_dir, mem, data_file, mem)
-
 
 class MultiIndexWorkQueue:
     """Dynamic work queue for loading even number of elements.

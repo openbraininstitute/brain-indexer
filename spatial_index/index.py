@@ -89,15 +89,11 @@ class Index(IndexInterface):
         self._window_queries = {
             "_np": self._core_index.find_intersecting_window_np,
             "raw_elements": self._core_index.find_intersecting_window_objs,
-            "positions": self._core_index.find_intersecting_window_pos,
-            "ids": self._core_index.find_intersecting_window,
         }
 
         self._vicinity_queries = {
             "_np": self._core_index.find_intersecting_np,
             "raw_elements": self._core_index.find_intersecting_objs,
-            "positions": self._core_index.find_intersecting_pos,
-            "ids": self._core_index.find_intersecting,
         }
 
         self._window_counts = {
@@ -195,9 +191,6 @@ class Index(IndexInterface):
             return methods[field](*query_shape, geometry=accuracy)
 
         else:
-            if field == "ids":
-                print(methods)
-
             result = methods["_np"](*query_shape, geometry=accuracy)
             return result[field]
 
@@ -341,17 +334,23 @@ class SynapseMultiIndex(SynapseIndexBase):
     pass
 
 
-class MorphIndexBase(Index):
+class _FromMetaDataWithOutSonata:
     @classmethod
     def from_meta_data(cls, meta_data, **kwargs):
         return cls(
             spatial_index.io.open_core_from_meta_data(
-                meta_data, resolver=spatial_index.MorphIndexResolver, **kwargs
+                meta_data, resolver=cls._resolver(), **kwargs
             )
         )
 
 
-class MorphIndex(MorphIndexBase):
+class MorphIndexBase(Index, _FromMetaDataWithOutSonata):
+    @classmethod
+    def _resolver(cls):
+        return spatial_index.MorphIndexResolver
+
+
+class _WriteInMemoryIndex:
     def write(self, index_path):
         """Saves the index to disk.
 
@@ -361,7 +360,19 @@ class MorphIndex(MorphIndexBase):
             self._core_index.dump(index_path)
 
 
+class MorphIndex(MorphIndexBase, _WriteInMemoryIndex):
+    pass
+
+
 class MorphMultiIndex(MorphIndexBase):
+    pass
+
+
+class SphereIndexBase(Index, _FromMetaDataWithOutSonata):
+    pass
+
+
+class SphereIndex(SphereIndexBase, _WriteInMemoryIndex):
     pass
 
 
@@ -379,6 +390,3 @@ def is_non_string_iterable(x):
 
     else:
         raise ValueError(f"Neither a string nor an iterable: {type(x)}")
-
-
-# TODO integrage other types of indexes like `PointIndex` and `SphereIndex`

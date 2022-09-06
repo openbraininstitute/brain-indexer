@@ -14,6 +14,7 @@
 
 namespace spatial_index {
 
+
 // Specialization of geometry_intersects for variant geometries
 template <typename T, typename... VarT, typename GeometryMode>
 bool geometry_intersects(const T& query_shape,
@@ -40,35 +41,14 @@ inline Point3D get_centroid(const boost::variant<VariantT...>& mixed_geometry) {
     );
 }
 
-// Three overloaded functions to export endpoints.
-// These are added mainly to allow export as numpy.
-// Depending on the object they can return a quiet_NaN
-// as a second endpoint if the object doesn't have an endpoint.
-// In that case the centroid will be returned as the first endpoint.
-
-inline Point3D get_endpoint(const Soma& sphere, bool first) {
-    if (first) {
-        return sphere.centroid;
-    }
-    else {
-        return Point3D{std::numeric_limits<CoordType>::quiet_NaN(),
-                       std::numeric_limits<CoordType>::quiet_NaN(),
-                       std::numeric_limits<CoordType>::quiet_NaN()};
-    }
-}
-
-inline Point3D get_endpoint(const Segment& seg, bool first) {
-    if (first) {
-        return seg.p1;
-    }
-    else {
-        return seg.p2;
-    }
-}
-
 template<class Value>
 std::string value_to_element_type() {
     return "unknown";
+}
+
+template<>
+std::string value_to_element_type<IndexedSphere>() {
+    return "sphere";
 }
 
 template<>
@@ -103,41 +83,18 @@ inline void IndexTreeMixin<Derived, T>::find_intersecting(const ShapeT& shape,
 }
 
 
-template <typename Derived, typename T>
-template <typename GeometryMode, typename ShapeT>
-inline decltype(auto) IndexTreeMixin<Derived, T>::find_intersecting(const ShapeT& shape) const {
-    using ids_getter = typename detail::id_getter_for<T>::type;
-    std::vector<typename ids_getter::value_type> ids;
-    find_intersecting<GeometryMode>(shape, ids_getter(ids));
-    return ids;
-}
-
 // Function to return payload data as a numpy arrays
 
 template <typename Derived, typename T>
 template <typename GeometryMode, typename ShapeT>
 inline decltype(auto) 
 IndexTreeMixin<Derived, T>::find_intersecting_np(const ShapeT& shape) const {
-    using exp_getter = typename detail::exp_getter_for<T>::type;
-    detail::query_result result;
-    find_intersecting<GeometryMode>(shape, exp_getter(result));
+    using getter_t = iter_entry_getter<T>;
+    typename getter_t::result_t result;
+    find_intersecting<GeometryMode>(shape, getter_t(result));
     return result;
 }
 
-
-template <typename Derived, typename T>
-template <typename GeometryMode, typename ShapeT>
-inline decltype(auto) IndexTreeMixin<Derived, T>::find_intersecting_pos(const ShapeT& shape) const {
-    std::vector<Point3D> points;
-    auto point_accu = boost::make_function_output_iterator(
-        [&points](const auto& item) {
-            points.push_back(get_centroid(item));
-        }
-    );
-
-    find_intersecting<GeometryMode>(shape, point_accu);
-    return points;
-}
 
 template <typename Derived, typename T>
 template <typename GeometryMode, typename ShapeT>

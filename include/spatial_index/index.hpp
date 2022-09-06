@@ -69,6 +69,7 @@ struct iter_ids_getter;
 struct iter_gid_segm_getter;
 
 /// \brief result iterator to collect gids, segment ids, section ids and centroids
+template<typename Element>
 struct iter_entry_getter;
 
 /**
@@ -78,7 +79,6 @@ struct ShapeId {
     identifier_t id;
 
     using id_getter_t = iter_ids_getter;
-    using exp_getter_t = iter_entry_getter;
 
     inline bool operator==(const ShapeId& rhs) const noexcept {
         return id == rhs.id;
@@ -153,7 +153,6 @@ inline bool is_segment_id_safe(unsigned segment_id) {
  */
 struct MorphPartId : public ShapeId {
     using id_getter_t = iter_gid_segm_getter;
-    using exp_getter_t = iter_entry_getter;
 
     inline MorphPartId() = default;
 
@@ -234,7 +233,6 @@ struct IndexedShape : public IndexT, public ShapeT {
         ar & boost::serialization::base_object<ShapeT>(*this);
     }
 };
-
 
 class Synapse : public IndexedShape<Sphere, SynapseId> {
     using super = IndexedShape<Sphere, SynapseId>;
@@ -360,20 +358,6 @@ class IndexTreeMixin {
      */
     template <typename GeometryMode=BoundingBoxGeometry, typename ShapeT, typename OutputIt>
     inline void find_intersecting(const ShapeT& shape, const OutputIt& iter) const;
-
-    /**
-     * \brief Gets the ids of the intersecting objects
-     * \returns The object ids, identifier_t or gid_segm_t, depending on the default id getter
-     */
-    template <typename GeometryMode=BoundingBoxGeometry, typename ShapeT>
-    inline decltype(auto) find_intersecting(const ShapeT& shape) const;
-
-    /**
-     * \brief Gets the pos of the intersecting objects
-     * \returns The object pos, depending on the default pos getter
-     */
-    template <typename GeometryMode=BoundingBoxGeometry, typename ShapeT>
-    inline decltype(auto) find_intersecting_pos(const ShapeT& shape) const;
 
     /**
      * \brief Finds & return objects which intersect, numpy version.

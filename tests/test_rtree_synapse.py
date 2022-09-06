@@ -1,9 +1,6 @@
-import tempfile
-
 import numpy as np
 
 from spatial_index import core
-from spatial_index import open_index
 from spatial_index.index import SynapseIndex
 
 points = np.array(
@@ -70,15 +67,3 @@ def test_synapse_query_aggregate():
     rtree = core.SynapseIndex()
     rtree.add_synapses(ids, post_gids, pre_gids, points)
     _test_rtree(SynapseIndex(rtree))
-
-
-def test_synapse_save_restore():
-    rtree = core.SynapseIndex()
-    rtree.add_synapses(ids, post_gids, pre_gids, points)
-
-    with tempfile.TemporaryDirectory(prefix="test_syntree.save", dir=".") as index_path:
-        rtree.dump(index_path)
-        del rtree
-
-        rtree2 = open_index(index_path)
-        _test_rtree(rtree2)

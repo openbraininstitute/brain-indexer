@@ -32,11 +32,13 @@ except ImportError:
     logging.warning("MPI MultiIndex builders have been disabled")
 
 from .morphology_builder import MorphIndexBuilder  # noqa
-
 from .synapse_builder import SynapseIndexBuilder  # noqa
+from .builder import SphereIndexBuilder  # noqa
 
 from .index import SynapseIndex, SynapseMultiIndex  # noqa
 from .index import MorphIndex, MorphMultiIndex  # noqa
+from .index import SphereIndex  # noqa
 
 from .resolver import IndexResolver, SynapseIndexResolver, MorphIndexResolver  # noqa
-from .resolver import open_index # noqa
+from .resolver import SphereIndexResolver  # noqa
+from .resolver import open_index  # noqa

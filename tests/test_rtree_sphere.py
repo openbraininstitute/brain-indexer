@@ -2,9 +2,35 @@ import tempfile
 
 import numpy as np
 
+import spatial_index
 from spatial_index import core
 
 IndexClass = core.SphereIndex
+
+
+def _any_query_id(core_index, query_shape, query_name):
+    if isinstance(core_index, core.MorphIndex):
+        index = spatial_index.MorphIndex(core_index)
+        field = "gid"
+    elif isinstance(core_index, core.SphereIndex):
+        index = spatial_index.SphereIndex(core_index)
+        field = "id"
+    else:
+        raise RuntimeError("Broken test logic.")
+
+    return getattr(index, query_name)(
+        *query_shape,
+        accuracy="best_effort",
+        fields=field
+    )
+
+
+def _window_query_id(core_index, *box):
+    return _any_query_id(core_index, box, "window_query")
+
+
+def _vicinity_query_id(core_index, *sphere):
+    return _any_query_id(core_index, sphere, "vicinity_query")
 
 
 def arange_centroids(N=10):
@@ -89,8 +115,12 @@ def test_intersection_none():
     centroid = np.array([0., 0., 0.], dtype=np.float32)
     radius = np.random.uniform(low=0.0, high=0.49)
 
-    idx = t.find_intersecting(centroid, radius, geometry="best_effort")
+    idx = t.find_intersecting_objs(centroid, radius, geometry="best_effort")
     assert len(idx) == 0, "Should be empty, but {} were found instead.".format(idx)
+
+    d = t.find_intersecting_np(centroid, radius, geometry="best_effort")
+    for x in d.values():
+        assert len(x) == 0, "Should be empty, but {} were found instead.".format(x)
 
 
 def test_intersection_all():
@@ -106,18 +136,16 @@ def test_intersection_all():
     centroid = np.array([0., 0., 0.], dtype=np.float32)
     radius = np.random.uniform(low=0.5, high=1.0)
 
-    idx = t.find_intersecting(centroid, radius, geometry="best_effort")
+    ids = t.find_intersecting_np(centroid, radius, geometry="best_effort")
     objs = t.find_intersecting_objs(centroid, radius, geometry="best_effort")
-    expected_result = np.arange(3, dtype=np.uintp)
-
-    if len(idx.dtype) > 1:
-        idx = idx['gid']  # Records
-    assert np.all(idx == expected_result), (idx, expected_result, centroids, radii)
+    expected_result = list(range(3))
 
     # New API: retrieve object references
     use_gid_field = IndexClass is core.MorphIndex  # MorphIndex raw ids are meaningless
-    for obj, exp_id in zip(objs, expected_result):
-        assert (obj.gid if use_gid_field else obj.id) == exp_id
+    assert sorted(obj.gid if use_gid_field else obj.id for obj in objs) == expected_result
+
+    field = "gid" if use_gid_field else "id"
+    assert sorted(ids[field]) == expected_result
 
 
 def test_intersection_random():
@@ -129,7 +157,7 @@ def test_intersection_random():
     centroids = np.random.uniform(low=p1, high=p2, size=(N_spheres, 3)).astype(np.float32)
     radii = np.random.uniform(low=0.01, high=10., size=N_spheres).astype(np.float32)
 
-    q_centroid = np.random.uniform(low=p1, high=p2).astype(np.float32)
+    q_centroid = np.random.uniform(low=p1, high=p2, size=3).astype(np.float32)
     q_radius = np.float32(np.random.uniform(low=0.01, high=10.))
 
     distances = np.linalg.norm(centroids - q_centroid, axis=1)
@@ -137,14 +165,14 @@ def test_intersection_random():
 
     t = IndexClass(centroids, radii)
 
-    idx = t.find_intersecting(q_centroid, q_radius, geometry="best_effort")
-    if len(idx.dtype) > 1:
-        idx = idx['gid']  # Records
-    assert len(np.setdiff1d(idx, expected_result)) == 0, (idx, expected_result)
+    idx = _vicinity_query_id(t, q_centroid, q_radius)
+    objs = t.find_intersecting_objs(q_centroid, q_radius, geometry="best_effort")
+
+    assert len(idx) == len(objs)
+    assert sorted(idx) == sorted(expected_result)
 
 
 def test_intersection_window():
-
     centroids = np.array(
         [
             # Some inside / partially inside
@@ -163,25 +191,10 @@ def test_intersection_window():
 
     min_corner = np.array([-1, -1, -1], dtype=np.float32)
     max_corner = np.array([1, 1, 1], dtype=np.float32)
-    idx = t.find_intersecting_window(min_corner, max_corner)
-    pos = t.find_intersecting_window_pos(min_corner, max_corner)
-    if len(idx.dtype) > 1:
-        idx = idx['gid']  # Records
-    expected_result = [0, 1, 2, 6]
-    expected_pos = [
-        [0.,    1.,  0.],
-        [-0.5, -0.5, 0.],
-        [0.5,  -0.5, 0.],
-        [1.2,   1.2, 1.2]
-    ]
-    assert np.all(idx == expected_result), (idx, expected_result)
-    assert np.allclose(pos, expected_pos)
+    idx = _window_query_id(t, min_corner, max_corner)
 
-    use_gid_field = IndexClass is core.MorphIndex  # MorphIndex raw ids are meaningless
-    for obj in t.find_intersecting_window_objs(min_corner, max_corner):
-        id_ = obj.gid if use_gid_field else obj.id
-        i = expected_result.index(id_)  # asserts gid is in the list
-        assert np.allclose(obj.centroid, expected_pos[i])
+    expected_result = [0, 1, 2, 6]
+    assert sorted(idx) == sorted(expected_result), (idx, expected_result)
 
 
 def test_bulk_spheres_points_add():
@@ -219,11 +232,11 @@ def test_bulk_spheres_points_add():
     # Query
     min_corner = [-1, -1, -1]
     max_corner = [1, 1, 1]
-    idx = rtree.find_intersecting_window(min_corner, max_corner)
-    if len(idx.dtype) > 1:
-        idx = idx['gid']  # Records
+
+    idx = _window_query_id(rtree, min_corner, max_corner)
     expected_result = np.array([0, 1, 2, 6, 10, 12, 13], dtype=np.uintp)
-    assert np.all(idx == expected_result), (idx, expected_result)
+
+    assert sorted(idx) == sorted(expected_result)
 
 
 def test_nearest_all():

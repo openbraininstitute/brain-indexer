@@ -53,17 +53,21 @@ struct id_getter_for<boost::variant<S1, S...>> {
     using type = typename id_getter_for<S1>::type;
 };
 
-// Same as before but for all payload data.
+// Three overloaded functions to export endpoints.
+// These are added mainly to allow export as numpy.
+// Depending on the object they can return a quiet_NaN
+// as a second endpoint if the object doesn't have an endpoint.
+// In that case the centroid will be returned as the first endpoint.
 
-template <typename S>
-struct exp_getter_for {
-    using type = typename S::exp_getter_t;
-};
+inline Point3D get_endpoint(const Soma& sphere, bool first) {
+    constexpr auto nan = std::numeric_limits<CoordType>::quiet_NaN();
+    return first ? sphere.centroid : Point3D{nan, nan, nan};
+}
 
-template <typename S1, typename... S>
-struct exp_getter_for<boost::variant<S1, S...>> {
-    using type = typename exp_getter_for<S1>::type;
-};
+inline Point3D get_endpoint(const Segment& seg, bool first) {
+    return first ? seg.p1 : seg.p2;
+}
+
 
 // Structures that contains the results of a query.
 // Necessary to export data as numpy arrays.
@@ -82,17 +86,36 @@ inline entry_kind get_entry_kind(const Soma&) {
     return entry_kind::SOMA;
 }
 
-struct query_result {
-    
+template<typename Element>
+struct query_result;
+
+template<>
+struct query_result<MorphoEntry> {
     std::vector<identifier_t> gid;
-    std::vector<unsigned> id1;
-    std::vector<unsigned> id2;
+    std::vector<unsigned> section_id;
+    std::vector<unsigned> segment_id;
+    std::vector<gid_segm_t> ids;
     std::vector<Point3D> centroid;
     std::vector<CoordType> radius;
     std::vector<Point3D> endpoint1;
     std::vector<Point3D> endpoint2;
     std::vector<entry_kind> kind;
+};
 
+template<>
+struct query_result<Synapse> {
+    std::vector<identifier_t> id;
+    std::vector<identifier_t> pre_gid;
+    std::vector<identifier_t> post_gid;
+    std::vector<Point3D> position;
+    std::vector<entry_kind> kind;
+};
+
+template<>
+struct query_result<IndexedSphere> {
+    std::vector<identifier_t> id;
+    std::vector<Point3D> centroid;
+    std::vector<CoordType> radius;
 };
 
 }  // namespace detail
@@ -163,53 +186,77 @@ struct iter_gid_segm_getter: public detail::iter_append_only<iter_gid_segm_gette
 // Exports all the fields of the payload as query result object i.e. a struct of arrays.
 // Used to fetch data to export as numpy arrays.
 
-struct iter_entry_getter: public detail::iter_append_only<iter_entry_getter> {
+template<typename Entry>
+struct iter_entry_getter;
 
-    iter_entry_getter(detail::query_result& output)
+template<>
+struct iter_entry_getter<MorphoEntry> : public detail::iter_append_only<iter_entry_getter<MorphoEntry>> {
+    using element_t = MorphoEntry;
+    using result_t = detail::query_result<MorphoEntry>;
+
+    iter_entry_getter(result_t& output)
         : output_(output) {}
 
-    template <typename S>
-    inline iter_entry_getter& operator=(const IndexedShape<S, ShapeId>& result_entry) { 
-        output_.gid.push_back(result_entry.id);
-        output_.id1.push_back(0u);
-        output_.id2.push_back(0u);
-        output_.centroid.push_back(result_entry.get_centroid());
-        output_.radius.push_back(result_entry.radius);
-        output_.endpoint1.push_back(get_endpoint(result_entry, 1));
-        output_.endpoint2.push_back(get_endpoint(result_entry, 0));
-        output_.kind.push_back(detail::get_entry_kind(result_entry));
-        return *this;
-    }
-
-    template <typename S>
-    inline iter_entry_getter& operator=(const IndexedShape<S, SynapseId>& result_entry) {
-        output_.gid.push_back(result_entry.id);
-        output_.id1.push_back(result_entry.pre_gid_);
-        output_.id2.push_back(result_entry.post_gid_);
-        output_.centroid.push_back(result_entry.get_centroid());
-        output_.kind.push_back(detail::get_entry_kind(result_entry));
-        return *this;
-    }
-
-    template <typename... ManyT>
-    inline iter_entry_getter& operator=(const boost::variant<ManyT...>& v) {
+    inline iter_entry_getter& operator=(const element_t& element) { 
         boost::apply_visitor(
             [this](const auto& t) {
                 output_.gid.push_back(t.gid());
-                output_.id1.push_back(t.section_id());
-                output_.id2.push_back(t.segment_id());
+                output_.section_id.push_back(t.section_id());
+                output_.segment_id.push_back(t.segment_id());
+                output_.ids.push_back(gid_segm_t{t.gid(), t.section_id(), t.segment_id()});
                 output_.centroid.push_back(t.get_centroid());
                 output_.radius.push_back(t.radius);
-                output_.endpoint1.push_back(get_endpoint(t, 1));
-                output_.endpoint2.push_back(get_endpoint(t, 0));
+                output_.endpoint1.push_back(detail::get_endpoint(t, 1));
+                output_.endpoint2.push_back(detail::get_endpoint(t, 0));
                 output_.kind.push_back(detail::get_entry_kind(t));
             },
-            v);
+            element);
         return *this;
     }
 
   private:
-    detail::query_result& output_;
+    result_t& output_;
+};
+
+template<>
+struct iter_entry_getter<Synapse> : public detail::iter_append_only<iter_entry_getter<Synapse>> {
+    using element_t = Synapse;
+    using result_t = detail::query_result<element_t>;
+
+    iter_entry_getter(result_t& output)
+        : output_(output) {}
+
+    inline iter_entry_getter& operator=(const element_t& element) {
+        output_.id.push_back(element.id);
+        output_.pre_gid.push_back(element.pre_gid_);
+        output_.post_gid.push_back(element.post_gid_);
+        output_.position.push_back(element.get_centroid());
+        output_.kind.push_back(detail::get_entry_kind(element));
+        return *this;
+    }
+
+  private:
+    result_t& output_;
+};
+
+
+template<>
+struct iter_entry_getter<IndexedSphere> : public detail::iter_append_only<iter_entry_getter<IndexedSphere>> {
+    using element_t = IndexedSphere;
+    using result_t = detail::query_result<element_t>;
+
+    iter_entry_getter(result_t& output)
+        : output_(output) {}
+
+    inline iter_entry_getter& operator=(const element_t& element) {
+        output_.id.push_back(element.id);
+        output_.centroid.push_back(element.centroid);
+        output_.radius.push_back(element.radius);
+        return *this;
+    }
+
+  private:
+    result_t& output_;
 };
 
 }  // namespace spatial_index
