@@ -20,7 +20,6 @@ CIRCUIT_2K_SI = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v1/circuit2k_si"
 def bluepy_check(circuit, result):
 
     i = 0
-    # for every entry in the result gid field
     for gid in result['gid']:
         # if the kind field of result is equal to zero (Soma)
         # increment and skip
@@ -31,19 +30,19 @@ def bluepy_check(circuit, result):
         # adding one to the gid since BluePy is 1-indexed
         m = circuit.morph.get(int(gid + 1), transform=True)
 
+        section_id = result['section_id'][i]
+        segment_id = result['segment_id'][i]
+
         # endpoint 1 from BluePy
-        p1_b = m.sections[
-            (result['section_id'][i]) - 1].points[result['segment_id'][i]]
+        p1_b = m.sections[section_id - 1].points[segment_id]
         # endpoint 1 from SpatialIndex
         p1_s = result['endpoint1'][i]
         # endpoint 2 from BluePy
-        p2_b = m.sections[
-            (result['section_id'][i]) - 1].points[result['segment_id'][i] + 1]
+        p2_b = m.sections[section_id - 1].points[segment_id + 1]
         # endpoint 2 from SpatialIndex
         p2_s = result['endpoint2'][i]
         # Radius from BluePy
-        r_b = m.sections[
-            (result['section_id'][i]) - 1].diameters[result['segment_id'][i]] / 2.
+        r_b = m.sections[section_id - 1].diameters[segment_id] / 2
         # Radius from SpatialIndex
         r_s = result['radius'][i]
 
