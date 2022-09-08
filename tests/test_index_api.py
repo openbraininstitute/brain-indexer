@@ -58,7 +58,7 @@ def check_query(query, query_shape, query_kwargs, builtin_fields):
 
 def check_all_regular_query_api(index, window, sphere, accuracy):
     query_kwargs = {"accuracy": accuracy}
-    builtin_fields = index._core_index.AVAILABLE_FIELDS
+    builtin_fields = index._core_index.builtin_fields
 
     check_query(index.window_query, window, query_kwargs, builtin_fields)
     check_query(index.vicinity_query, sphere, query_kwargs, builtin_fields)
@@ -139,7 +139,7 @@ def test_index_sonata_query_api(element_kind, index_kind, accuracy):
     query_kwargs = {"accuracy": accuracy}
 
     index, window, sphere = circuit_10_config(index_kind, element_kind)
-    builtin_fields = index._core_index.AVAILABLE_FIELDS
+    builtin_fields = index._core_index.builtin_fields
 
     check_sonata_query(index.window_query, window, query_kwargs, builtin_fields)
     check_sonata_query(index.vicinity_query, sphere, query_kwargs, builtin_fields)
@@ -200,7 +200,7 @@ def expected_builtin_fields(index):
 
 def check_builtin_fields(index):
     expected = expected_builtin_fields(index)
-    actual = index._core_index.AVAILABLE_FIELDS
+    actual = index._core_index.builtin_fields
 
     assert sorted(expected) == sorted(actual)
 

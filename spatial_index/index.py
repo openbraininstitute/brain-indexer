@@ -202,7 +202,7 @@ class Index(IndexInterface):
 
     def _enforce_fields_default(self, fields):
         if fields is None:
-            fields = self._core_index.AVAILABLE_FIELDS
+            fields = self._core_index.builtin_fields
 
         # must catch: "" and any empty iterator.
         if len(fields) == 0:
@@ -233,7 +233,7 @@ class SynapseIndexBase(Index):
     def _sonata_multi_field_window_query(self, query_shape, *,
                                          fields=None, accuracy=None, methods=None):
 
-        available_builtin_fields = self._core_index.AVAILABLE_FIELDS
+        available_builtin_fields = self._core_index.builtin_fields
         special_fields = self._deduce_special_fields(methods)
 
         builtin_fields = filter(
@@ -268,7 +268,7 @@ class SynapseIndexBase(Index):
                                           field=None, accuracy=None, methods=None):
 
         regular_fields = (
-            self._core_index.AVAILABLE_FIELDS + self._deduce_special_fields(methods)
+            self._core_index.builtin_fields + self._deduce_special_fields(methods)
         )
 
         if field in regular_fields:

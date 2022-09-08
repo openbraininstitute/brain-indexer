@@ -596,7 +596,7 @@ inline py::class_<Class> create_IndexTree_bindings(py::module& m, const char* cl
 template <typename Class>
 inline void add_SphereIndex_fields_bindings(py::class_<Class>& c) {
     c.def_property_readonly_static(
-        "AVAILABLE_FIELDS",
+        "builtin_fields",
         [](py::object& /* self */) {
             return std::vector<std::string>{
                 "id",
@@ -748,7 +748,7 @@ inline void add_SynapseIndex_find_intersecting_window_np(py::class_<Class>& c) {
 template <typename Class>
 inline void add_SynapseIndex_fields_bindings(py::class_<Class>& c) {
     c.def_property_readonly_static(
-        "AVAILABLE_FIELDS",
+        "builtin_fields",
         [](py::object& /* self */) {
             return std::vector<std::string>{
                 "id",
@@ -1143,7 +1143,7 @@ inline void add_MorphIndex_add_neuron_bindings(py::class_<Class>& c) {
 template <typename Class>
 inline void add_MorphIndex_fields_bindings(py::class_<Class>& c) {
     c.def_property_readonly_static(
-        "AVAILABLE_FIELDS",
+        "builtin_fields",
         [](py::object& /* self */) {
             return std::vector<std::string>{
                 "gid",
