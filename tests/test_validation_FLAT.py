@@ -22,7 +22,7 @@ CIRCUIT_FILE = os.path.join(CIRCUIT_2K, "circuit.mvd3")
 MORPH_FILE = os.path.join(CIRCUIT_2K, "morphologies/ascii")
 
 
-def do_multi_index_query_serial(min_corner, max_corner):
+def do_multi_index_query_serial(corner, opposite_corner):
     from mpi4py import MPI
     from spatial_index import MorphMultiIndexBuilder
 
@@ -35,15 +35,15 @@ def do_multi_index_query_serial(min_corner, max_corner):
 
     if MPI.COMM_WORLD.Get_rank() == 0:
         index = spatial_index.open_index(output_dir, max_cache_size_mb=1000)
-        return index.window_query(min_corner, max_corner, fields="ids")
+        return index.window_query(corner, opposite_corner, fields="ids")
 
 
-def do_query_serial(min_corner, max_corner):
+def do_query_serial(corner, opposite_corner):
     index = MorphIndexBuilder.from_mvd_file(MORPH_FILE, CIRCUIT_FILE,
                                             target_gids=range(700, 1200),
                                             progress=True)
 
-    idx = index.window_query(min_corner, max_corner, fields="ids")
+    idx = index.window_query(corner, opposite_corner, fields="ids")
     return idx
 
 

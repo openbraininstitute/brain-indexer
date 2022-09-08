@@ -384,6 +384,31 @@ BOOST_AUTO_TEST_CASE(MultiIndexQueries) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(DegenerateBoxes) {
+    // This test checks the boost behaviour on boxes where one dimension is
+    // singular, i.e. the box is a rectangle.
+
+    if(mpi::rank(MPI_COMM_WORLD) != 0) {
+        return;
+    }
+
+    auto n_elements = identifier_t(1000);
+    auto domain = std::array<CoordType, 2>{-10.0, 10.0};
+
+    auto rng = std::default_random_engine{};
+    auto elements = random_elements<EveryEntry>(n_elements, domain, 0, rng);
+
+    auto index = IndexTree<EveryEntry>(elements);
+
+    auto box_xy = Box3D{{domain[0], domain[0], 0.0}, {domain[1], domain[1], 0.0}};
+    auto box_xz = Box3D{{domain[0], 0.0, domain[0]}, {domain[1], 0.0, domain[1]}};
+    auto box_yz = Box3D{{0.0, domain[0], domain[0]}, {0.0, domain[1], domain[1]}};
+
+    BOOST_CHECK(index.count_intersecting(box_xy) > 0);
+    BOOST_CHECK(index.count_intersecting(box_xz) > 0);
+    BOOST_CHECK(index.count_intersecting(box_yz) > 0);
+}
+
 BOOST_AUTO_TEST_CASE(ASANRtreeInsert) {
     // This test is a reproducer for an ASAN `stack-use-after-scope`
     // issue, found when running the Python tests.

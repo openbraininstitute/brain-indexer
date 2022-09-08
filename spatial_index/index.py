@@ -10,7 +10,7 @@ from .util import is_non_string_iterable, strip_singleton_non_string_iterable
 
 class IndexInterface(abc.ABC):
     @abc.abstractmethod
-    def window_query(self, min_corner, max_corner, *,
+    def window_query(self, corner, opposite_corner, *,
                      fields=None, accuracy=None,
                      populations=None, population_mode=None):
         """Find all elements intersecting with the query box.
@@ -64,7 +64,7 @@ class IndexInterface(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def window_counts(self, min_corner, max_corner, *,
+    def window_counts(self, corner, opposite_corner, *,
                       accuracy=None, group_by=None,
                       populations=None, population_mode=None):
         """Counts all elements intersecting with the query box.
@@ -215,10 +215,10 @@ class Index(IndexInterface):
             )
 
     @_wrap_single_as_multi_population
-    def window_query(self, min_corner, max_corner, *,
+    def window_query(self, corner, opposite_corner, *,
                      fields=None, accuracy=None):
         return self._query(
-            (min_corner, max_corner),
+            (corner, opposite_corner),
             fields=fields,
             accuracy=accuracy,
             methods=self._window_queries,
@@ -235,10 +235,10 @@ class Index(IndexInterface):
         )
 
     @_wrap_single_as_multi_population
-    def window_counts(self, min_corner, max_corner, *,
+    def window_counts(self, corner, opposite_corner, *,
                       group_by=None, accuracy=None):
         return self._counts(
-            (min_corner, max_corner),
+            (corner, opposite_corner),
             group_by=group_by,
             accuracy=accuracy,
             methods=self._window_counts,

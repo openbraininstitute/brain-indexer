@@ -103,6 +103,9 @@ struct Box3Dx : public Box3D {
     }
 };
 
+Box3D make_query_box(const Point3D& a, const Point3D& b) {
+    return Box3D{min(a, b), max(a, b)};
+}
 
 /**
  * \brief A Cylinder represention. Base abstraction for Segments

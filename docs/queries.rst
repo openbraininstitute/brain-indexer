@@ -15,10 +15,16 @@ where you don't know which type of index you're dealing with please consult
 Query Shapes
 ------------
 A query returns all indexed elements that intersect with the *query shape* in
-the requested geometry mode. The query shape can be either an axis-aligned box
-in which case the query is called a *window query*; a sphere which we call a
-*vicinity query*; or a cylinder (mostly for internal purposes such as placing
-segments).
+the requested geometry mode. The query shape can be:
+
+* An axis-aligned box in which case the query is called a *window query*. The
+  axis-aligned box can be specified using any two opposing corners of the box;
+  often the min/max corners are used, but any two corners that define the box
+  are accepted.
+
+* A sphere for which we call a the query a *vicinity query*.
+
+* A cylinder (mostly for internal purposes such as placing segments).
 
 Indexed Elements
 ----------------

@@ -66,9 +66,13 @@ inline void add_IndexTree_place_bindings(py::class_<Class>& c) {
             }
             const coord_t* c0 = region_corners.data(0, 0);
             const coord_t* c1 = region_corners.data(1, 0);
-            return obj.place(si::Box3D{point_t(c0[0], c0[1], c0[2]),
-                                       point_t(c1[0], c1[1], c1[2])},
-                             SomaT{gid, mk_point(center), rad});
+            return obj.place(
+                si::make_query_box(
+                    point_t(c0[0], c0[1], c0[2]),
+                    point_t(c1[0], c1[1], c1[2])
+                ),
+                SomaT{gid, mk_point(center), rad}
+            );
         },
         R"(
         Attempts to insert a sphere without overlapping any existing shape.
@@ -79,7 +83,6 @@ inline void add_IndexTree_place_bindings(py::class_<Class>& c) {
 
         Args:
             region_corners(array): A 2x3 list/np.array of the region corners
-                E.g. region_corners[0] is the 3D min_corner point.
             gid(int): The id of the sphere
             center(array): A len-3 list or np.array[float32] with the center point
             radius(float): The radius of the sphere
@@ -285,19 +288,19 @@ template<typename Class>
 inline void add_IndexTree_find_intersecting_window_objs_bindings(py::class_<Class>& c) {
     c
     .def("find_intersecting_window_objs",
-        [](Class& obj, const array_t& min_corner, const array_t& max_corner, const std::string& geometry) {
+        [](Class& obj, const array_t& corner, const array_t& opposite_corner, const std::string& geometry) {
             return detail::find_intersecting_objs(
-                obj, si::Box3D{mk_point(min_corner), mk_point(max_corner)}, geometry
+                obj, si::make_query_box(mk_point(corner), mk_point(opposite_corner)), geometry
             );
         },
-        py::arg("min_corner"),
-        py::arg("max_corner"),
+        py::arg("corner"),
+        py::arg("opposite_corner"),
         py::arg("geometry") = std::string("bounding_box"),
         R"(
-        Searches objects intersecting the given Box3D, and returns the full objects.
+        Searches objects intersecting the given 3D box, and returns the full objects.
 
         Args:
-            min_corner, max_corner(array) : min/max corners of the query window
+            corner, opposite_corner(array) : two corners defining the box
             geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
         )"
     );
@@ -335,20 +338,20 @@ template<typename Class>
 inline void add_IndexTree_count_intersecting_bindings(py::class_<Class>& c) {
     c
     .def("count_intersecting",
-         [](Class& obj, const array_t& min_corner, const array_t& max_corner, const std::string& geometry) {
+         [](Class& obj, const array_t& corner, const array_t& opposite_corner, const std::string& geometry) {
              return detail::count_intersecting(
                 obj,
-                si::Box3D{mk_point(min_corner), mk_point(max_corner)},
+                si::make_query_box(mk_point(corner), mk_point(opposite_corner)),
                 geometry);
          },
-         py::arg("min_corner"),
-         py::arg("max_corner"),
+         py::arg("corner"),
+         py::arg("opposite_corner"),
          py::arg("geometry") = std::string("bounding_box"),
          R"(
-         Count the number of objects intersecting the given Box3D.
+         Count the number of objects intersecting the given 3D box.
 
          Args:
-             min_corner, max_corner(array) : min/max corners of the query window
+             corner, opposite_corner(array) : two corners defining the box
              geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
          )"
     )
@@ -616,24 +619,24 @@ inline void add_IndexTree_find_intersecting_window_np(
     c
     .def("find_intersecting_window_np",
             [wrap_as_dict](Class& obj,
-                           const array_t& min_corner, const array_t& max_corner,
+                           const array_t& corner, const array_t& opposite_corner,
                            const std::string& geometry) {
 
                 const auto& results = detail::find_intersecting_np(
                     obj,
-                    si::Box3D{mk_point(min_corner), mk_point(max_corner)},
+                    si::make_query_box(mk_point(corner), mk_point(opposite_corner)),
                     geometry
                 );
                 return wrap_as_dict(results);
             },
-            py::arg("min_corner"),
-            py::arg("max_corner"),
+            py::arg("corner"),
+            py::arg("opposite_corner"),
             py::arg("geometry") = std::string("bounding_box"),
             R"(
-            Searches objects intersecting the given Box3D, and returns them as a dict of numpy arrays.
+            Searches objects intersecting the given the 3D box, and returns them as a dict of numpy arrays.
 
             Args:
-                min_corner, max_corner(array) : min/max corners of the query window
+                corner, opposite_corner(array) : two corners defining the box
                 geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
             Returns:
                 a dict of numpy arrays contaning the data of the objects that intersecting the given 3D box.
@@ -787,22 +790,22 @@ inline void add_SynapseIndex_count_intersecting_agg_gid_bindings(py::class_<Clas
     c
     .def("count_intersecting_agg_gid",
         [](Class& obj,
-           const array_t& min_corner, const array_t& max_corner,
+           const array_t& corner, const array_t& opposite_corner,
            const std::string& geometry) {
 
             return detail::count_intersecting_agg_gid(obj, 
-                si::Box3D{mk_point(min_corner), mk_point(max_corner)},
+                si::make_query_box(mk_point(corner), mk_point(opposite_corner)),
                 geometry
             );
         },
-        py::arg("min_corner"),
-        py::arg("max_corner"),
+        py::arg("corner"),
+        py::arg("opposite_corner"),
         py::arg("geometry") = std::string("bounding_box"),
         R"(
         Finds the points inside a given window and aggregated them by gid
 
         Args:
-            min_corner, max_corner(array) : min/max corners of the query window
+            corner, opposite_corner(array) : two corners defining the box
             geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
         )"
     )
@@ -957,16 +960,19 @@ inline void add_MorphIndex_place_bindings(py::class_<Class>& c) {
             }
             const coord_t* c0 = region_corners.data(0, 0);
             const coord_t* c1 = region_corners.data(1, 0);
-            return obj.place(si::Box3D{point_t(c0[0], c0[1], c0[2]),
-                                       point_t(c1[0], c1[1], c1[2])},
-                             si::Segment{gid, section_id, segment_id, mk_point(p1), mk_point(p2), radius});
+            return obj.place(
+                si::make_query_box(
+                    point_t(c0[0], c0[1], c0[2]),
+                    point_t(c1[0], c1[1], c1[2])
+                ),
+                si::Segment{gid, section_id, segment_id, mk_point(p1), mk_point(p2), radius}
+            );
         },
         R"(
         Attempts at inserting a segment without overlapping any existing shape.
 
         Args:
-            region_corners(array): A 2x3 list/np.array of the region corners.\
-                E.g. region_corners[0] is the 3D min_corner point.
+            region_corners(array): A 2x3 list/np.array of the region corners.
             gid(int): The id of the neuron
             section_id(int): The id of the section
             segment_id(int): The id of the segment
