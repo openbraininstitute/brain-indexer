@@ -182,20 +182,24 @@ UsageRateCache<Storage>::MetaData::on_evict(size_t query_count) {
 
 template <class Storage>
 UsageRateCache<Storage>::~UsageRateCache() {
-    nlohmann::json j;
-    for(const auto &[id, md] : meta_data) {
-        j.push_back({
-            { "id", id },
-            { "access_count", md.access_count() },
-            { "eviction_count", md.eviction_count() },
-            { "incache_count", md.incache_count(most_recent_query_count) },
-            { "usage_rate", md.usage_rate(most_recent_query_count) }
-        });
-    }
+    auto should_write = util::read_boolean_environment_variable("SI_REPORT_USAGE_STATS");
 
-    auto filename = "si_cache_stats_" + util::iso_datetime_now() + ".json";
-    auto o = std::ofstream(filename);
-    o << std::setw(4) << j << std::endl;
+    if(should_write) {
+        nlohmann::json j;
+        for(const auto &[id, md] : meta_data) {
+            j.push_back({
+                { "id", id },
+                { "access_count", md.access_count() },
+                { "eviction_count", md.eviction_count() },
+                { "incache_count", md.incache_count(most_recent_query_count) },
+                { "usage_rate", md.usage_rate(most_recent_query_count) }
+            });
+        }
+
+        auto filename = "si_cache_stats_" + util::iso_datetime_now() + ".json";
+        auto o = std::ofstream(filename);
+        o << std::setw(4) << j << std::endl;
+    }
 }
 
 

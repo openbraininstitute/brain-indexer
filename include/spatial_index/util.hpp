@@ -3,6 +3,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/numeric/conversion/converter.hpp>
 
+#include "logging.hpp"
+
 namespace spatial_index {
 
 namespace util {
@@ -176,6 +178,41 @@ std::string iso_datetime_now() {
     strftime(buf, sizeof buf, "%FT%T", gmtime(&now));
 
     return std::string(buf);
+}
+
+/// @brief Read the environment variable and convert it to `bool`.
+bool read_boolean_environment_variable(const std::string& name) {
+    char const * const var_c_str = std::getenv(name.c_str());
+
+    if(var_c_str == nullptr) {
+        return false;
+    }
+
+    auto var = std::string(var_c_str);
+    if(var == "") {
+        return false;
+    }
+
+    if(var == "0") {
+        return false;
+    }
+
+    if(var == "Off" || var == "off" || var == "OFF") {
+        return false;
+    }
+
+    if(var == "1") {
+        return true;
+    }
+
+    if(var == "On" || var == "on" || var == "ON") {
+        return true;
+    }
+
+    log_warn("Ambiguous value for environment variable: " + name + ". Please"
+             " use `0`, `Off`; or `1`, `On`. Defaulting to: true.");
+
+    return true;
 }
 
 
