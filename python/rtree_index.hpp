@@ -324,7 +324,7 @@ inline void add_MorphIndex_find_intersecting_window_np(py::class_<Class>& c) {
             "radius"_a=pyutil::to_pyarray(results.radius),
             "endpoint1"_a=endpoint1,
             "endpoint2"_a=endpoint2,
-            "kind"_a=pyutil::to_pyarray(results.kind)
+            "is_soma"_a=pyutil::to_pyarray(results.is_soma)
         );
     };
 
@@ -1154,7 +1154,7 @@ inline void add_MorphIndex_fields_bindings(py::class_<Class>& c) {
                 "endpoint1",
                 "endpoint2",
                 "radius",
-                "kind"
+                "is_soma"
             };
         },
         "List of fields that are builtin."

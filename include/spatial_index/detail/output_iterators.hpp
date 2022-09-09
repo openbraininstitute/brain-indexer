@@ -7,6 +7,8 @@
 
 #include "../index.hpp"
 
+#include <boost/container/vector.hpp>
+
 namespace spatial_index {
 
 namespace detail {
@@ -72,18 +74,16 @@ inline Point3D get_endpoint(const Segment& seg, bool first) {
 // Structures that contains the results of a query.
 // Necessary to export data as numpy arrays.
 
-enum class entry_kind {SOMA, SEGMENT, SYNAPSE};
-
-inline entry_kind get_entry_kind(const Sphere&) {
-    return entry_kind::SYNAPSE;
+inline bool get_is_soma(const Segment&) {
+    return false;
 }
 
-inline entry_kind get_entry_kind(const Segment&) {
-    return entry_kind::SEGMENT;
+inline bool get_is_soma(const Soma&) {
+    return true;
 }
 
-inline entry_kind get_entry_kind(const Soma&) {
-    return entry_kind::SOMA;
+inline bool get_is_soma(const MorphoEntry& element) {
+    return boost::apply_visitor([](const auto& v) { return get_is_soma(v); }, element);
 }
 
 template<typename Element>
@@ -99,7 +99,7 @@ struct query_result<MorphoEntry> {
     std::vector<CoordType> radius;
     std::vector<Point3D> endpoint1;
     std::vector<Point3D> endpoint2;
-    std::vector<entry_kind> kind;
+    boost::container::vector<bool> is_soma;
 };
 
 template<>
@@ -108,7 +108,6 @@ struct query_result<Synapse> {
     std::vector<identifier_t> pre_gid;
     std::vector<identifier_t> post_gid;
     std::vector<Point3D> position;
-    std::vector<entry_kind> kind;
 };
 
 template<>
@@ -208,7 +207,7 @@ struct iter_entry_getter<MorphoEntry> : public detail::iter_append_only<iter_ent
                 output_.radius.push_back(t.radius);
                 output_.endpoint1.push_back(detail::get_endpoint(t, 1));
                 output_.endpoint2.push_back(detail::get_endpoint(t, 0));
-                output_.kind.push_back(detail::get_entry_kind(t));
+                output_.is_soma.push_back(detail::get_is_soma(t));
             },
             element);
         return *this;
@@ -231,7 +230,6 @@ struct iter_entry_getter<Synapse> : public detail::iter_append_only<iter_entry_g
         output_.pre_gid.push_back(element.pre_gid_);
         output_.post_gid.push_back(element.post_gid_);
         output_.position.push_back(element.get_centroid());
-        output_.kind.push_back(detail::get_entry_kind(element));
         return *this;
     }
 

@@ -21,9 +21,8 @@ def bluepy_check(circuit, result):
 
     i = 0
     for gid in result['gid']:
-        # if the kind field of result is equal to zero (Soma)
-        # increment and skip
-        if result['kind'][i] == 0:
+        # Skip somas.
+        if result['is_soma'][i]:
             i += 1
             continue
 

@@ -189,7 +189,7 @@ def expected_builtin_fields(index):
         return ["gid", "section_id", "segment_id",
                 "ids", "centroid",
                 "radius", "endpoint1", "endpoint2",
-                "kind"]
+                "is_soma"]
 
     elif isinstance(index._core_index, sphere_index_classes):
         return ["id", "centroid", "radius"]

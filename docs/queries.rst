@@ -97,7 +97,7 @@ Examples
       "gid": ...,
       "section_id": ...,
       ...
-      "kind": ...
+      "is_soma": ...
     }
 
 
@@ -192,7 +192,7 @@ Examples
     {
       "gid": ...,
       ...
-      "kind": ...,
+      "is_soma": ...,
     }
 
 Counting Queries

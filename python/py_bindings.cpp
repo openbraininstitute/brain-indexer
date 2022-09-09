@@ -22,11 +22,6 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, si::MemDiskPtr<T>);
 
 PYBIND11_MODULE(_spatial_index, m) {
 
-    py::enum_<si::detail::entry_kind>(m, "EntryKind")
-    .value("SOMA", si::detail::entry_kind::SOMA)
-    .value("SEGMENT", si::detail::entry_kind::SEGMENT)
-    .value("SYNAPSE", si::detail::entry_kind::SYNAPSE);
-
     m.def("_minimum_log_severity",
         []() -> si::LogSeverity {
             return si::get_global_minimum_log_severity();
