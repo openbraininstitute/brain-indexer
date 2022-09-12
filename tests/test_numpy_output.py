@@ -64,5 +64,5 @@ def test_numpy_output_seg():
         assert np.array_equal(obj.gid, np_out['gid'][i])
         assert np.array_equal(obj.section_id, np_out['section_id'][i])
         assert np.array_equal(obj.segment_id, np_out['segment_id'][i])
-        assert np.array_equal(obj.endpoints[0], np_out['endpoint1'][i])
-        assert np.array_equal(obj.endpoints[1], np_out['endpoint2'][i])
+        assert np.array_equal(obj.endpoints[0], np_out['endpoints'][0][i])
+        assert np.array_equal(obj.endpoints[1], np_out['endpoints'][1][i])

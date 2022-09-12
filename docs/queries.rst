@@ -67,13 +67,11 @@ For morphology indexes the supported fields are:
 * ``"segement_id"`` which is the segment ID of the neuron,
 * ``"ids"`` the three ids as a numpy structured array,
 * ``"centroid"`` the center of the sphere or cylinder,
-* ``endpoint1`` which for somas is the center of the sphere, for segments its
-  the center of one of the caps of the cylinder,
-* ``endpoint2`` which for somas is ``nan``, for segments its
-  the center of one of the other cap of the cylinder,
+* ``endpoints`` which, for segments, is a tuple of the two centers of the caps
+  of the cylinder. For somas only the first array of points is valid and
+  represents the center of the soma.
 * ``radius`` which is the radius of either the sphere or cylinder.
-* ``kind`` an integer that can be compared against ``int(EntryKind.soma)``
-  to know if one is dealing with a soma or a segment.
+* ``is_soma`` an array of booleans which are ``True`` if that element is a soma.
 
 The partially supported field is:
 

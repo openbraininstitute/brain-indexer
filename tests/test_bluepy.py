@@ -35,11 +35,11 @@ def bluepy_check(circuit, result):
         # endpoint 1 from BluePy
         p1_b = m.sections[section_id - 1].points[segment_id]
         # endpoint 1 from SpatialIndex
-        p1_s = result['endpoint1'][i]
+        p1_s = result['endpoints'][0][i]
         # endpoint 2 from BluePy
         p2_b = m.sections[section_id - 1].points[segment_id + 1]
         # endpoint 2 from SpatialIndex
-        p2_s = result['endpoint2'][i]
+        p2_s = result['endpoints'][1][i]
         # Radius from BluePy
         r_b = m.sections[section_id - 1].diameters[segment_id] / 2
         # Radius from SpatialIndex

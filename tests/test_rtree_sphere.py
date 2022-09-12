@@ -119,8 +119,13 @@ def test_intersection_none():
     assert len(idx) == 0, "Should be empty, but {} were found instead.".format(idx)
 
     d = t.find_intersecting_np(centroid, radius, geometry="best_effort")
-    for x in d.values():
-        assert len(x) == 0, "Should be empty, but {} were found instead.".format(x)
+    for k, x in d.items():
+        if k == "endpoints":
+            p1, p2 = x
+            assert p1.size == 0, "Should be empty, but {} were found instead.".format(x)
+            assert p2.size == 0, "Should be empty, but {} were found instead.".format(x)
+        else:
+            assert len(x) == 0, "Should be empty, but {} were found instead.".format(x)
 
 
 def test_intersection_all():

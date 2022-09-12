@@ -78,7 +78,7 @@ def build_query_segment_index(min_corner=[-50, 0, 0], max_corner=[0, 50, 50]):
     # Method 4, retrieve all the information in the payload
     # and output them as a dictionary of numpy arrays.
     # Segment information includes: gid, section_id, segment_id
-    # radius, endpoint1/2 and kind.
+    # radius, endpoints and is_soma.
     dict_query = index.window_query(min_corner, max_corner)
     print(dict_query)
 

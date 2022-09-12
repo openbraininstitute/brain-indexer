@@ -325,8 +325,7 @@ inline void add_MorphIndex_find_intersecting_window_np(py::class_<Class>& c) {
             "ids"_a=pyutil::to_pyarray(results.ids),
             "centroid"_a=centroid,
             "radius"_a=pyutil::to_pyarray(results.radius),
-            "endpoint1"_a=endpoint1,
-            "endpoint2"_a=endpoint2,
+            "endpoints"_a=py::make_tuple(endpoint1, endpoint2),
             "is_soma"_a=pyutil::to_pyarray(results.is_soma)
         );
     };
@@ -1157,8 +1156,7 @@ inline void add_MorphIndex_fields_bindings(py::class_<Class>& c) {
                 "segment_id",
                 "ids",
                 "centroid",
-                "endpoint1",
-                "endpoint2",
+                "endpoints",
                 "radius",
                 "is_soma"
             };

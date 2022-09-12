@@ -25,7 +25,7 @@ def expected_builtin_fields(index):
     elif index._element_type == "morphology":
         return ["gid", "section_id", "segment_id",
                 "ids", "centroid",
-                "radius", "endpoint1", "endpoint2",
+                "radius", "endpoints",
                 "is_soma"]
 
     elif index._element_type == "sphere":
@@ -56,17 +56,37 @@ def assert_valid_dict_result(results, expected_fields):
     assert sorted(results.keys()) == sorted(expected_fields)
 
     for field in expected_fields:
-        assert isinstance(results[field], np.ndarray)
+        assert_valid_single_result(results[field], field)
 
-    lengths = set(r.shape[0] for r in results.values())
+    def length(r, field):
+        if field == "endpoints":
+            p1, p2 = r
+            assert p1.shape == p2.shape
+            return p1.shape[0]
+        else:
+            return r.shape[0]
+
+    lengths = set(length(r, f) for f, r in results.items())
     assert len(lengths) == 1, results
     assert next(iter(lengths)) > 0
 
 
 @_wrap_assert_for_multi_population
-def assert_valid_single_result(result):
-    assert isinstance(result, (list, np.ndarray)), result
-    assert len(result) > 0
+def assert_valid_single_result(result, field):
+    if field == "endpoints":
+        p1, p2 = result
+        assert isinstance(p1, np.ndarray), p1
+        assert isinstance(p2, np.ndarray), p1
+        assert p1.shape == p2.shape
+        assert p1.shape[0] > 0
+        assert p1.shape[1] == 3
+
+    elif field == "raw_elements":
+        assert isinstance(result, (list, np.ndarray)), result
+
+    else:
+        assert isinstance(result, np.ndarray), result
+        assert len(result) > 0
 
 
 def _wrap_check_for_multi_population(check_single_population):
@@ -132,7 +152,9 @@ def check_query(query, query_shape, *, query_kwargs=None, builtin_fields=None,
 
     for field in all_fields:
         result = query(*query_shape, fields=field, **query_kwargs)
-        assert_valid_single_result(result, expected_populations=expected_populations)
+        assert_valid_single_result(
+            result, field, expected_populations=expected_populations
+        )
 
     for k in [1, len(builtin_fields) + 1]:
         for fields in itertools.combinations(builtin_fields, k):
