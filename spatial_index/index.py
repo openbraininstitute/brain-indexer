@@ -165,6 +165,18 @@ class IndexInterface(abc.ABC):
         """
         pass
 
+    @property
+    @abc.abstractclassmethod
+    def element_type(self):
+        """A string identifier of the element type.
+
+        The element type is one of:
+          - ``"morphology"`` for morphology indexes
+          - ``"synapse"`` for synapse indexes
+          - ``"sphere"`` for sphere indexes
+        """
+        pass
+
 
 def _wrap_single_as_multi_population(func):
     def wrapped_func(self, *query_shape, populations=None, population_mode=None,
@@ -432,7 +444,7 @@ class SynapseIndexBase(Index):
         )
 
     @property
-    def _element_type(self):
+    def element_type(self):
         return "synapse"
 
 
@@ -475,7 +487,7 @@ class MorphIndexBase(Index, _FromMetaDataWithOutSonata):
         return spatial_index.MorphIndexResolver
 
     @property
-    def _element_type(self):
+    def element_type(self):
         return "morphology"
 
 
@@ -499,7 +511,7 @@ class MorphMultiIndex(MorphIndexBase):
 
 class SphereIndexBase(Index, _FromMetaDataWithOutSonata):
     @property
-    def _element_type(self):
+    def element_type(self):
         return "sphere"
 
 
@@ -576,5 +588,5 @@ class MultiPopulationIndex(IndexInterface):
         return list(self._indexes.keys())
 
     @property
-    def _element_type(self):
-        return next(iter(self._indexes.values()))._element_type
+    def element_type(self):
+        return next(iter(self._indexes.values())).element_type

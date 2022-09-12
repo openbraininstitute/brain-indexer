@@ -30,11 +30,11 @@ def small_morphology_sonata_conf():
     return morph_dir, filename, population
 
 
-def small_sonata_conf(element_kind):
-    if element_kind == "synapse":
+def small_sonata_conf(element_type):
+    if element_type == "synapse":
         return small_synpase_sonata_conf()
 
-    elif element_kind == "morphology":
+    elif element_type == "morphology":
         return small_morphology_sonata_conf()
 
     else:
@@ -42,22 +42,22 @@ def small_sonata_conf(element_kind):
 
 
 @pytest.mark.skipif(not os.path.exists(CIRCUIT_10_DIR), reason="Missing data file.")
-@pytest.mark.parametrize("element_kind", ["synapse", "morphology"])
-def test_morphology_in_memory_from_sonata_file(element_kind):
+@pytest.mark.parametrize("element_type", ["synapse", "morphology"])
+def test_morphology_in_memory_from_sonata_file(element_type):
     # This test also exercises:
     #    - from_sonata_tgids
     #    - from_sonata_selection
 
-    args = small_sonata_conf(element_kind)
+    args = small_sonata_conf(element_type)
     index_variant = "in_memory"
 
-    Builder = IndexResolver.builder_class(element_kind, index_variant)
+    Builder = IndexResolver.builder_class(element_type, index_variant)
 
     index = Builder.from_sonata_file(*args)
-    assert isinstance(index, IndexResolver.index_class(element_kind, index_variant))
+    assert isinstance(index, IndexResolver.index_class(element_type, index_variant))
 
     with tempfile.TemporaryDirectory(prefix="from_sonata_file") as d:
-        index_path = os.path.join(d, element_kind)
+        index_path = os.path.join(d, element_type)
 
         Builder.from_sonata_file(*args, output_dir=index_path)
         loaded_index = open_index(index_path)

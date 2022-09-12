@@ -19,16 +19,16 @@ USECASE_3_DIR = os.path.join(DATA_DIR, "sonata_usecases/usecase3")
 
 
 def expected_builtin_fields(index):
-    if index._element_type == "synapse":
+    if index.element_type == "synapse":
         return ["id", "pre_gid", "post_gid", "position"]
 
-    elif index._element_type == "morphology":
+    elif index.element_type == "morphology":
         return ["gid", "section_id", "segment_id",
                 "ids", "centroid",
                 "radius", "endpoints",
                 "is_soma"]
 
-    elif index._element_type == "sphere":
+    elif index.element_type == "sphere":
         return ["id", "centroid", "radius"]
 
     else:
@@ -190,8 +190,13 @@ def check_counts(counts_method, query_shape, query_kwargs=None,
     assert_valid_counts(counts, expected_populations=expected_populations)
 
 
+def check_element_type(index):
+    isinstance(index.element_type, str)
+
+
 def check_generic_api(index):
     check_builtin_fields(index)
+    check_element_type(index)
 
 
 def check_builtin_fields(index):
@@ -306,19 +311,19 @@ def check_all_index_api(index, window, sphere, accuracy, population_mode):
     check_generic_api(index)
 
 
-def circuit_10_config(index_variant, element_kind):
-    if "synapse" in element_kind:
+def circuit_10_config(index_variant, element_type):
+    if "synapse" in element_type:
         index_path = os.path.join(
-            CIRCUIT_1K_DIR, f"indexes/{element_kind}/{index_variant}"
+            CIRCUIT_1K_DIR, f"indexes/{element_type}/{index_variant}"
         )
 
-    elif element_kind == "morphology":
+    elif element_type == "morphology":
         index_path = os.path.join(
-            CIRCUIT_10_DIR, f"indexes/{element_kind}/{index_variant}"
+            CIRCUIT_10_DIR, f"indexes/{element_type}/{index_variant}"
         )
 
     else:
-        raise ValueError(f"Invalid {element_kind = }.")
+        raise ValueError(f"Invalid {element_type = }.")
 
     index = open_index(index_path)
 
@@ -342,8 +347,8 @@ def spheres_config(index_variant):
     return index, window, sphere
 
 
-def usecase_3_config(index_variant, element_kind):
-    index_path = os.path.join(USECASE_3_DIR, f"indexes/{element_kind}/{index_variant}")
+def usecase_3_config(index_variant, element_type):
+    index_path = os.path.join(USECASE_3_DIR, f"indexes/{element_type}/{index_variant}")
     index = open_index(index_path)
 
     # We know there's only very few elements. Hence oversize boxes are fine.
@@ -356,7 +361,7 @@ def usecase_3_config(index_variant, element_kind):
 @pytest.mark.skipif(not os.path.exists(CIRCUIT_10_DIR),
                     reason="Circuit directory not available")
 @pytest.mark.parametrize(
-    "element_kind,index_variant,accuracy,population_mode",
+    "element_type,index_variant,accuracy,population_mode",
     itertools.product(
         ["synapse", "synapse_no_sonata", "morphology"],
         ["in_memory", "multi_index"],
@@ -364,13 +369,13 @@ def usecase_3_config(index_variant, element_kind):
         [None, "single", "multi"]
     )
 )
-def test_index_api(element_kind, index_variant, accuracy, population_mode):
-    index, window, sphere = circuit_10_config(index_variant, element_kind)
+def test_index_api(element_type, index_variant, accuracy, population_mode):
+    index, window, sphere = circuit_10_config(index_variant, element_type)
     check_all_index_api(index, window, sphere, accuracy, population_mode)
 
 
 @pytest.mark.parametrize(
-    "element_kind,index_variant,accuracy,population_mode",
+    "element_type,index_variant,accuracy,population_mode",
     itertools.product(
         ["sphere"],
         ["in_memory"],
@@ -378,7 +383,7 @@ def test_index_api(element_kind, index_variant, accuracy, population_mode):
         [None, "single", "multi"]
     )
 )
-def test_sphere_index_query_api(element_kind, index_variant, accuracy, population_mode):
+def test_sphere_index_query_api(element_type, index_variant, accuracy, population_mode):
     index, window, sphere = spheres_config(index_variant)
     check_all_index_api(index, window, sphere, accuracy, population_mode)
 
@@ -386,7 +391,7 @@ def test_sphere_index_query_api(element_kind, index_variant, accuracy, populatio
 @pytest.mark.skipif(not os.path.exists(USECASE_3_DIR),
                     reason="Circuit directory not available")
 @pytest.mark.parametrize(
-    "element_kind,index_variant,accuracy,population_mode",
+    "element_type,index_variant,accuracy,population_mode",
     itertools.product(
         ["synapse", "morphology"],
         ["in_memory"],
@@ -394,24 +399,24 @@ def test_sphere_index_query_api(element_kind, index_variant, accuracy, populatio
         [None, "single", "multi"]
     )
 )
-def test_multi_population_index_api(element_kind, index_variant, accuracy,
+def test_multi_population_index_api(element_type, index_variant, accuracy,
                                     population_mode):
 
-    index, window, sphere = usecase_3_config(index_variant, element_kind)
+    index, window, sphere = usecase_3_config(index_variant, element_type)
     check_all_index_api(index, window, sphere, accuracy, population_mode)
 
 
 @pytest.mark.skipif(not os.path.exists(CIRCUIT_10_DIR),
                     reason="Circuit directory not available")
 @pytest.mark.parametrize(
-    "element_kind,index_variant",
+    "element_type,index_variant",
     itertools.product(
         ["synapse", "synapse_no_sonata", "morphology"],
         ["in_memory"],
     )
 )
-def test_index_write_api(element_kind, index_variant):
-    index, _, _ = circuit_10_config(index_variant, element_kind)
+def test_index_write_api(element_type, index_variant):
+    index, _, _ = circuit_10_config(index_variant, element_type)
 
     with tempfile.TemporaryDirectory(prefix="api_write_test") as d:
         index_path = os.path.join(d, "foo")
@@ -425,14 +430,14 @@ def test_index_write_api(element_kind, index_variant):
 @pytest.mark.skipif(not os.path.exists(CIRCUIT_10_DIR),
                     reason="Circuit directory not available")
 @pytest.mark.parametrize(
-    "element_kind,index_variant",
+    "element_type,index_variant",
     itertools.product(
         ["synapse"],
         ["in_memory"],
     )
 )
-def test_index_write_sonata_api(element_kind, index_variant):
-    index, _, _ = circuit_10_config(index_variant, element_kind)
+def test_index_write_sonata_api(element_type, index_variant):
+    index, _, _ = circuit_10_config(index_variant, element_type)
 
     with tempfile.TemporaryDirectory(prefix="api_write_test") as d:
 

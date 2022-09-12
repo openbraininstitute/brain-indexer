@@ -36,6 +36,18 @@ we can build indexes for
 
 * *synapses* which are treated as points.
 
+A string identifier of the indexed element can be obtained by
+
+.. code-block: python
+
+    index.element_type
+
+which is
+
+* ``"morphology"`` for morphology indexes,
+* ``"synapse"`` for synapse indexes,
+* ``"sphere"`` for indexes of spheres.
+
 
 Regular Queries
 ---------------
