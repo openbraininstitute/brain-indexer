@@ -1364,6 +1364,10 @@ inline void create_MetaDataConstants_bindings(py::module& m) {
     m.def("deduce_meta_data_path", [](const std::string& path) {
         return deduce_meta_data_path(path);
     });
+
+    m.def("default_meta_data_path", [](const std::string& path) {
+        return default_meta_data_path(path);
+    });
 }
 
 }  // namespace py_bindings

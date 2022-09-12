@@ -8,6 +8,7 @@ from .builder import SphereIndexBuilder
 from .index import MorphIndex, MorphMultiIndex
 from .index import SynapseIndex, SynapseMultiIndex
 from .index import SphereIndex
+from .index import MultiPopulationIndex
 
 from .io import MetaData
 
@@ -142,6 +143,17 @@ def _open_single_population_index(meta_data, **kwargs):
     return Index.from_meta_data(meta_data, **kwargs)
 
 
+def _open_multi_population_index(meta_data, **kwargs):
+    index_paths = meta_data.multi_population.index_paths
+
+    indexes = {
+        pop: _open_single_population_index(MetaData(path), **kwargs)
+        for pop, path in index_paths.items()
+    }
+
+    return MultiPopulationIndex(indexes)
+
+
 def open_index(path, max_cache_size_mb=None):
     """Open an index.
 
@@ -160,7 +172,15 @@ def open_index(path, max_cache_size_mb=None):
     """
 
     meta_data = MetaData(path)
-    return _open_single_population_index(
-        meta_data,
-        max_cache_size_mb=max_cache_size_mb
-    )
+
+    if meta_data.multi_population:
+        return _open_multi_population_index(
+            meta_data,
+            max_cache_size_mb=max_cache_size_mb
+        )
+
+    else:
+        return _open_single_population_index(
+            meta_data,
+            max_cache_size_mb=max_cache_size_mb
+        )

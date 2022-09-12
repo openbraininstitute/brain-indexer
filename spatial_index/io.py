@@ -68,6 +68,19 @@ class MetaData:
             # expand path somehow
             return self._meta_data.resolve_path(self._raw_sub_config[name])
 
+    class _MultiPopulationConfig:
+        def __init__(self, meta_data):
+            self._raw_sub_config = meta_data._raw_meta_data["multi_population"]
+            self._meta_data = meta_data
+
+        @property
+        def index_paths(self):
+            raw_populations = self._raw_sub_config["populations"]
+            return {
+                pop: self._meta_data.resolve_path(pop_conf["index_path"])
+                for pop, pop_conf in raw_populations.items()
+            }
+
     def __init__(self, path):
         self._meta_data_filename = self._deduce_meta_data_filename(path)
         self._raw_meta_data = read_json(self._meta_data_filename)
@@ -102,6 +115,11 @@ class MetaData:
     @property
     def multi_index(self):
         return self._sub_config(MetaData._Constants.multi_index_key)
+
+    @property
+    def multi_population(self):
+        if "multi_population" in self._raw_meta_data:
+            return self._MultiPopulationConfig(self)
 
     def resolve_path(self, path):
         return os.path.join(self._dirname, path)
@@ -149,6 +167,25 @@ def write_sonata_meta_data_section(index_path, edge_filename, population_name):
     meta_data["extended"] = {
         "dataset_path": os.path.abspath(edge_filename),
         "population": population_name,
+    }
+
+    write_json(meta_data_path, meta_data)
+
+
+def write_multi_population_meta_data(index_path, element_type, populations):
+    meta_data_path = core.default_meta_data_path(index_path)
+
+    multi_population_conf = {
+        "populations": {}
+    }
+
+    for pop in populations:
+        multi_population_conf["populations"][pop] = {"index_path": pop}
+
+    meta_data = {
+        "version": MetaData._Constants.version,
+        "element_type": element_type,
+        "multi_population": multi_population_conf,
     }
 
     write_json(meta_data_path, meta_data)

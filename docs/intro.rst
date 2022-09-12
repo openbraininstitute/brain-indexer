@@ -100,8 +100,8 @@ In this case ``SynapseIndexBuilder`` is the appropriate class to use:
     index = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, "All")
 
 Building a synapse index through this API enables queries to fetch any
-attributes of the synapse stored in the SONATA file. Please see :ref:`Queries`_ for
-more information about how to perform queries.
+attributes of the synapse stored in the SONATA file. Please see
+:ref:`Queries` for more information about how to perform queries.
 
 Passing the keyword argument ``output_dir`` ensures that the index is also
 stored to disk.
@@ -126,7 +126,7 @@ There are three executables
   if you already have a circuit config files, this is the right command to use.
 
     .. command-output:: spatial-index-circuit --help
-  
+
 
 * ``spatial-index-nodes`` is convenient for indexing segments if one wants to
   specify the paths of the input files directly.

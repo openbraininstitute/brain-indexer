@@ -1,7 +1,9 @@
 import os
+import re
 import sys
-from tqdm import tqdm
+import collections
 
+from tqdm import tqdm
 import numpy as np
 
 import spatial_index
@@ -44,6 +46,53 @@ def docopt_get_args(func, extra_args=None):
 
 def get_dirname(path):
     return os.path.dirname(path) or "."
+
+
+def is_strictly_sensible_filename(filename):
+    """Checks that `filename` only contains sensible character.
+
+    Note, that `filename` must not contain any directory separators, e.g. `/`.
+    This will check that files conform to the strict notion of a-Z, 0-9, ".",
+    "_", "-". Therefore it's true for only a subset of what would be supported
+    by the file system.
+
+    Note, this doesn't check the length.
+    """
+
+    return re.match(r"^[a-zA-Z0-9_.\-]{1,}$", filename) is not None
+
+
+def is_non_string_iterable(x):
+    """Check if `x` is iterable; but not a string."""
+
+    if isinstance(x, str):
+        return False
+
+    elif isinstance(x, bytes):
+        raise NotImplementedError("'bytes' strings aren't supported (yet).")
+
+    elif isinstance(x, collections.abc.Iterable):
+        return True
+
+    else:
+        raise ValueError(f"Neither a string nor an iterable: {type(x)}")
+
+
+def strip_singleton_non_string_iterable(x):
+    """Returns `x` or the only element of `x`.
+
+    Here strings are not considered as iterable. Making it useful for
+    canonicalizing keyword arguments.
+    """
+
+    if not isinstance(x, str) and isinstance(x, collections.abc.Iterable):
+        if len(x) != 1:
+            raise ValueError(f"Invalid {x=}")
+
+        return next(iter(x))
+
+    else:
+        return x
 
 
 def balanced_chunk(n_elements, n_chunks, k_chunk):

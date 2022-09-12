@@ -9,6 +9,7 @@ BBP Spatial Index
    Intro <intro>
    Queries <queries>
    Multi Index <multi_index>
+   Multiple Populations <multi_population>
    Developer Guide <developer_guide>
    Change Log <CHANGES>
    Python API Reference<api>

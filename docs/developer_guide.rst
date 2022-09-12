@@ -53,11 +53,11 @@ Logging Policy
 --------------
 There are three levels of logging
   * **info** This level contains information that is meaningful and of interest
-  to the user. Typically its purpose is to understand what the library is doing,
-  on a coarse level. The size of the log must be kept easily human readable.
+    to the user. Typically its purpose is to understand what the library is doing,
+    on a coarse level. The size of the log must be kept easily human readable.
 
   * **warn** This level contains information that might indicate a problem. For example,
-  an invalid setting that falls back to a default.
+    an invalid setting that falls back to a default.
 
   * **error** Additional information about the error not present in the exception.
 

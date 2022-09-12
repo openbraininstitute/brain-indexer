@@ -8,6 +8,16 @@
 namespace spatial_index {
 
     struct MetaDataConstants {
+        /**
+         * \brief Version of the meta data format.
+         *
+         *  This does not version the actual heavy files. Those might
+         *  depend on other constants such as `SPATIAL_INDEX_STRUCT_VERSION`,
+         *  e.g. when using boost serialization.
+         * 
+         *  Again this version number is used only to control which meta data
+         *  reader should be used to interpret the JSON file.
+         */
         static constexpr int version = 0;
 
         static constexpr auto memory_mapped_key = "memory_mapped";

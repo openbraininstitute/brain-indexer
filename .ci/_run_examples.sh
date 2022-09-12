@@ -19,6 +19,7 @@ srun -n3 python examples/synapse_multi_index_sonata.py
 srun -n5 python tests/test_validation_FLAT.py --run-multi-index
 bash .ci/test_circuit_config-circuit-1or2k.sh
 bash .ci/test_circuit_config-usecase1.sh
+bash .ci/test_circuit_config-usecase3.sh
 bash examples/run_ipynb.sh examples/basic_tutorial.ipynb
 
 set +x

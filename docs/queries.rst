@@ -6,6 +6,11 @@ The strength of a spatial index is that one can query it to get all elements
 within a certain query shape, quickly. Here "quickly" means without looping
 over all elements in the index.
 
+This section describes the available queries and their API. Note that this
+applies to both indexes for a single population and
+:ref:`multi-population indexes<Multiple Populations>`. If you're writing code
+where you don't know which type of index you're dealing with please consult
+:ref:`Writing Generic Code`.
 
 Query Shapes
 ------------
@@ -231,4 +236,3 @@ This is enabled through the keyword argument ``group_by="gid"``.
      293: 1,
      ...
    }
-
