@@ -65,5 +65,5 @@ def _test_rtree(index):
 
 def test_synapse_query_aggregate():
     rtree = core.SynapseIndex()
-    rtree.add_synapses(ids, post_gids, pre_gids, points)
+    rtree._add_synapses(ids, post_gids, pre_gids, points)
     _test_rtree(SynapseIndex(rtree))

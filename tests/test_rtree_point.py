@@ -21,7 +21,7 @@ ids = np.arange(len(points), dtype=np.intp)
 def test_add_points():
     print("Running tests with class " + core.SphereIndex.__name__)
     t = core.SphereIndex()
-    t.add_points(points, ids)
+    t._add_points(points, ids)
     min_corner = [-1, -1, -1]
     max_corner = [1, 1, 1]
     idx = _window_query_id(t, min_corner, max_corner)
@@ -32,7 +32,7 @@ def test_add_points():
 
 def test_init_points():
     p = core.SphereIndex(points, radii=None)  # or p = core.SphereIndex(points, None)
-    idx = p.find_nearest([5, 0, 0], 3)
+    idx = p._find_nearest([5, 0, 0], 3)
     expected_result = np.array([0, 2, 6], dtype=np.uintp)
     assert np.all(idx == expected_result), (idx, expected_result)
 
@@ -40,7 +40,7 @@ def test_init_points():
 def test_init_points_with_ids():
     p = core.SphereIndex(points, radii=None, py_ids=ids)
     # or p = core.SphereIndex(points, None, ids)
-    idx = p.find_nearest([5, 0, 0], 3)
+    idx = p._find_nearest([5, 0, 0], 3)
     expected_result = np.array([0, 2, 6], dtype=np.uintp)
     assert np.all(idx == expected_result), (idx, expected_result)
 

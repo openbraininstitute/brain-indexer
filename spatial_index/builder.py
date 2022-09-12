@@ -7,7 +7,7 @@ class SphereIndexBuilderBase:
         self._core_builder = core.SphereIndex()
 
     def add_sphere(self, id, center, radius):
-        self._core_builder.insert(id, center, radius)
+        self._core_builder._insert(id, center, radius)
 
     @classmethod
     def create(cls, centroids, radii, output_dir=None):

@@ -26,10 +26,10 @@ def test_morphos_insert():
 
     t = core.MorphIndex()
     for i in range(len(c1)):
-        t.insert(i // 4, i % 4, i % 4, c1[i], c2[i], radii[i])
+        t._insert(i // 4, i % 4, i % 4, c1[i], c2[i], radii[i])
 
     for i, c in enumerate(c1):
-        idx = t.find_nearest(c, 1)[0]
+        idx = t._find_nearest(c, 1)[0]
         assert idx[0] == (i // 4) and idx[1] == (i % 4), "i={}, idx={} ".format(i, idx)
 
 
@@ -50,12 +50,12 @@ def test_bulk_neuron_add():
     radius = np.ones(N, dtype=np.float32)
 
     rtree = core.MorphIndex()
-    rtree.add_neuron(nrn_id, points, radius, [1, 10])
+    rtree._add_neuron(nrn_id, points, radius, [1, 10])
 
     # around a point, expect 4 segments, 2 from branch 1, 2 from branch 2
     COORD_SEARCH = [5, 0, 0]
     EXPECTED_IDS = {(1, 1, 3), (1, 1, 4), (1, 2, 0), (1, 2, 1)}
-    idx = rtree.find_nearest(COORD_SEARCH, 4)
+    idx = rtree._find_nearest(COORD_SEARCH, 4)
 
     assert len(idx) == len(EXPECTED_IDS)
     for out_id in idx:
@@ -83,7 +83,7 @@ def test_add_neuron_with_soma_and_toString():
     radius = [3, 2, 2, 1]
     offsets = [0, 2]
     rtree = core.MorphIndex()
-    rtree.add_neuron(1, points, radius, offsets)
+    rtree._add_neuron(1, points, radius, offsets)
     str_expect = (
         'IndexTree([\n'
         '  Soma(id=(1, 0, 0), Sphere(centroid=[1 3 5], radius=3))\n'
@@ -105,7 +105,7 @@ def test_add_neuron_without_soma_and_toString():
     offsets = [0, 2]
     rtree = core.MorphIndex()
     # add segments
-    rtree.add_neuron(1, points, radius, offsets, has_soma=False)
+    rtree._add_neuron(1, points, radius, offsets, has_soma=False)
     str_expect = (
         'IndexTree([\n'
         '  Segment(id=(1, 1, 0), Cylinder(centroids=([1.12 3 5], [2 4 6]), radius=3))\n'
@@ -118,7 +118,7 @@ def test_add_neuron_without_soma_and_toString():
     s_p = [1, 3, 5.135]
     s_r = 3136
     s_id = 1
-    rtree.add_soma(s_id, s_p, s_r)
+    rtree._add_soma(s_id, s_p, s_r)
     str_expect = (
         'IndexTree([\n'
         '  Segment(id=(1, 1, 0), Cylinder(centroids=([1.12 3 5], [2 4 6]), radius=3))\n'
@@ -141,7 +141,7 @@ def test_endpoints_retrieval():
     min_corner = [-50, 0, 0]
     max_corner = [0, 50, 50]
     rtree = core.MorphIndex()
-    rtree.add_neuron(1, points, radius, offsets)
+    rtree._add_neuron(1, points, radius, offsets)
     array_expect = np.array([[1, 3, 5], [2, 4, 6]])
 
     index = MorphIndex(rtree)
@@ -157,7 +157,7 @@ def test_endpoints_retrieval():
 def test_add_neuron_exc_with_soma(points, radius, offsets, exc_msg):
     rtree = core.MorphIndex()
     with pytest.raises(ValueError) as excinfo:
-        rtree.add_neuron(1, points, radius, offsets, has_soma=True)
+        rtree._add_neuron(1, points, radius, offsets, has_soma=True)
     assert exc_msg in str(excinfo.value)
 
 
@@ -176,5 +176,5 @@ def test_add_neuron_exc_with_soma(points, radius, offsets, exc_msg):
 def test_add_neuron_exc_without_soma(points, radius, offsets, exc_msg):
     rtree = core.MorphIndex()
     with pytest.raises(ValueError) as excinfo:
-        rtree.add_neuron(1, points, radius, offsets, has_soma=False)
+        rtree._add_neuron(1, points, radius, offsets, has_soma=False)
     assert exc_msg in str(excinfo.value)

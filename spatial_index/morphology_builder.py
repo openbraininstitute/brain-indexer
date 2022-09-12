@@ -114,8 +114,8 @@ class MorphIndexBuilderBase:
         morph = self.morph_lib.get(morph)
         soma_center, soma_rad = morph.soma
         soma_center = soma_center + position  # Avoid +=
-        self._core_builder.add_soma(gid, soma_center, soma_rad)
-        self._core_builder.add_neuron(
+        self._core_builder._add_soma(gid, soma_center, soma_rad)
+        self._core_builder._add_neuron(
             gid, points, morph.radius, morph.branch_offsets[:-1], False
         )
 
@@ -192,7 +192,7 @@ class MorphIndexBuilder(MorphIndexBuilderBase, ChunkedProcessingMixin):
     def _write_index_if_needed(self, output_dir):
         if output_dir is not None:
             spatial_index.logger.info("Writing index to file: %s", output_dir)
-            self._core_builder.dump(output_dir)
+            self._core_builder._dump(output_dir)
 
 
 # Only provide MPI MultiIndex builders if enabled at the core

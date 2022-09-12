@@ -185,33 +185,33 @@ class Index(IndexInterface):
         self._core_index = core_index
 
         self._window_queries = {
-            "_np": self._core_index.find_intersecting_window_np,
-            "raw_elements": self._core_index.find_intersecting_window_objs,
+            "_np": self._core_index._find_intersecting_window_np,
+            "raw_elements": self._core_index._find_intersecting_window_objs,
         }
 
         self._vicinity_queries = {
-            "_np": self._core_index.find_intersecting_np,
-            "raw_elements": self._core_index.find_intersecting_objs,
+            "_np": self._core_index._find_intersecting_np,
+            "raw_elements": self._core_index._find_intersecting_objs,
         }
 
         self._window_counts = {
-            None: self._core_index.count_intersecting,
+            None: self._core_index._count_intersecting,
         }
 
-        if hasattr(self._core_index, "count_intersecting_agg_gid"):
+        if hasattr(self._core_index, "_count_intersecting_agg_gid"):
             self._window_counts["gid"] = getattr(
                 self._core_index,
-                "count_intersecting_agg_gid"
+                "_count_intersecting_agg_gid"
             )
 
         self._vicinity_counts = {
-            None: self._core_index.count_intersecting_vicinity,
+            None: self._core_index._count_intersecting_vicinity,
         }
 
-        if hasattr(self._core_index, "count_intersecting_vicinity_agg_gid"):
+        if hasattr(self._core_index, "_count_intersecting_vicinity_agg_gid"):
             self._vicinity_counts["gid"] = getattr(
                 self._core_index,
-                "count_intersecting_vicinity_agg_gid"
+                "_count_intersecting_vicinity_agg_gid"
             )
 
     @_wrap_single_as_multi_population
@@ -447,7 +447,7 @@ class SynapseIndex(SynapseIndexBase):
         No action is performed if `index_path` is `None`.
         """
         if index_path is not None:
-            self._core_index.dump(index_path)
+            self._core_index._dump(index_path)
 
             if sonata_filename is not None and population is not None:
                 write_sonata_meta_data_section(
@@ -486,7 +486,7 @@ class _WriteInMemoryIndex:
         No action is performed if `index_path` is `None`.
         """
         if index_path is not None:
-            self._core_index.dump(index_path)
+            self._core_index._dump(index_path)
 
 
 class MorphIndex(MorphIndexBase, _WriteInMemoryIndex):

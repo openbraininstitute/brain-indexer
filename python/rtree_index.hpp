@@ -40,7 +40,7 @@ inline void create_Sphere_bindings(py::module& m) {
 template<typename T, typename SomaT, typename Class>
 inline void add_IndexTree_insert_bindings(py::class_<Class>& c) {
     c
-    .def("insert",
+    .def("_insert",
         [](Class& obj, const id_t gid, const array_t& point, const coord_t radius) {
             obj.insert(SomaT{gid, mk_point(point), radius});
         },
@@ -58,7 +58,7 @@ inline void add_IndexTree_insert_bindings(py::class_<Class>& c) {
 template<typename T, typename SomaT, typename Class>
 inline void add_IndexTree_place_bindings(py::class_<Class>& c) {
     c
-    .def("place",
+    .def("_place",
         [](Class& obj, const array_t& region_corners,
                        const id_t gid, const array_t& center, const coord_t rad) {
             if (region_corners.ndim() != 2 || region_corners.size() != 6) {
@@ -119,7 +119,7 @@ inline void add_IndexTree_bounds_bindings(py::class_<Class>& c) {
 template<typename T, typename SomaT, typename Class>
 inline void add_IndexTree_add_spheres_bindings(py::class_<Class>& c) {
     c
-    .def("add_spheres",
+    .def("_add_spheres",
         [](Class& obj, const array_t& centroids,
                        const array_t& radii,
                        const array_ids& py_ids) {
@@ -145,7 +145,7 @@ inline void add_IndexTree_add_spheres_bindings(py::class_<Class>& c) {
 template<typename T, typename SomaT, typename Class>
 inline void add_IndexTree_add_points_bindings(py::class_<Class>& c) {
     c
-    .def("add_points",
+    .def("_add_points",
         [](Class& obj, const array_t& centroids, const array_ids& py_ids) {
             si::util::constant<coord_t> zero_radius(0);
             const auto points = convert_input(centroids);
@@ -242,7 +242,7 @@ count_intersecting_agg_gid(Class& obj, const Shape& query_shape, const std::stri
 template<typename Class>
 inline void add_IndexTree_is_intersecting_bindings(py::class_<Class>& c) {
     c
-    .def("is_intersecting",
+    .def("_is_intersecting",
         [](Class& obj, const array_t& point, const coord_t radius, const std::string& geometry) {
             return detail::is_intersecting(obj, si::Sphere{mk_point(point), radius}, geometry);
         },
@@ -264,7 +264,7 @@ inline void add_IndexTree_is_intersecting_bindings(py::class_<Class>& c) {
 template<typename Class>
 inline void add_IndexTree_find_intersecting_objs_bindings(py::class_<Class>& c) {
     c
-    .def("find_intersecting_objs",
+    .def("_find_intersecting_objs",
         [](Class& obj, const array_t& centroid, const coord_t& radius, const std::string& geometry) {
             return detail::find_intersecting_objs(
                 obj, si::Sphere{mk_point(centroid), radius}, geometry
@@ -272,22 +272,14 @@ inline void add_IndexTree_find_intersecting_objs_bindings(py::class_<Class>& c) 
         },
         py::arg("centroid"),
         py::arg("radius"),
-        py::arg("geometry") = std::string("bounding_box"),
-        R"(
-        Searches objects intersecting the given Sphere, and returns the full objects.
-
-        Args:
-            point(array): A len-3 list or np.array[float32] with the center point
-            radius(float): The radius of the sphere
-            geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
-        )"
+        py::arg("geometry") = std::string("bounding_box")
     );
 }
 
 template<typename Class>
 inline void add_IndexTree_find_intersecting_window_objs_bindings(py::class_<Class>& c) {
     c
-    .def("find_intersecting_window_objs",
+    .def("_find_intersecting_window_objs",
         [](Class& obj, const array_t& corner, const array_t& opposite_corner, const std::string& geometry) {
             return detail::find_intersecting_objs(
                 obj, si::make_query_box(mk_point(corner), mk_point(opposite_corner)), geometry
@@ -295,14 +287,7 @@ inline void add_IndexTree_find_intersecting_window_objs_bindings(py::class_<Clas
         },
         py::arg("corner"),
         py::arg("opposite_corner"),
-        py::arg("geometry") = std::string("bounding_box"),
-        R"(
-        Searches objects intersecting the given 3D box, and returns the full objects.
-
-        Args:
-            corner, opposite_corner(array) : two corners defining the box
-            geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
-        )"
+        py::arg("geometry") = std::string("bounding_box")
     );
 }
 
@@ -336,7 +321,7 @@ inline void add_MorphIndex_find_intersecting_window_np(py::class_<Class>& c) {
 template<typename Class>
 inline void add_IndexTree_count_intersecting_bindings(py::class_<Class>& c) {
     c
-    .def("count_intersecting",
+    .def("_count_intersecting",
          [](Class& obj, const array_t& corner, const array_t& opposite_corner, const std::string& geometry) {
              return detail::count_intersecting(
                 obj,
@@ -345,16 +330,9 @@ inline void add_IndexTree_count_intersecting_bindings(py::class_<Class>& c) {
          },
          py::arg("corner"),
          py::arg("opposite_corner"),
-         py::arg("geometry") = std::string("bounding_box"),
-         R"(
-         Count the number of objects intersecting the given 3D box.
-
-         Args:
-             corner, opposite_corner(array) : two corners defining the box
-             geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
-         )"
+         py::arg("geometry") = std::string("bounding_box")
     )
-    .def("count_intersecting_vicinity",
+    .def("_count_intersecting_vicinity",
          [](Class& obj, const array_t& center, CoordType radius, const std::string& geometry) {
              return detail::count_intersecting(
                 obj,
@@ -363,34 +341,18 @@ inline void add_IndexTree_count_intersecting_bindings(py::class_<Class>& c) {
          },
          py::arg("center"),
          py::arg("radius"),
-         py::arg("geometry") = std::string("bounding_box"),
-         R"(
-         Count the number of objects intersecting the given sphere.
-
-         Args:
-             center(array) : The center of the query shape.
-             radius(float) : The radius of the query shape.
-             geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
-         )"
+         py::arg("geometry") = std::string("bounding_box")
     );
 }
 
 template<typename Class>
 inline void add_IndexTree_find_nearest_bindings(py::class_<Class>& c) {
     c
-    .def("find_nearest",
+    .def("_find_nearest",
         [](Class& obj, const array_t& point, const int k_neighbors) {
             const auto& vec = obj.find_nearest(mk_point(point), k_neighbors);
             return pyutil::to_pyarray(vec);
-        },
-        R"(
-        Searches and returns the ids of the nearest K objects to the given point.
-
-        Args:
-            point(array): A len-3 list or np.array[float32] with the point
-                to search around
-            k_neighbors(int): The number of neighbour shapes to return
-        )"
+        }
     );
 }
 
@@ -533,7 +495,7 @@ inline py::class_<Class> create_IndexTree_bindings(py::module& m,
         )"
     )
 
-    .def("dump",
+    .def("_dump",
         [](const Class& obj, const std::string& filename) { obj.dump(filename); },
         R"(
         Save the spatial index tree to a file on disk.
@@ -616,7 +578,7 @@ inline void add_IndexTree_find_intersecting_window_np(
         const WrapAsDict& wrap_as_dict) {
 
     c
-    .def("find_intersecting_window_np",
+    .def("_find_intersecting_window_np",
             [wrap_as_dict](Class& obj,
                            const array_t& corner, const array_t& opposite_corner,
                            const std::string& geometry) {
@@ -630,20 +592,11 @@ inline void add_IndexTree_find_intersecting_window_np(
             },
             py::arg("corner"),
             py::arg("opposite_corner"),
-            py::arg("geometry") = std::string("bounding_box"),
-            R"(
-            Searches objects intersecting the given the 3D box, and returns them as a dict of numpy arrays.
-
-            Args:
-                corner, opposite_corner(array) : two corners defining the box
-                geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
-            Returns:
-                a dict of numpy arrays contaning the data of the objects that intersecting the given 3D box.
-            )"
+            py::arg("geometry") = std::string("bounding_box")
         );
 
     c
-    .def("find_intersecting_np",
+    .def("_find_intersecting_np",
             [wrap_as_dict](Class& obj,
                            const array_t& center, CoordType radius,
                            const std::string& geometry) {
@@ -657,17 +610,7 @@ inline void add_IndexTree_find_intersecting_window_np(
             },
             py::arg("center"),
             py::arg("radius"),
-            py::arg("geometry") = std::string("bounding_box"),
-            R"(
-            Searches objects intersecting the given sphere and returns them as a dict of numpy arrays.
-
-            Args:
-                center(array) : The center of the query shape.
-                radius(float) : The radius of the query shape.
-                geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
-            Returns:
-                a dict of numpy arrays contaning the data of the objects that intersecting the given 3D box.
-            )"
+            py::arg("geometry") = std::string("bounding_box")
         );
     
 }
@@ -767,7 +710,7 @@ inline void add_SynapseIndex_fields_bindings(py::class_<Class>& c) {
 template<class Class>
 inline void add_SynapseIndex_add_synapses_bindings(py::class_<Class>& c) {
     c
-    .def("add_synapses",
+    .def("_add_synapses",
         [](Class& obj, const array_ids& syn_ids, const array_ids& post_gids, const array_ids& pre_gids, const array_t& points) {
             const auto syn_ids_ = syn_ids.template unchecked<1>();
             const auto post_gids_ = post_gids.template unchecked<1>();
@@ -787,7 +730,7 @@ inline void add_SynapseIndex_add_synapses_bindings(py::class_<Class>& c) {
 template<class Class>
 inline void add_SynapseIndex_count_intersecting_agg_gid_bindings(py::class_<Class>& c) {
     c
-    .def("count_intersecting_agg_gid",
+    .def("_count_intersecting_agg_gid",
         [](Class& obj,
            const array_t& corner, const array_t& opposite_corner,
            const std::string& geometry) {
@@ -799,17 +742,10 @@ inline void add_SynapseIndex_count_intersecting_agg_gid_bindings(py::class_<Clas
         },
         py::arg("corner"),
         py::arg("opposite_corner"),
-        py::arg("geometry") = std::string("bounding_box"),
-        R"(
-        Finds the points inside a given window and aggregated them by gid
-
-        Args:
-            corner, opposite_corner(array) : two corners defining the box
-            geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
-        )"
+        py::arg("geometry") = std::string("bounding_box")
     )
 
-    .def("count_intersecting_vicinity_agg_gid",
+    .def("_count_intersecting_vicinity_agg_gid",
         [](Class& obj,
            const array_t& center, CoordType radius,
            const std::string& geometry) {
@@ -821,15 +757,7 @@ inline void add_SynapseIndex_count_intersecting_agg_gid_bindings(py::class_<Clas
         },
         py::arg("point"),
         py::arg("radius"),
-        py::arg("geometry") = std::string("bounding_box"),
-        R"(
-        Finds the points inside a given window and aggregated them by gid
-
-        Args:
-            center(array): The center of the query shape.
-            radius(float): The radius of the query shape.
-            geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
-        )"
+        py::arg("geometry") = std::string("bounding_box")
     );
 }
 
@@ -928,7 +856,7 @@ inline static void add_branch(MorphIndexTree& obj,
 template <typename Class>
 inline void add_MorphIndex_insert_bindings(py::class_<Class>& c) {
     c
-    .def("insert",
+    .def("_insert",
         [](Class& obj, const id_t gid, const unsigned section_id, const unsigned segment_id,
                        const array_t& p1, const array_t& p2, const coord_t radius) {
             obj.insert(si::Segment{gid, section_id, segment_id, mk_point(p1), mk_point(p2), radius});
@@ -950,7 +878,7 @@ inline void add_MorphIndex_insert_bindings(py::class_<Class>& c) {
 template <typename Class>
 inline void add_MorphIndex_place_bindings(py::class_<Class>& c) {
     c
-    .def("place",
+    .def("_place",
         [](Class& obj, const array_t& region_corners,
                        const id_t gid, const unsigned section_id, const unsigned segment_id,
                        const array_t& p1, const array_t& p2, const coord_t radius) {
@@ -985,7 +913,7 @@ inline void add_MorphIndex_place_bindings(py::class_<Class>& c) {
 template <typename Class>
 inline void add_MorphIndex_add_branch_bindings(py::class_<Class>& c) {
     c
-    .def("add_branch",
+    .def("_add_branch",
         [](Class& obj, const id_t gid, const unsigned section_id, const array_t& centroids_np,
                        const array_t& radii_np) {
             const auto& point_radii = convert_input(centroids_np, radii_np);
@@ -1011,7 +939,7 @@ inline void add_MorphIndex_add_branch_bindings(py::class_<Class>& c) {
 template <typename Class>
 inline void add_MorphIndex_add_soma_bindings(py::class_<Class>& c) {
     c
-    .def("add_soma",
+    .def("_add_soma",
         [](Class& obj, const id_t gid, const array_t& point, const coord_t radius) {
             obj.insert(si::Soma{gid, mk_point(point), radius});
         },
@@ -1029,7 +957,7 @@ inline void add_MorphIndex_add_soma_bindings(py::class_<Class>& c) {
 template <typename Class>
 inline void add_MorphIndex_add_neuron_bindings(py::class_<Class>& c) {
     c
-    .def("add_neuron",
+    .def("_add_neuron",
         [](Class& obj, const id_t gid, const array_t& centroids_np, const array_t& radii_np,
                        const array_offsets& branches_offset_np,
                        bool has_soma) {
@@ -1221,7 +1149,7 @@ inline void add_MultiIndexBulkBuilder_creation_bindings(py::class_<Class>& c) {
         )"
     )
 
-    .def("finalize",
+    .def("_finalize",
          [](Class &obj) {
             auto comm_size = mpi::size(MPI_COMM_WORLD);
             auto comm = mpi::comm_shrink(MPI_COMM_WORLD, comm_size - 1);

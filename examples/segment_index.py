@@ -57,7 +57,7 @@ def build_query_segment_index(min_corner=[-50, 0, 0], max_corner=[0, 50, 50]):
         return
 
     # Similar, but query a spherical region
-    ids = index._core_index.find_nearest([.0, .0, .0], 10)  # FIXME modernize
+    ids = index.vicinity_query([0.0, 0.0, 0.0], 50.0)
     print("Number of elements in spherical region:", len(ids))
 
     # Method 2: Get the position only directly from the index as numpy Nx3 (3D positions)

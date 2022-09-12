@@ -38,7 +38,7 @@ class SynapseIndexBuilderBase:
             self._sonata_edges.get_attribute("afferent_center_y", selection),
             self._sonata_edges.get_attribute("afferent_center_z", selection)
         ))
-        self._core_builder.add_synapses(syn_ids, post_gids, pre_gids, synapse_centers)
+        self._core_builder._add_synapses(syn_ids, post_gids, pre_gids, synapse_centers)
 
     @classmethod
     def from_sonata_file(cls, edge_filename, population_name, target_gids=None,
@@ -116,7 +116,7 @@ class SynapseIndexBuilder(SynapseIndexBuilderBase, ChunkedProcessingMixin):
     def _write_index_if_needed(self, output_dir):
         if output_dir is not None:
             spatial_index.logger.info("Writing index to file: %s", output_dir)
-            self._core_builder.dump(output_dir)
+            self._core_builder._dump(output_dir)
 
     def _write_extended_meta_data_section(*a, **kw):
         spatial_index.io.write_sonata_meta_data_section(*a, **kw)

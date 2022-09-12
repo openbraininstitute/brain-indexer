@@ -37,8 +37,8 @@ class ChunkedProcessingMixin(metaclass=ABCMeta):
 
 
 class MultiIndexBuilderMixin:
-    def finalize(self):
-        self._core_builder.finalize()
+    def _finalize(self):
+        self._core_builder._finalize()
 
     def local_size(self):
         return self._core_builder.local_size()
@@ -73,7 +73,7 @@ class MultiIndexBuilderMixin:
         if mpi_rank == 0:
             spatial_index.logger.info("Starting to build distributed index.")
 
-        builder.finalize()
+        builder._finalize()
         comm.Barrier()
 
 
