@@ -27,11 +27,11 @@ def example_syn_index():
     max_corner = [300, 300, 520]
 
     # Method #1 - Get the ids, then query the edge file for ANY data
-    ids_in_region = index.window_query(min_corner, max_corner, fields="id")
+    ids_in_region = index.box_query(min_corner, max_corner, fields="id")
     print("Found N points:", len(ids_in_region))
 
     # additional SONATA attributes can be retrieved during a query:
-    z_coords = index.window_query(min_corner, max_corner, fields="afferent_center_z")
+    z_coords = index.box_query(min_corner, max_corner, fields="afferent_center_z")
 
     # or by using the `ids`:
     sonata_dataset = spatial_index.io.open_sonata_edges(EDGE_FILE, "All")
@@ -41,7 +41,7 @@ def example_syn_index():
     print("First 10 Z coordinates: ", z_coords[:10])
 
     # Method #2, get the objects: position and id directly from index
-    objs_in_region = index.window_query(min_corner, max_corner, fields="raw_elements")
+    objs_in_region = index.box_query(min_corner, max_corner, fields="raw_elements")
     for i, obj in enumerate(objs_in_region):
         if i % 20 == 0:
             print("Sample synapse id:", obj.id, "Position", obj.centroid)
@@ -51,7 +51,7 @@ def example_syn_index():
     # Method #3, get the information as a dictionary of numpy arrays
     # Information for synapses includes: id, pre_gid, post_gid,
     # centroid and kind.
-    dict_query = index.window_query(min_corner, max_corner)
+    dict_query = index.box_query(min_corner, max_corner)
     print(dict_query)
 
 

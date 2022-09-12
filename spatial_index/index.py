@@ -10,9 +10,9 @@ from .util import is_non_string_iterable, strip_singleton_non_string_iterable
 
 class IndexInterface(abc.ABC):
     @abc.abstractmethod
-    def window_query(self, corner, opposite_corner, *,
-                     fields=None, accuracy=None,
-                     populations=None, population_mode=None):
+    def box_query(self, corner, opposite_corner, *,
+                  fields=None, accuracy=None,
+                  populations=None, population_mode=None):
         """Find all elements intersecting with the query box.
 
         A detailed explanation is available in the User Guide.
@@ -37,9 +37,9 @@ class IndexInterface(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def vicinity_query(self, center, radius, *,
-                       fields=None, accuracy=None,
-                       populations=None, population_mode=None):
+    def sphere_query(self, center, radius, *,
+                     fields=None, accuracy=None,
+                     populations=None, population_mode=None):
         """Find all elements intersecting with the query sphere.
 
         A detailed explanation is available in the User Guide.
@@ -64,9 +64,9 @@ class IndexInterface(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def window_counts(self, corner, opposite_corner, *,
-                      accuracy=None, group_by=None,
-                      populations=None, population_mode=None):
+    def box_counts(self, corner, opposite_corner, *,
+                   accuracy=None, group_by=None,
+                   populations=None, population_mode=None):
         """Counts all elements intersecting with the query box.
 
         A detailed explanation is available in the User Guide.
@@ -91,9 +91,9 @@ class IndexInterface(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def vicinity_counts(self, center, radius, *,
-                        accuracy=None, group_by=None,
-                        populations=None, population_mode=None):
+    def sphere_counts(self, center, radius, *,
+                      accuracy=None, group_by=None,
+                      populations=None, population_mode=None):
         """Counts all elements intersecting with the query sphere.
 
         A detailed explanation is available in the User Guide.
@@ -184,74 +184,74 @@ class Index(IndexInterface):
     def __init__(self, core_index):
         self._core_index = core_index
 
-        self._window_queries = {
-            "_np": self._core_index._find_intersecting_window_np,
-            "raw_elements": self._core_index._find_intersecting_window_objs,
+        self._box_queries = {
+            "_np": self._core_index._find_intersecting_box_np,
+            "raw_elements": self._core_index._find_intersecting_box_objs,
         }
 
-        self._vicinity_queries = {
+        self._sphere_queries = {
             "_np": self._core_index._find_intersecting_np,
             "raw_elements": self._core_index._find_intersecting_objs,
         }
 
-        self._window_counts = {
+        self._box_counts = {
             None: self._core_index._count_intersecting,
         }
 
         if hasattr(self._core_index, "_count_intersecting_agg_gid"):
-            self._window_counts["gid"] = getattr(
+            self._box_counts["gid"] = getattr(
                 self._core_index,
                 "_count_intersecting_agg_gid"
             )
 
-        self._vicinity_counts = {
-            None: self._core_index._count_intersecting_vicinity,
+        self._sphere_counts = {
+            None: self._core_index._count_intersecting_sphere,
         }
 
-        if hasattr(self._core_index, "_count_intersecting_vicinity_agg_gid"):
-            self._vicinity_counts["gid"] = getattr(
+        if hasattr(self._core_index, "_count_intersecting_sphere_agg_gid"):
+            self._sphere_counts["gid"] = getattr(
                 self._core_index,
-                "_count_intersecting_vicinity_agg_gid"
+                "_count_intersecting_sphere_agg_gid"
             )
 
     @_wrap_single_as_multi_population
-    def window_query(self, corner, opposite_corner, *,
+    def box_query(self, corner, opposite_corner, *,
+                  fields=None, accuracy=None):
+        return self._query(
+            (corner, opposite_corner),
+            fields=fields,
+            accuracy=accuracy,
+            methods=self._box_queries,
+        )
+
+    @_wrap_single_as_multi_population
+    def sphere_query(self, center, radius, *,
                      fields=None, accuracy=None):
         return self._query(
-            (corner, opposite_corner),
-            fields=fields,
-            accuracy=accuracy,
-            methods=self._window_queries,
-        )
-
-    @_wrap_single_as_multi_population
-    def vicinity_query(self, center, radius, *,
-                       fields=None, accuracy=None):
-        return self._query(
             (center, radius),
             fields=fields,
             accuracy=accuracy,
-            methods=self._vicinity_queries
+            methods=self._sphere_queries
         )
 
     @_wrap_single_as_multi_population
-    def window_counts(self, corner, opposite_corner, *,
+    def box_counts(self, corner, opposite_corner, *,
+                   group_by=None, accuracy=None):
+        return self._counts(
+            (corner, opposite_corner),
+            group_by=group_by,
+            accuracy=accuracy,
+            methods=self._box_counts,
+        )
+
+    @_wrap_single_as_multi_population
+    def sphere_counts(self, center, radius, *,
                       group_by=None, accuracy=None):
         return self._counts(
-            (corner, opposite_corner),
-            group_by=group_by,
-            accuracy=accuracy,
-            methods=self._window_counts,
-        )
-
-    @_wrap_single_as_multi_population
-    def vicinity_counts(self, center, radius, *,
-                        group_by=None, accuracy=None):
-        return self._counts(
             (center, radius),
             group_by=group_by,
             accuracy=accuracy,
-            methods=self._vicinity_counts
+            methods=self._sphere_counts
         )
 
     def __len__(self):
@@ -278,7 +278,7 @@ class Index(IndexInterface):
         accuracy = self._enforce_accuracy_default(accuracy)
 
         if is_non_string_iterable(fields):
-            return self._multi_field_window_query(
+            return self._multi_field_box_query(
                 query_shape,
                 fields=fields,
                 accuracy=accuracy,
@@ -286,21 +286,21 @@ class Index(IndexInterface):
             )
 
         else:
-            return self._single_field_window_query(
+            return self._single_field_box_query(
                 query_shape,
                 field=fields,
                 accuracy=accuracy,
                 methods=methods
             )
 
-    def _multi_field_window_query(self, query_shape, *,
-                                  fields=None, accuracy=None, methods=None):
+    def _multi_field_box_query(self, query_shape, *,
+                               fields=None, accuracy=None, methods=None):
 
         result = methods["_np"](*query_shape, geometry=accuracy)
         return {k: result[k] for k in fields}
 
-    def _single_field_window_query(self, query_shape, *,
-                                   field=None, accuracy=None, methods=None):
+    def _single_field_box_query(self, query_shape, *,
+                                field=None, accuracy=None, methods=None):
 
         if field in methods:
             return methods[field](*query_shape, geometry=accuracy)
@@ -344,8 +344,8 @@ class SynapseIndexBase(Index):
 
         if sonata_edges is not None:
             self._sonata_edges = sonata_edges
-            self._multi_field_window_query = self._sonata_multi_field_window_query
-            self._single_field_window_query = self._sonata_single_field_window_query
+            self._multi_field_box_query = self._sonata_multi_field_box_query
+            self._single_field_box_query = self._sonata_single_field_box_query
 
             self._available_fields += self._sonata_edges.attribute_names
 
@@ -353,8 +353,8 @@ class SynapseIndexBase(Index):
     def available_fields(self):
         return list(self._available_fields)
 
-    def _sonata_multi_field_window_query(self, query_shape, *,
-                                         fields=None, accuracy=None, methods=None):
+    def _sonata_multi_field_box_query(self, query_shape, *,
+                                      fields=None, accuracy=None, methods=None):
 
         available_builtin_fields = self.builtin_fields
         special_fields = self._deduce_special_fields(methods)
@@ -375,7 +375,7 @@ class SynapseIndexBase(Index):
 
             raise ValueError(f"Invalid fields: {fields}")
 
-        result = super()._multi_field_window_query(
+        result = super()._multi_field_box_query(
             query_shape, fields=builtin_fields, accuracy=accuracy, methods=methods
         )
 
@@ -387,18 +387,18 @@ class SynapseIndexBase(Index):
 
         return {k: result[k] for k in fields}
 
-    def _sonata_single_field_window_query(self, query_shape, *,
-                                          field=None, accuracy=None, methods=None):
+    def _sonata_single_field_box_query(self, query_shape, *,
+                                       field=None, accuracy=None, methods=None):
 
         regular_fields = self.builtin_fields + self._deduce_special_fields(methods)
 
         if field in regular_fields:
-            return super()._single_field_window_query(
+            return super()._single_field_box_query(
                 query_shape, field=field, accuracy=accuracy, methods=methods
             )
 
         else:
-            ids = super()._single_field_window_query(
+            ids = super()._single_field_box_query(
                 query_shape, field="id", accuracy=accuracy, methods=methods,
             )
 
@@ -535,20 +535,20 @@ class MultiPopulationIndex(IndexInterface):
         self._indexes = indexes
 
     @_wrap_as_multi_population
-    def vicinity_query(self, index, *args, **kwargs):
-        return index.vicinity_query(*args, **kwargs)
+    def sphere_query(self, index, *args, **kwargs):
+        return index.sphere_query(*args, **kwargs)
 
     @_wrap_as_multi_population
-    def window_query(self, index, *args, **kwargs):
-        return index.window_query(*args, **kwargs)
+    def box_query(self, index, *args, **kwargs):
+        return index.box_query(*args, **kwargs)
 
     @_wrap_as_multi_population
-    def window_counts(self, index, *args, **kwargs):
-        return index.window_counts(*args, **kwargs)
+    def box_counts(self, index, *args, **kwargs):
+        return index.box_counts(*args, **kwargs)
 
     @_wrap_as_multi_population
-    def vicinity_counts(self, index, *args, **kwargs):
-        return index.vicinity_counts(*args, **kwargs)
+    def sphere_counts(self, index, *args, **kwargs):
+        return index.sphere_counts(*args, **kwargs)
 
     @_wrap_as_multi_population
     def bounds(self, index, *args, **kwargs):

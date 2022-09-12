@@ -17,12 +17,12 @@ Query Shapes
 A query returns all indexed elements that intersect with the *query shape* in
 the requested geometry mode. The query shape can be:
 
-* An axis-aligned box in which case the query is called a *window query*. The
+* An axis-aligned box in which case the query is called a *box query*. The
   axis-aligned box can be specified using any two opposing corners of the box;
   often the min/max corners are used, but any two corners that define the box
   are accepted.
 
-* A sphere for which we call a the query a *vicinity query*.
+* A sphere for which we call a the query a *sphere query*.
 
 * A cylinder (mostly for internal purposes such as placing segments).
 
@@ -87,21 +87,21 @@ Examples
 
     >>> index = spatial_index.open(morph_index_path)
 
-    >>> index.window_query(*window, fields="gid")
+    >>> index.box_query(*window, fields="gid")
     np.array([12, 3, 32, ...], np.int64)
 
-    >>> index.window_query(*window, fields=["gid"])
+    >>> index.box_query(*window, fields=["gid"])
     {
       "gid": np.array([12, 3, 32, ...], np.int64)
     }
 
-    >>> index.window_query(*window, fields=["gid", "radius"])
+    >>> index.box_query(*window, fields=["gid", "radius"])
     {
       "gid": np.array([...], ...),
       "radius": np.array([...], ...)
     }
 
-    >>> index.window_query(*window)
+    >>> index.box_query(*window)
     {
       "gid": ...,
       "section_id": ...,
@@ -152,7 +152,7 @@ As an example the section and segment id on the pre- and post-synapse can be
 obtained as follows:
 
 .. code-block: python
-   >>> index.window_query(
+   >>> index.box_query(
            *window,
            fields=[
                "id",
@@ -197,7 +197,7 @@ Examples
 .. code-block:: python
 
     >>> index = spatial_index.open_index(morph_index_path)
-    >>> index.window_query(*window, accuracy="best_effort")
+    >>> index.box_query(*window, accuracy="best_effort")
     {
       "gid": ...,
       ...
@@ -214,10 +214,10 @@ the same way as for :ref:`regular indexes <kw-accuracy>`.
 
 .. code-block:: python
 
-   >>> index.window_counts(*window)
+   >>> index.box_counts(*window)
    9238
 
-   >>> index.vicinity_counts(*sphere)
+   >>> index.sphere_counts(*sphere)
    2789
 
 Keyword argument: ``group_by``
@@ -234,7 +234,7 @@ This is enabled through the keyword argument ``group_by="gid"``.
    # The keys of the dictionary are the target GIDs, and
    # the values are the number of synapses are contained in
    # `window` with the specified target GID.
-   >>> index.window_counts(*window, group_by="gid")
+   >>> index.box_counts(*window, group_by="gid")
    {
      2379: 23,
      293: 1,

@@ -26,7 +26,7 @@ import spatial_index
 index = spatial_index.open_index("${output_dir}/circuit-segments")
 sphere = [0.0, 0.0, 0.0], 1000.0
 
-results = index.vicinity_query(*sphere, fields="gid")
+results = index.sphere_query(*sphere, fields="gid")
 assert "NodeA" in results
 assert "NodeB" in results
 
@@ -44,7 +44,7 @@ import spatial_index
 index = spatial_index.open_index("${output_dir}/circuit-synapses")
 sphere = [0.0, 0.0, 0.0], 1000.0
 
-results = index.vicinity_query(*sphere, fields="id")
+results = index.sphere_query(*sphere, fields="id")
 assert "NodeA__NodeA__chemical" in results
 assert "NodeB__NodeB__chemical" in results
 

@@ -26,7 +26,7 @@ def test_syn_index():
     assert len(ds) == len(index)
 
     # Way #1 - Get the ids, then query the edge file for ANY data
-    ids_in_region = index.window_query([200, 200, 480], [300, 300, 520], fields="id")
+    ids_in_region = index.box_query([200, 200, 480], [300, 300, 520], fields="id")
     print("Found N synapses:", len(ids_in_region))
     assert len(ds) > len(ids_in_region) > 0
 
@@ -37,7 +37,7 @@ def test_syn_index():
         assert 480 < z < 520
 
     # Way #2, get the objects: position and id directly from index
-    objs_in_region = index.window_query(
+    objs_in_region = index.box_query(
         [200, 200, 480], [300, 300, 520],
         fields="raw_elements"
     )
@@ -49,10 +49,10 @@ def test_syn_index():
             print("Sample synapse id:", obj.id, "Position", obj.centroid)
 
     # Test counting / aggregation
-    total_in_region = index.window_counts([200, 200, 480], [300, 300, 520])
+    total_in_region = index.box_counts([200, 200, 480], [300, 300, 520])
     assert len(ids_in_region) == total_in_region
 
-    aggregated = index.window_counts([200, 200, 480], [300, 300, 520], group_by="gid")
+    aggregated = index.box_counts([200, 200, 480], [300, 300, 520], group_by="gid")
     print("Synapses belong to {} neurons".format(len(aggregated)))
     assert len(aggregated) == 19
     assert aggregated[351] == 2

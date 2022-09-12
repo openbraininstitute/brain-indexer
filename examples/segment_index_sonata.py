@@ -28,11 +28,11 @@ def example_sonata_index():
 
     # Way #1 - Get the ids, then query the node file for ANY data
     window = [200, 200, 480], [300, 300, 520]
-    ids_in_region = index.window_query(*window, fields="ids")
+    ids_in_region = index.box_query(*window, fields="ids")
     print("Found N points:", len(ids_in_region))
 
     # Way #2 - Get the queried object directly
-    obj_in_region = index.window_query(*window, fields="raw_elements")
+    obj_in_region = index.box_query(*window, fields="raw_elements")
     print("Found N objects:", len(obj_in_region))
     for i, obj in enumerate(obj_in_region):
         print("Point #%d: GID: %s Section ID: %s Segment ID: %s Centroid: %s" %
@@ -45,7 +45,7 @@ def example_sonata_index():
         MORPH_FILE, NODES_FILE, "All", selection
     )
     print("Index size:", len(index_selection))
-    inds = index_selection.window_query(
+    inds = index_selection.box_query(
         [15, 900, 15], [20, 1900, 20], fields="raw_elements"
     )
     print("Found N objects:", len(inds))

@@ -20,7 +20,7 @@ pre_gids = np.array([0, 0, 1, 2, 2, 2, 3], dtype=np.intp)
 
 
 def _test_rtree(index):
-    objs = index.window_query(
+    objs = index.box_query(
         [-1., -1., -1.], [1., 1., 1.],
         fields="raw_elements"
     )
@@ -43,10 +43,10 @@ def _test_rtree(index):
         assert obj.id == id_ and obj.post_gid == post_gid and obj.pre_gid == pre_gid, \
             (obj.id, obj.post_gid, obj.pre_gid, "!=", id_, post_gid, pre_gid)
 
-    n_elems_within = index.window_counts([-1., -1., -1.], [1., 1., 1.])
+    n_elems_within = index.box_counts([-1., -1., -1.], [1., 1., 1.])
     assert n_elems_within == 4
 
-    aggregated_per_gid = index.window_counts(
+    aggregated_per_gid = index.box_counts(
         [-1., -1., -1.], [1., 1., 1.], group_by="gid"
     )
     assert aggregated_per_gid[1] == 2
@@ -54,7 +54,7 @@ def _test_rtree(index):
     assert 3 not in aggregated_per_gid
     assert aggregated_per_gid[4] == 1
 
-    aggregated_2 = index.window_counts(
+    aggregated_2 = index.box_counts(
         [-5., -5., -5.], [5., 5., 5.], group_by="gid"
     )
     assert aggregated_2[1] == 2

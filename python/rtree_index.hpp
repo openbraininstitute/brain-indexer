@@ -277,9 +277,9 @@ inline void add_IndexTree_find_intersecting_objs_bindings(py::class_<Class>& c) 
 }
 
 template<typename Class>
-inline void add_IndexTree_find_intersecting_window_objs_bindings(py::class_<Class>& c) {
+inline void add_IndexTree_find_intersecting_box_objs_bindings(py::class_<Class>& c) {
     c
-    .def("_find_intersecting_window_objs",
+    .def("_find_intersecting_box_objs",
         [](Class& obj, const array_t& corner, const array_t& opposite_corner, const std::string& geometry) {
             return detail::find_intersecting_objs(
                 obj, si::make_query_box(mk_point(corner), mk_point(opposite_corner)), geometry
@@ -294,7 +294,7 @@ inline void add_IndexTree_find_intersecting_window_objs_bindings(py::class_<Clas
 
 
 template<typename Class>
-inline void add_MorphIndex_find_intersecting_window_np(py::class_<Class>& c) {
+inline void add_MorphIndex_find_intersecting_box_np(py::class_<Class>& c) {
     auto wrap_results_in_dict = [](const auto& results) {
         auto centroid = py::array_t<CoordType>({results.centroid.size(), 3ul},
                                                 (CoordType*)results.endpoint1.data());
@@ -315,7 +315,7 @@ inline void add_MorphIndex_find_intersecting_window_np(py::class_<Class>& c) {
         );
     };
 
-    add_IndexTree_find_intersecting_window_np(c, wrap_results_in_dict);
+    add_IndexTree_find_intersecting_box_np(c, wrap_results_in_dict);
 }
 
 template<typename Class>
@@ -332,7 +332,7 @@ inline void add_IndexTree_count_intersecting_bindings(py::class_<Class>& c) {
          py::arg("opposite_corner"),
          py::arg("geometry") = std::string("bounding_box")
     )
-    .def("_count_intersecting_vicinity",
+    .def("_count_intersecting_sphere",
          [](Class& obj, const array_t& center, CoordType radius, const std::string& geometry) {
              return detail::count_intersecting(
                 obj,
@@ -380,7 +380,7 @@ inline void add_IndexTree_query_bindings(py::class_<Class> &c) {
     add_IndexTree_is_intersecting_bindings<Class>(c);
 
     add_IndexTree_find_intersecting_objs_bindings<Class>(c);
-    add_IndexTree_find_intersecting_window_objs_bindings<Class>(c);
+    add_IndexTree_find_intersecting_box_objs_bindings<Class>(c);
 
     add_IndexTree_count_intersecting_bindings<Class>(c);
 
@@ -573,12 +573,12 @@ inline void add_SphereIndex_fields_bindings(py::class_<Class>& c) {
 }
 
 template<typename Class, typename WrapAsDict>
-inline void add_IndexTree_find_intersecting_window_np(
+inline void add_IndexTree_find_intersecting_box_np(
         py::class_<Class>& c,
         const WrapAsDict& wrap_as_dict) {
 
     c
-    .def("_find_intersecting_window_np",
+    .def("_find_intersecting_box_np",
             [wrap_as_dict](Class& obj,
                            const array_t& corner, const array_t& opposite_corner,
                            const std::string& geometry) {
@@ -616,7 +616,7 @@ inline void add_IndexTree_find_intersecting_window_np(
 }
 
 template<typename Class>
-inline void add_SphereIndex_find_intersecting_window_np(py::class_<Class>& c) {
+inline void add_SphereIndex_find_intersecting_box_np(py::class_<Class>& c) {
     auto wrap_as_dict = [](const auto& results) {
         return py::dict(
             "id"_a=pyutil::to_pyarray(results.id),
@@ -626,7 +626,7 @@ inline void add_SphereIndex_find_intersecting_window_np(py::class_<Class>& c) {
         );
     };
 
-    add_IndexTree_find_intersecting_window_np(c, wrap_as_dict);
+    add_IndexTree_find_intersecting_box_np(c, wrap_as_dict);
 }
 
 template <typename Class = si::IndexTree<si::IndexedSphere>>
@@ -634,7 +634,7 @@ inline void create_SphereIndex_bindings(py::module& m, const char* class_name) {
     using value_type = typename Class::value_type;
     auto c = create_IndexTree_bindings<value_type, value_type, Class>(m, class_name);
 
-    add_SphereIndex_find_intersecting_window_np(c);
+    add_SphereIndex_find_intersecting_box_np(c);
     add_SphereIndex_fields_bindings(c);
 }
 
@@ -675,7 +675,7 @@ inline void create_Synapse_bindings(py::module& m) {
 
 
 template<typename Class>
-inline void add_SynapseIndex_find_intersecting_window_np(py::class_<Class>& c) {
+inline void add_SynapseIndex_find_intersecting_box_np(py::class_<Class>& c) {
     auto wrap_as_dict = [](const auto& results) {
         return py::dict(
             "id"_a=pyutil::to_pyarray(results.id),
@@ -686,7 +686,7 @@ inline void add_SynapseIndex_find_intersecting_window_np(py::class_<Class>& c) {
         );
     };
 
-    add_IndexTree_find_intersecting_window_np(c, wrap_as_dict);
+    add_IndexTree_find_intersecting_box_np(c, wrap_as_dict);
 }
 
 
@@ -745,7 +745,7 @@ inline void add_SynapseIndex_count_intersecting_agg_gid_bindings(py::class_<Clas
         py::arg("geometry") = std::string("bounding_box")
     )
 
-    .def("_count_intersecting_vicinity_agg_gid",
+    .def("_count_intersecting_sphere_agg_gid",
         [](Class& obj,
            const array_t& center, CoordType radius,
            const std::string& geometry) {
@@ -769,7 +769,7 @@ inline void create_SynapseIndex_bindings(py::module& m, const char* class_name) 
 
     add_SynapseIndex_add_synapses_bindings(c);
     add_SynapseIndex_count_intersecting_agg_gid_bindings(c);
-    add_SynapseIndex_find_intersecting_window_np(c);
+    add_SynapseIndex_find_intersecting_box_np(c);
     add_SynapseIndex_fields_bindings(c);
 }
 
@@ -1106,7 +1106,7 @@ inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
     add_MorphIndex_add_neuron_bindings<Class>(c);
     add_MorphIndex_add_soma_bindings<Class>(c);
 
-    add_MorphIndex_find_intersecting_window_np<Class>(c);
+    add_MorphIndex_find_intersecting_box_np<Class>(c);
 
     add_MorphIndex_fields_bindings<Class>(c);
 }
@@ -1254,7 +1254,7 @@ inline py::class_<Class> create_MorphMultiIndex_bindings(py::module& m, const ch
     using value_type = typename Class::value_type;
     auto c = create_MultiIndex_bindings<value_type>(m, class_name);
 
-    add_MorphIndex_find_intersecting_window_np(c);
+    add_MorphIndex_find_intersecting_box_np(c);
     add_MorphIndex_fields_bindings(c);
 
     return c;
@@ -1266,7 +1266,7 @@ inline py::class_<Class> create_SynapseMultiIndex_bindings(py::module& m, const 
     using value_type = typename Class::value_type;
     auto c = create_MultiIndex_bindings<value_type>(m, class_name);
 
-    add_SynapseIndex_find_intersecting_window_np(c);
+    add_SynapseIndex_find_intersecting_box_np(c);
     add_SynapseIndex_fields_bindings(c);
 
     return c;

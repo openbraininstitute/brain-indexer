@@ -43,7 +43,7 @@ def example_query_multi_index():
         # Define a query window by its two extreme corners, and run the
         # query.
         min_corner, max_corner = [200, 200, 480], [300, 300, 520]
-        found = core_index.window_query(min_corner, max_corner)
+        found = core_index.box_query(min_corner, max_corner)
 
         # Now you can start doing science:
         print(found)

@@ -20,14 +20,14 @@ single-population results. For example:
 
 .. code-block: python
 
-    >>> index.window_query(*window, fields="gid")
+    >>> index.box_query(*window, fields="gid")
     {
       "NodeA__NodeA__chemical": np.array([12, 3290, ..., ]),
       "NodeA__NodeB__chemical": np.array([22, 2309, ..., ]),
       ...
     }
 
-    >>> index.window_query(*window, fields=["gid", "radius"])
+    >>> index.box_query(*window, fields=["gid", "radius"])
     {
       "NodeA__NodeA__chemical": {
         "gid": np.array([12, 3290, ..., ]),
@@ -47,13 +47,13 @@ the results for all indexes. Example:
 
 .. code-block: python
 
-    >>> index.window_query(*window, fields="gid", populations="NodeA__NodeA__chemical")
+    >>> index.box_query(*window, fields="gid", populations="NodeA__NodeA__chemical")
     {
       "NodeA__NodeA__chemical": np.array([12, 3290, ..., ])
     }
 
     >>> all_but_one = index.populations[:-1]
-    >>> index.window_query(*window, fields="gid", populations=all_but_one)
+    >>> index.box_query(*window, fields="gid", populations=all_but_one)
     {
       "NodeA__NodeA__chemical": np.array([12, 3290, ..., ]),
       "NodeA__NodeB__chemical": np.array([22, 2309, ..., ]),
@@ -100,7 +100,7 @@ The potential traps:
     def special_query(index, window):
         """Query the index suitable for scientific Usecase A."
 
-        results = index.window_query(*window, fields="gid")
+        results = index.box_query(*window, fields="gid")
 
         # Bad: fails for multi-population indexes
         largest_gid = np.max(results["gid"]) > 1000
@@ -123,7 +123,7 @@ case, we can coerce the result into the single-population format:
     def special_query(index, window, population=None):
         """Query the index suitable for scientific Usecase A."
 
-        results = index.window_query(
+        results = index.box_query(
             *window, fields="gid", population=population,
             population_mode="single"
         )
@@ -144,7 +144,7 @@ Then, one can choose to always use the multi-population return type:
     def special_query(index, window, populations=None):
         """Print larges GID."
 
-        results = index.window_query(
+        results = index.box_query(
             *window, fields="gid", population=population,
             population_mode="multiple"
         )

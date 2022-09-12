@@ -246,7 +246,7 @@ def check_all_regular_query_api(index, window, sphere, accuracy, population_mode
     expected_population_mode = deduce_expected_population_mode(index, population_mode)
 
     check_query(
-        index.window_query, window, query_kwargs=query_kwargs,
+        index.box_query, window, query_kwargs=query_kwargs,
         builtin_fields=builtin_fields,
         populations=populations,
         population_mode=expected_population_mode,
@@ -254,14 +254,14 @@ def check_all_regular_query_api(index, window, sphere, accuracy, population_mode
 
     reversed_window = (window[1], window[0])
     check_query(
-        index.window_query, reversed_window, query_kwargs=query_kwargs,
+        index.box_query, reversed_window, query_kwargs=query_kwargs,
         builtin_fields=builtin_fields,
         populations=populations,
         population_mode=expected_population_mode,
     )
 
     check_query(
-        index.vicinity_query, sphere, query_kwargs=query_kwargs,
+        index.sphere_query, sphere, query_kwargs=query_kwargs,
         builtin_fields=builtin_fields,
         populations=populations,
         population_mode=expected_population_mode,
@@ -275,20 +275,20 @@ def check_all_counts_api(index, window, sphere, accuracy, population_mode):
     expected_population_mode = deduce_expected_population_mode(index, population_mode)
 
     check_counts(
-        index.window_counts, window, query_kwargs=query_kwargs,
+        index.box_counts, window, query_kwargs=query_kwargs,
         populations=populations,
         population_mode=expected_population_mode,
     )
 
     reversed_window = (window[1], window[0])
     check_counts(
-        index.window_counts, reversed_window, query_kwargs=query_kwargs,
+        index.box_counts, reversed_window, query_kwargs=query_kwargs,
         populations=populations,
         population_mode=expected_population_mode,
     )
 
     check_counts(
-        index.vicinity_counts, sphere, query_kwargs=query_kwargs,
+        index.sphere_counts, sphere, query_kwargs=query_kwargs,
         populations=populations,
         population_mode=expected_population_mode,
     )

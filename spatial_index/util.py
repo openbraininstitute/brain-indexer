@@ -187,13 +187,13 @@ def is_likely_same_index(lhs, rhs, confidence=0.99, error_rate=0.001, rtol=1e-5)
         min_corner = xyz - 0.5 * sampling_extent
         max_corner = xyz + 0.5 * sampling_extent
 
-        if not is_window_query_equal(lhs, rhs, min_corner, max_corner, atol):
+        if not is_box_query_equal(lhs, rhs, min_corner, max_corner, atol):
             return False
 
     return True
 
 
-def is_window_query_equal(lhs, rhs, corner, opposite_corner, atol):
+def is_box_query_equal(lhs, rhs, corner, opposite_corner, atol):
     """Does the window queryreturn the same result?
 
     Given the two indexes `rhs` and `lhs`, will performing the same
@@ -204,12 +204,12 @@ def is_window_query_equal(lhs, rhs, corner, opposite_corner, atol):
     can be different for each dimension.
     """
     def is_contained(a, b):
-        return is_window_query_contained(a, b, corner, opposite_corner, atol)
+        return is_box_query_contained(a, b, corner, opposite_corner, atol)
 
     return is_contained(lhs, rhs) and is_contained(rhs, lhs)
 
 
-def is_window_query_contained(lhs, rhs, corner, opposite_corner, atol):
+def is_box_query_contained(lhs, rhs, corner, opposite_corner, atol):
     """Are results from one query contained in the other?
 
     Given the two indexes `rhs` and `lhs`, will performing the window
@@ -218,8 +218,8 @@ def is_window_query_contained(lhs, rhs, corner, opposite_corner, atol):
 
     The `atol` is the size by which the window is inflated.
     """
-    lhs_results = lhs.window_query(corner, opposite_corner)
-    rhs_results = rhs.window_query(corner - atol, opposite_corner + atol)
+    lhs_results = lhs.box_query(corner, opposite_corner)
+    rhs_results = rhs.box_query(corner - atol, opposite_corner + atol)
 
     if all(key in lhs_results for key in ["gid", "section_id", "segment_id"]):
         # Morphology indexes

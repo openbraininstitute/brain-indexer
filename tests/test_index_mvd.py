@@ -74,7 +74,7 @@ def test_serial_exec():
     builder.process_range((0, 1))  # Process first neuron
     index = builder.index
     assert len(index) > 1700
-    objs_in_region = index.window_query(
+    objs_in_region = index.box_query(
         [100, 50, 100], [200, 100, 200],
         fields="raw_elements"
     )
@@ -108,12 +108,12 @@ def test_sonata_index():
         Test2Info.MORPHOLOGY_DIR, Test2Info.SONATA_NODES, "All", range(700, 800)
     )
     assert len(index) == 588961
-    points_in_region = index.window_query(
+    points_in_region = index.box_query(
         [200, 200, 480], [300, 300, 520],
         fields="raw_elements"
     )
     assert len(points_in_region) > 0
-    obj_in_region = index.window_query(
+    obj_in_region = index.box_query(
         [0, 0, 0], [10, 10, 10],
         fields="raw_elements"
     )
@@ -131,7 +131,7 @@ def test_sonata_selection():
     )
 
     assert len(index) == 25618
-    obj_in_region = index.window_query(
+    obj_in_region = index.box_query(
         [15, 900, 15], [20, 1900, 20],
         fields="raw_elements"
     )

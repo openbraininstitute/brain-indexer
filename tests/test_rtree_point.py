@@ -2,7 +2,7 @@ import numpy as np
 
 from spatial_index import core
 
-from test_rtree_sphere import _window_query_id
+from test_rtree_sphere import _box_query_id
 
 points = np.array(
     [
@@ -24,7 +24,7 @@ def test_add_points():
     t._add_points(points, ids)
     min_corner = [-1, -1, -1]
     max_corner = [1, 1, 1]
-    idx = _window_query_id(t, min_corner, max_corner)
+    idx = _box_query_id(t, min_corner, max_corner)
     expected_result = np.array([0, 1, 2, 6], dtype=np.uintp)
 
     assert sorted(idx) == sorted(expected_result)

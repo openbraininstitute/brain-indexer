@@ -40,7 +40,7 @@ min_points = np.random.uniform(low=-10, high=0, size=(N_QUERIES, 3)).astype(np.f
 #Query Execution timing
 start = timer()
 for i in range(N_QUERIES):
-    idx = index.window_query(min_points[i], max_points[i], fields="ids")
+    idx = index.box_query(min_points[i], max_points[i], fields="ids")
 end = timer()
 query_time = end - start
 global_time = timer() - start_global
@@ -52,7 +52,7 @@ print ("Total number of results: ")
 print (len(idx))
 
 # Option position retrieval for debugging purposes
-#pos = index.window_query(min_points[1], max_points[1], fields="raw_elements")
+#pos = index.box_query(min_points[1], max_points[1], fields="raw_elements")
 #print (min_points[1], max_points[1])
 
 # Optional print position of query results for debug purposes

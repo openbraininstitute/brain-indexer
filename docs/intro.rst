@@ -31,8 +31,8 @@ After opening the index one may query it as follows:
 
 .. code-block:: python
 
-    results = index.window_query(min_points, max_points)
-    results = index.vicinity_query(center, radius)
+    results = index.box_query(min_points, max_points)
+    results = index.sphere_query(center, radius)
 
 The former returns all elements that intersect with the box defined by the
 corners ``min_points`` and ``max_points``. The latter is used when the query

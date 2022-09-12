@@ -35,7 +35,7 @@ def do_multi_index_query_serial(corner, opposite_corner):
 
     if MPI.COMM_WORLD.Get_rank() == 0:
         index = spatial_index.open_index(output_dir, max_cache_size_mb=1000)
-        return index.window_query(corner, opposite_corner, fields="ids")
+        return index.box_query(corner, opposite_corner, fields="ids")
 
 
 def do_query_serial(corner, opposite_corner):
@@ -43,7 +43,7 @@ def do_query_serial(corner, opposite_corner):
                                             target_gids=range(700, 1200),
                                             progress=True)
 
-    idx = index.window_query(corner, opposite_corner, fields="ids")
+    idx = index.box_query(corner, opposite_corner, fields="ids")
     return idx
 
 

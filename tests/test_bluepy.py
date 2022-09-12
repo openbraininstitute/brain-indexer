@@ -70,7 +70,7 @@ def test_bluepy_validation():
         for m in range(1, 6):
             max_point = min_point + ((1.1 ** m) * np.random.uniform(
                 low=10, high=20, size=1).astype(np.float32))
-            result = indexer.window_query(min_point, max_point)
+            result = indexer.box_query(min_point, max_point)
             if not result['gid'].size == 0:
                 i += 1
                 bluepy_check(c, result)

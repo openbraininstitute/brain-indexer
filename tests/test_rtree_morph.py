@@ -63,7 +63,7 @@ def test_bulk_neuron_add():
 
     # New API
     index = MorphIndex(rtree)
-    objs = index.window_query(
+    objs = index.box_query(
         [COORD_SEARCH[0] - 0.9, -.1, -.1],
         [COORD_SEARCH[0] + 0.9, .1, .1],
         fields="raw_elements"
@@ -145,7 +145,7 @@ def test_endpoints_retrieval():
     array_expect = np.array([[1, 3, 5], [2, 4, 6]])
 
     index = MorphIndex(rtree)
-    idx = index.window_query(min_corner, max_corner, fields="raw_elements")
+    idx = index.box_query(min_corner, max_corner, fields="raw_elements")
     assert idx[0].endpoints is None
     np.testing.assert_allclose(idx[1].endpoints, array_expect)
 

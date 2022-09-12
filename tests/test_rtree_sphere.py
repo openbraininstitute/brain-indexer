@@ -25,12 +25,12 @@ def _any_query_id(core_index, query_shape, query_name):
     )
 
 
-def _window_query_id(core_index, *box):
-    return _any_query_id(core_index, box, "window_query")
+def _box_query_id(core_index, *box):
+    return _any_query_id(core_index, box, "box_query")
 
 
-def _vicinity_query_id(core_index, *sphere):
-    return _any_query_id(core_index, sphere, "vicinity_query")
+def _sphere_query_id(core_index, *sphere):
+    return _any_query_id(core_index, sphere, "sphere_query")
 
 
 def arange_centroids(N=10):
@@ -170,7 +170,7 @@ def test_intersection_random():
 
     t = IndexClass(centroids, radii)
 
-    idx = _vicinity_query_id(t, q_centroid, q_radius)
+    idx = _sphere_query_id(t, q_centroid, q_radius)
     objs = t._find_intersecting_objs(q_centroid, q_radius, geometry="best_effort")
 
     assert len(idx) == len(objs)
@@ -196,7 +196,7 @@ def test_intersection_window():
 
     min_corner = np.array([-1, -1, -1], dtype=np.float32)
     max_corner = np.array([1, 1, 1], dtype=np.float32)
-    idx = _window_query_id(t, min_corner, max_corner)
+    idx = _box_query_id(t, min_corner, max_corner)
 
     expected_result = [0, 1, 2, 6]
     assert sorted(idx) == sorted(expected_result), (idx, expected_result)
@@ -238,7 +238,7 @@ def test_bulk_spheres_points_add():
     min_corner = [-1, -1, -1]
     max_corner = [1, 1, 1]
 
-    idx = _window_query_id(rtree, min_corner, max_corner)
+    idx = _box_query_id(rtree, min_corner, max_corner)
     expected_result = np.array([0, 1, 2, 6, 10, 12, 13], dtype=np.uintp)
 
     assert sorted(idx) == sorted(expected_result)

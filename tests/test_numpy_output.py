@@ -36,8 +36,8 @@ def test_numpy_output_syn():
     min_corner = [200, 200, 480]
     max_corner = [300, 300, 520]
 
-    np_out = index.window_query(min_corner, max_corner)
-    obj_out = index.window_query(min_corner, max_corner, fields="raw_elements")
+    np_out = index.box_query(min_corner, max_corner)
+    obj_out = index.box_query(min_corner, max_corner, fields="raw_elements")
 
     for i, obj in enumerate(obj_out):
         assert np.array_equal(obj.id, np_out['id'][i])
@@ -57,8 +57,8 @@ def test_numpy_output_seg():
     min_corner = [-50, 0, 0]
     max_corner = [0, 50, 50]
 
-    np_out = index.window_query(min_corner, max_corner)
-    obj_out = index.window_query(min_corner, max_corner, fields="raw_elements")
+    np_out = index.box_query(min_corner, max_corner)
+    obj_out = index.box_query(min_corner, max_corner, fields="raw_elements")
 
     for i, obj in enumerate(obj_out):
         assert np.array_equal(obj.gid, np_out['gid'][i])
