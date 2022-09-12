@@ -145,7 +145,7 @@ class MorphIndexBuilderBase:
 
     @classmethod
     def from_sonata_file(cls, morphology_dir, node_filename, pop_name, target_gids=None,
-                         index_kind=None, **kw):
+                         **kw):
         """ Creates a node index from a sonata node file.
 
         Args:
@@ -161,13 +161,13 @@ class MorphIndexBuilderBase:
 
     @classmethod
     def from_mvd_file(cls, morphology_dir, node_filename, target_gids=None,
-                      index_kind=None, **kw):
+                      **kw):
         """ Build a synpase index from an mvd file"""
         return cls.create(morphology_dir, node_filename, "", target_gids, **kw)
 
     @classmethod
     def from_sonata_selection(cls, morphology_dir, node_filename, pop_name,
-                              selection, index_kind=None, **kw):
+                              selection, **kw):
         """ Builds the synapse index from a generic Sonata selection object"""
         return cls.create(morphology_dir, node_filename, pop_name,
                           selection.flatten(), **kw)

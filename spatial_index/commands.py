@@ -222,10 +222,10 @@ def _sonata_morphology_dir(config, population):
 
 def _parse_options_for_builder_args(options, output_dir):
     if options["multi_index"]:
-        index_kind = "multi_index"
+        index_variant = "multi_index"
         index_kwargs = {}
     else:
-        index_kind = "in_memory"
+        index_variant = "in_memory"
         index_kwargs = {"progress": True}
 
     if output_dir is None:
@@ -233,13 +233,13 @@ def _parse_options_for_builder_args(options, output_dir):
 
     index_kwargs["output_dir"] = output_dir
 
-    return index_kind, index_kwargs
+    return index_variant, index_kwargs
 
 
 def _run_spatial_index_nodes(morphology_dir, nodes_file, options, output_dir=None):
-    index_kind, index_kwargs = _parse_options_for_builder_args(options, output_dir)
+    index_variant, index_kwargs = _parse_options_for_builder_args(options, output_dir)
 
-    Builder = MorphIndexResolver.builder_class(index_kind)
+    Builder = MorphIndexResolver.builder_class(index_variant)
     Builder.create(
         morphology_dir, nodes_file, **index_kwargs
     )
@@ -247,18 +247,18 @@ def _run_spatial_index_nodes(morphology_dir, nodes_file, options, output_dir=Non
 
 def _run_spatial_index_sonata_nodes(morphology_dir, nodes_file, population, options,
                                     output_dir=None):
-    index_kind, index_kwargs = _parse_options_for_builder_args(options, output_dir)
+    index_variant, index_kwargs = _parse_options_for_builder_args(options, output_dir)
 
-    Builder = MorphIndexResolver.builder_class(index_kind)
+    Builder = MorphIndexResolver.builder_class(index_variant)
     Builder.from_sonata_file(
         morphology_dir, nodes_file, population, **index_kwargs
     )
 
 
 def _run_spatial_index_synapses(edges_file, population, options, output_dir=None):
-    index_kind, index_kwargs = _parse_options_for_builder_args(options, output_dir)
+    index_variant, index_kwargs = _parse_options_for_builder_args(options, output_dir)
 
-    Builder = SynapseIndexResolver.builder_class(index_kind)
+    Builder = SynapseIndexResolver.builder_class(index_variant)
     Builder.from_sonata_file(
         edges_file, population, **index_kwargs
     )
