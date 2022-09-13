@@ -1,6 +1,23 @@
 Change Log
 ==========
 
+Version 0.8.0
+--------------
+**September 2022**
+
+**Features**
+  * Implemented multi-population support for indexes
+
+**Improvements**
+  * Boxes are defined through any two opposing corners, not just the min- and max-corners.
+  * "window_query" and "vicinity_query" are now "box_query" and "sphere_query", respectively; and analogously for "{window,vicinity}_counts".
+  * "endpoints" are now exported as a tuples and not as two separate objects
+  * "kind" field has been replaced by "is_soma"
+  * Removed support for memory mapped files from the Python API
+  * The multi-index cache usage statistics report has been deactivated by default, available on-demand by setting the environment variable "SI_REPORT_USAGE_STATS" to "1" or "On"
+  * Consistency improvements for the code
+  * Bug fix for multi-index creation.
+
 Version 0.7.0
 -------------
 **September 2022**
