@@ -16,6 +16,6 @@ else
     python -m venv "$1"
 fi
 
-module load unstable cmake gcc boost/1.78.0
+module load unstable cmake gcc boost hpe-mpi
 . "$1"/bin/activate
 pip install git+ssh://git@bbpgitlab.epfl.ch/hpc/SpatialIndex.git
