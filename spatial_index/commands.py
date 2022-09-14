@@ -57,10 +57,10 @@ def spatial_index_circuit(args=None):
     For a synapse index we expect the SONATA config to provide
         networks/edges
 
-    Currently, only a single population is supported. Therefore, the
-    'networks/{nodes,edges}' must identify a unique file. This is possible
-    if either the list only contains one dictionary, or, if a population has
-    been selected, only one file matches the specified population.
+    Multiple populations are supported through the flag `--populations`. When
+    indexing multiple populations, one must list all populations to be indexed.
+    When indexing a single population, one may omit `--populations` if the
+    population is unique.
 
     Note: requires libsonata
 
