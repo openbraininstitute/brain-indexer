@@ -4,7 +4,7 @@
 
 import os
 
-import spatial_index
+from spatial_index import logger
 
 from .util import docopt_get_args, is_likely_same_index
 from .util import is_strictly_sensible_filename, is_non_string_iterable
@@ -138,7 +138,7 @@ def spatial_index_compare(args=None):
     rhs = open_index(options["rhs_circuit"])
 
     if not is_likely_same_index(lhs, rhs):
-        spatial_index.logger.info("The two indexes differ.")
+        logger.info("The two indexes differ.")
         exit(-1)
 
 
@@ -170,8 +170,13 @@ def _validated_populations(options, circuit_config):
     if not populations:
         populations = _sonata_available_populations(options, circuit_config)
 
-        error_msg = "At most one population is supported."
-        assert len(populations) == 1, error_msg
+        if len(populations) != 1:
+            logger.error(
+                "The input files contain multiple populations, but `--population`"
+                " wasn't used. Please use `--population` to list all populations"
+                " to be indexed."
+            )
+            raise ValueError("Invalid `--populations` for multiple populations.")
 
         populations = next(iter(populations))
 
