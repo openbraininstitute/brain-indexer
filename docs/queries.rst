@@ -129,7 +129,6 @@ For synapse indexes the supported fields are:
 * ``"id"`` which is the ID of the synapse,
 * ``"post_gid"`` which is the GID of the post-synaptic neuron,
 * ``"pre_gid"`` which is the GID of the pre-synaptic neuron,
-* ``"ids"`` the three ids packed into a single struct,
 * ``"position"`` the center of the sphere or cylinder.
 
 The partially supported field is:
