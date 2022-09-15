@@ -12,7 +12,7 @@ Multi-Population Queries
 
 In SI, this has been implemented through ``MultiPopulationIndex``. Which
 supports the same API as regular indexes, with a few additions. See
-:ref:`Queries`_ for more details.
+:ref:`Queries` for more details.
 
 The difference between single-population indexes and multi-population indexes is
 that multi-population indexes the results of queries is a dictionary of

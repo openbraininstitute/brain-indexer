@@ -9,7 +9,7 @@
 
 # Define the number of nodes and partition 
 #SBATCH --nodes=1
-#SBATCH --partition=prod_p2
+#SBATCH --partition=prod
 #SBATCH --exclusive
 
 # Configure to use all the memory
