@@ -35,13 +35,18 @@ Activate the virtualenv using:
 ## How to install from source
 
 Clone the repository:  
-`git clone git@bbpgitlab.epfl.ch:hpc/SpatialIndex.git && cd SpatialIndex`
 
-Create the virtualenv:  
-`python -m venv <name of the virtualenv>`
+    git clone --recursive git@bbpgitlab.epfl.ch:hpc/spatial-index.git
 
-Install using pip:  
-`pip install -e .`
+This is the command in case you forgot the `--recursive`:
+
+    git submodule update --init --recursive
+
+Remember to `cd` into the correct directory and create the virtualenv
+and install as editable with pip
+
+    python -m venv <name of the virtualenv>
+    pip install -e .
 
 ## Examples
 
