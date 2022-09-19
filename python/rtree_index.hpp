@@ -849,6 +849,8 @@ inline static void add_branch(MorphIndexTree& obj,
                               const coord_t* radii) {
     // loop over segments. id is i + 1
     for (unsigned i = 0; i < n_segments; i++) {
+        // TODO reconsider this choice of using only `radii[i]`; because the
+        // input frequently has one radius per cap. Not one radius per cylinder.
         obj.insert(si::Segment{neuron_id, section_id, i , points[i], points[i + 1], radii[i]});
     }
 }
@@ -970,11 +972,12 @@ inline void add_MorphIndex_add_neuron_bindings(py::class_<Class>& c) {
             const auto offsets = branches_offset_np.template unchecked<1>().data(0);
 
             // Check if at least one point was provided when has_soma==True
-            if (has_soma && centroids_np.shape(0) < 1) {
+            if (has_soma && centroids_np.shape(0) == 0) {
                 throw py::value_error("has_soma is True but no points provided");
             }
 
             const unsigned n_segment_points = npoints - has_soma;
+
             if (n_segment_points == 0) {
                 if (has_soma && radii_np.size() != 1) {
                     throw py::value_error("Please provide the soma radius");
@@ -988,12 +991,23 @@ inline void add_MorphIndex_add_neuron_bindings(py::class_<Class>& c) {
                     throw py::value_error("Please provide at least two points for segments");
                 }
 
-                if (radii_np.size() < centroids_np.shape(0) - 1) {
-                    throw py::value_error("Please provide a radius per segment");
+                if (radii_np.size() != npoints) {
+                    log_error(
+                        boost::format("We require exactly one radius per point,"
+                            " as if the section had a piecewise varying radius."
+                            " Regardless, SI only has cylinders, i.e., constant radius"
+                            " per segment. We ignore the second radius and only take"
+                            " the first. Found: radii.size = %d, npoints = %d.")
+                        % radii_np.size() % npoints
+                    );
+
+                    throw py::value_error(
+                        "Please provide exactly one radius for each point."
+                    );
                 }
 
                 // Check that the branches are at least one
-                if (n_branches < 1) {
+                if (n_branches == 0) {
                     throw py::value_error("Please provide at least one branch offset");
                 }
 
@@ -1003,8 +1017,13 @@ inline void add_MorphIndex_add_neuron_bindings(py::class_<Class>& c) {
                 }
 
                 // Check that the max offset is less than the number of points
-                const auto max_offset = *std::max_element(offsets, offsets + n_branches);
-                if (max_offset > npoints - 2) {  // 2 To ensure the segment has a closing point
+                for(size_t i = 0; i < n_branches-1; ++i) {
+                    if(offsets[i] > offsets[i+1]) {
+                        throw py::value_error("The 'branch_offsets' must be non-decreasing.");
+                    }
+                }
+
+                if (offsets[n_branches - 1] > npoints - 2) {  // 2 To ensure the segment has a closing point
                     throw py::value_error("At least one of the branches offset is too large");
                 }
             }

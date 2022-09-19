@@ -33,6 +33,63 @@ def test_morphos_insert():
         assert idx[0] == (i // 4) and idx[1] == (i % 4), "i={}, idx={} ".format(i, idx)
 
 
+def test_bulk_single_segments_no_soma():
+    """
+    Adding a neuron with one segment per section
+    .=
+    .=
+    .=
+    """
+
+    n_sections = 3
+    points = np.array([
+        3 * [1.0], 3 * [1.1],
+        3 * [2.0], 3 * [2.1],
+        3 * [3.0], 3 * [3.1],
+    ])
+
+    n_points = points.shape[0]
+    assert n_points == 2 * n_sections, "Broken internal test logic."
+
+    offsets = np.array(range(0, n_points, 2))
+    radii = np.arange(n_points)  # Fake piecewise linear radii
+
+    rtree = core.MorphIndex()
+    rtree._add_neuron(0, points, radii, offsets, has_soma=False)
+
+    assert len(rtree) == n_sections
+
+
+def test_bulk_single_segments_with_soma():
+    """
+    Adding a neuron with one segment per section
+    (S).=
+       .=
+       .=
+    """
+
+    n_sections = 3
+    points = np.array([
+        3 * [9.0],
+        3 * [1.0], 3 * [1.1],
+        3 * [2.0], 3 * [2.1],
+        3 * [3.0], 3 * [3.1],
+    ])
+
+    n_points = points.shape[0]
+    n_elements = n_sections + 1
+
+    assert n_points == 2 * n_sections + 1, "Broken internal test logic."
+
+    offsets = np.array([0] + list(range(1, n_points, 2)))
+    radii = np.arange(n_points)  # Fake piecewise linear radii.
+
+    rtree = core.MorphIndex()
+    rtree._add_neuron(0, points, radii, offsets, has_soma=True)
+
+    assert len(rtree) == n_elements
+
+
 def test_bulk_neuron_add():
     """
     Adding a neuron alike:
@@ -150,31 +207,30 @@ def test_endpoints_retrieval():
     np.testing.assert_allclose(idx[1].endpoints, array_expect)
 
 
-@pytest.mark.parametrize("points, radius, offsets, exc_msg", (
-    ([], [1], [0], "has_soma is True but no points provided"),
-    ([[0, 0, 0]], [], [0], "Please provide the soma radius")
-))
-def test_add_neuron_exc_with_soma(points, radius, offsets, exc_msg):
+@pytest.mark.parametrize(
+    "points, radius, offsets",
+    [
+        ([], [1], [0]),
+        ([[0, 0, 0]], [], [0]),
+    ]
+)
+def test_add_neuron_exc_with_soma(points, radius, offsets):
     rtree = core.MorphIndex()
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(ValueError):
         rtree._add_neuron(1, points, radius, offsets, has_soma=True)
-    assert exc_msg in str(excinfo.value)
 
 
-@pytest.mark.parametrize("points, radius, offsets, exc_msg",
-                         [([[0., 0., 0.], [0., 10., 0.]], [1, 1, ], [1, 1, 2, ],
-                          "Too many branches given the supplied points"),
-                          ([[0., 0., 0.], [0., 10., 0.]], [1, 1, ], [4, ],
-                          "At least one of the branches offset is too large"),
-                          ([[0., 0., 0.], [0., 10., 0.]], [], [0, 0, ],
-                          "Please provide a radius per segment"),
-                          ([[0., 0., 0.], [0., 10., 0.]], [1, 1, ], [],
-                          "Please provide at least one branch offset"),
-                          ([[0., 0., 0.]], [1, ], [0, ],
-                          "Please provide at least two points for segments")]
-                         )
-def test_add_neuron_exc_without_soma(points, radius, offsets, exc_msg):
+@pytest.mark.parametrize(
+    "points, radius, offsets",
+    [
+        ([[0., 0., 0.], [0., 10., 0.]], [1, 1, ], [1, 1, 2, ]),
+        ([[0., 0., 0.], [0., 10., 0.]], [1, 1, ], [4, ]),
+        ([[0., 0., 0.], [0., 10., 0.]], [], [0, 0, ]),
+        ([[0., 0., 0.], [0., 10., 0.]], [1, 1, ], []),
+        ([[0., 0., 0.]], [1, ], [0, ])
+    ]
+)
+def test_add_neuron_exc_without_soma(points, radius, offsets):
     rtree = core.MorphIndex()
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(ValueError):
         rtree._add_neuron(1, points, radius, offsets, has_soma=False)
-    assert exc_msg in str(excinfo.value)
