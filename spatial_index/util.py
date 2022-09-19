@@ -254,3 +254,21 @@ def is_box_query_contained(lhs, rhs, corner, opposite_corner, atol):
         spatial_index.logger.info(f"The two indexes diff:\n{lhs_ids}\n{rhs_ids}")
 
     return is_equal
+
+
+def bcast_sonata_selection(selection, *, root=None, mpi_comm=None):
+    from libsonata import Selection
+
+    rank = mpi_comm.Get_rank()
+    ranges = selection.ranges if rank == root else None
+    return Selection(bcast_sonata_ranges(ranges, root=root, mpi_comm=mpi_comm))
+
+
+def bcast_sonata_ranges(ranges, *, root=None, mpi_comm=None):
+    from mpi4py import MPI
+
+    assert root is not None
+    if mpi_comm is None:
+        mpi_comm = MPI.COMM_WORLD
+
+    return mpi_comm.bcast(np.atleast_2d(ranges), root=root)

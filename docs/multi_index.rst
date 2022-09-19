@@ -93,3 +93,38 @@ was evicted. If you see high eviction number ``>2`` and perceive the querying
 to be slow you should try increase the size of the cache. On BB5 up to about
 300GB. If this doesn't help and the log file shows unsatisfactory cache
 utilization, please report the issue through JIRA.
+
+
+MPI Tips for Constructing Multi Indexes
+---------------------------------------
+This selection collects common patters for creating multi-indexes by using the
+Python API (as opposed to the CLI). If you discover a useful pattern you want to
+have documented for others, please let us know.
+
+Synapse Indexes for Target GIDs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+SpatialIndex allows building multi-indexes only of those synapses which have a
+target GID from a user specified list.
+
+In order to save memory, it can be useful to construct this list only on one
+MPI rank, and let SI deal with distributing them.
+
+.. code-block: python
+
+    from mpi4py import MPI
+    from spatial_index import SynapseMultiIndexBuilder
+
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+
+    def compute_target_gids():
+        # The scientific details about selecting the
+        # target GIDs would go here.
+        return target_gids
+
+    if rank == SynapseMultiIndexBuilder.constructor_rank(comm):
+        target_gids = compute_target_gids()
+    else:
+        target_gids = None
+
+    SynapseMutliIndexBuilder.from_sonata_file(edges_file, target_gids, output_dir=output_dir)

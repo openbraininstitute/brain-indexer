@@ -63,7 +63,7 @@ class MultiIndexBuilderMixin:
 
         work_queue = MultiIndexWorkQueue(comm)
 
-        if mpi_rank == comm_size - 1:
+        if mpi_rank == work_queue.distributor_rank:
             work_queue.distribute_work(builder.n_elements_to_import())
         else:
             while (chunk := work_queue.request_work(builder.local_size())) is not None:
@@ -103,6 +103,10 @@ class MultiIndexWorkQueue:
         self._chunk_tag = 2930
 
         self._distributor_rank = self.comm_size - 1
+
+    @property
+    def distributor_rank(self):
+        return self._distributor_rank
 
     def distribute_work(self, n_elements):
         """This is the entry-point for the distributor rank."""

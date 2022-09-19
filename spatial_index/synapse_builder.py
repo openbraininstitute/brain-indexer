@@ -6,7 +6,7 @@ import numpy
 
 import spatial_index
 from . import _spatial_index as core
-from .util import gen_ranges
+from .util import gen_ranges, bcast_sonata_selection
 from .index import SynapseIndex
 from .chunked_builder import ChunkedProcessingMixin, MultiIndexBuilderMixin
 
@@ -49,11 +49,15 @@ class SynapseIndexBuilderBase:
             edge_filename: The Sonata edges filename
             population_name: The name of the population
             target_gids: A list/array of target gids to index. Default: None
-                Warn: None will index all synapses, please mind memory limits
+                Warn: None will index all synapses, please mind memory limits.
+                Note: For multi-indexes, this keyword argument only needs to be
+                present on the constructor rank.
             output_dir: If not `None` the index will be stored in the folder `output_dir`.
         """
         edges = spatial_index.io.open_sonata_edges(edge_filename, population_name)
-        index = cls.from_sonata_tgids(edges, target_gids, output_dir=output_dir, **kw)
+        index = cls.from_sonata_tgids(
+            edges, target_gids=target_gids, output_dir=output_dir, **kw
+        )
 
         if output_dir is not None:
             cls._write_extended_meta_data_section(
@@ -63,12 +67,21 @@ class SynapseIndexBuilderBase:
         return index
 
     @classmethod
-    def from_sonata_tgids(cls, sonata_edges, target_gids=None, **kw):
+    def _select_afferent_edges(cls, sonata_edges, target_gids, **kw):
+        return sonata_edges.afferent_edges(target_gids)
+
+    @classmethod
+    def _make_sonata_selection(cls, sonata_edges, target_gids, **kw):
+        if target_gids is not None:
+            return cls._select_afferent_edges(sonata_edges, target_gids)
+
+        else:
+            return sonata_edges.select_all()
+
+    @classmethod
+    def from_sonata_tgids(cls, sonata_edges, target_gids, **kw):
         """Creates a synapse index from an edge file and a set of target GIDs."""
-        selection = (
-            sonata_edges.afferent_edges(target_gids) if target_gids is not None
-            else sonata_edges.select_all()
-        )
+        selection = cls._make_sonata_selection(sonata_edges, target_gids)
         return cls.from_sonata_selection(sonata_edges, selection, **kw)
 
     @classmethod
@@ -137,6 +150,27 @@ if hasattr(core, "SynapseMultiIndexBulkBuilder"):
             assert output_dir is not None, f"Invalid `output_dir`. [{output_dir}]"
             self._core_builder = core.SynapseMultiIndexBulkBuilder(output_dir)
 
+        @classmethod
+        def constructor_rank(cls, mpi_comm=None):
+            """The MPI rank of the *constructor rank*.
+
+            The *constructor rank* is the rank on which all argument to the
+            constructor need to have valid values. Some keyword-arguments
+            point to MB of data, e.g. ``target_gids``; those sometimes don't
+            need to present on all MPI ranks. When a particular keyword argument
+            is optional this is clearly stated in the API documentatio stated in
+            the API documentation.
+
+            Please consult the User Guide for tips on using SI in an MPI parallel
+            setting.
+            """
+
+            if mpi_comm is None:
+                from mpi4py import MPI
+                mpi_comm = MPI.COMM_WORLD
+
+            return mpi_comm.Get_size() - 1
+
         @property
         def _index_if_loaded(self):
             return None
@@ -149,3 +183,20 @@ if hasattr(core, "SynapseMultiIndexBulkBuilder"):
 
             if MPI.COMM_WORLD == 0:
                 spatial_index.io.write_sonata_meta_data_section(*a, **kw)
+
+        @classmethod
+        def _make_sonata_selection(cls, sonata_edges, target_gids, **kw):
+            from mpi4py import MPI
+
+            comm = MPI.COMM_WORLD
+            mpi_rank = comm.Get_rank()
+            root = cls.constructor_rank(mpi_comm=comm)
+
+            if mpi_rank == root:
+                selection = SynapseIndexBuilderBase._make_sonata_selection(
+                    sonata_edges, target_gids
+                )
+            else:
+                selection = None
+
+            return bcast_sonata_selection(selection, root=root, mpi_comm=comm)
