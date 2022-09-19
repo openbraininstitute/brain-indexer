@@ -1,6 +1,22 @@
 Change Log
 ==========
 
+Version 0.8.2
+--------------
+**September 2022**
+
+**Improvements**
+  * Improves documentation.
+  * Fixes OOM issue for synapse indexes that select by target GID.
+  * Fixes assert of `radii` during construction of morphology indexes.
+
+Version 0.8.1
+--------------
+**September 2022**
+
+**Improvements**
+  * Improves help and error messages.
+
 Version 0.8.0
 --------------
 **September 2022**
