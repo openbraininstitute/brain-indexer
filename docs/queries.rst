@@ -22,7 +22,7 @@ the requested geometry mode. The query shape can be:
   often the min/max corners are used, but any two corners that define the box
   are accepted.
 
-* A sphere for which we call a the query a *sphere query*.
+* A sphere for which we call the query a *sphere query*.
 
 * A cylinder (mostly for internal purposes such as placing segments).
 
@@ -38,7 +38,7 @@ we can build indexes for
 
 A string identifier of the indexed element can be obtained by
 
-.. code-block: python
+.. code-block:: python
 
     index.element_type
 
@@ -55,8 +55,8 @@ Regular queries are queries which return attributes of the indexed elements
 that intersect with a given query shape. Please see `Counting Queries`_ only
 the number of index elements is needed.
 
-Keyword argument: ``fields``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Keyword argument: fields
+~~~~~~~~~~~~~~~~~~~~~~~~
 The preferred output format of queries are numpy arrays containing the values
 of interest. Which attributes are returned is controlled by a keyword argument
 ``fields``. If fields is a string then a ``list`` or numpy array is returned.
@@ -138,7 +138,7 @@ The partially supported field is:
 
 
 Sphere Indexes
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^
 Indexes of Spheres support the following fields:
 
 * ``"id"`` which is the ID of the synapse,
@@ -162,7 +162,8 @@ supported field.
 As an example the section and segment id on the pre- and post-synapse can be
 obtained as follows:
 
-.. code-block: python
+.. code-block:: python
+
    >>> index.box_query(
            *window,
            fields=[
@@ -181,8 +182,8 @@ obtained as follows:
 
 .. _`kw-accuracy`:
 
-Keyword argument: ``accuracy``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Keyword argument: accuracy
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 The query always reports all elements that intersect (as opposed
 to contained in) with the query shape. However, it is not always possible to
 decide efficiently if the element intersects exactly with the query shape. In
@@ -218,7 +219,8 @@ Examples
 Counting Queries
 ----------------
 Counting queries are queries for which only the number of index elements is
-returned. If information about the individual indexed elements themselves is need, please consult `Regular Queries`_.
+returned. If information about the individual indexed elements themselves is
+needed, please consult `Regular Queries`_.
 
 The API for counting queries is simple and the accuracy can be controlled in
 the same way as for :ref:`regular indexes <kw-accuracy>`.
@@ -231,8 +233,8 @@ the same way as for :ref:`regular indexes <kw-accuracy>`.
    >>> index.sphere_counts(*sphere)
    2789
 
-Keyword argument: ``group_by``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Keyword argument: group_by
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 For synapse indexes a special mode of counting is supported. For indexes of
 synapses from N source populations into a single target population, one can
 group the synapses by the GID of the target neuron; and then count the number

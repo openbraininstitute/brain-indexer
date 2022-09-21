@@ -160,20 +160,18 @@ class IndexInterface(abc.ABC):
     def populations(self):
         """The names of the populations covered by this index.
 
-        Single population indexes may return `[None]` instead of the
+        Single population indexes may return ``[None]`` instead of the
         actual population name.
         """
         pass
 
     @property
-    @abc.abstractclassmethod
+    @abc.abstractmethod
     def element_type(self):
         """A string identifier of the element type.
 
-        The element type is one of:
-          - ``"morphology"`` for morphology indexes
-          - ``"synapse"`` for synapse indexes
-          - ``"sphere"`` for sphere indexes
+        The element type is one of: ``"morphology"`` for morphology indexes;
+        ``"synapse"`` for synapse indexes; or ``"sphere"`` for sphere indexes.
         """
         pass
 
@@ -452,11 +450,11 @@ class SynapseIndex(SynapseIndexBase):
     def write(self, index_path, *, sonata_filename=None, population=None):
         """Saves the index to disk.
 
-        If both `sonata_filename` and `population` are passed, then the
+        If both ``sonata_filename`` and ``population`` are passed, then the
         additional metadata needed to load an index supporting fetching
         attributes from SONATA is also saved.
 
-        No action is performed if `index_path` is `None`.
+        No action is performed if ``index_path`` is ``None``.
         """
         if index_path is not None:
             self._core_index._dump(index_path)

@@ -1,12 +1,58 @@
 Introduction
 ============
 
-If you prefer a hands-on approach you might like to start with the Jupyter
-Notebook ``basic_tutorial.ipynb`` or any of the examples in ``examples/``.
+A spatial index is a data structure that's designed to quickly find all
+elements that intersect with a given query shape. The word *index* is used
+in the database sense; not as an integer identifier.
+
+Here quick means, that we do not need to look through all element to figure out
+which elements intersect with the query shape. In SpatialIndex we use an
+implementation of an R-tree, see `boost::rtree`_. The idea behind an R-tree is that the
+leaves of the tree contain the bounding boxes of the elements; and internal
+nodes store the bounding box of their descendants. This structure is depicted
+in :numref:`index`.
+
+.. _boost::rtree: https://www.boost.org/doc/libs/1_80_0/libs/geometry/doc/html/geometry/spatial_indexes.html
+
+.. _index:
+.. figure:: img/index.png
+   :scale: 20 %
+
+   The gray non-axis aligned boxes are represent the elements in the tree. The
+   gray outlines represent the bounding box of internal nodes.
+
+Given such a tree, when performing the query one only needs to descend into
+subtrees, if they query shape intersects with the bounding box of the subtree.
+By design this piece of information is stored in the root of the subtree. This
+is show in  :numref:`query`.
+
+.. _query:
+.. figure:: img/query.png
+   :scale: 20 %
+
+   The yellow box is the query shape. The elements found by this query are
+   shown in green, any other elements are drawn in gray. The outlines show
+   which parts of the tree need to be considered when performing a query. In
+   the first level the entire left side is excluded, then the lower half. In
+   the third level, both subtrees need to be looked at.
+
+The trick is to create the tree such that the bounding boxes of internal nodes
+don't overlap too much or needlessly.
+
+One typical work flow for indexes is to create them once up front, store them
+and open them whenever one needs to perform spatial queries. Naturally, there
+are other workflows which will also be covered, but for now it's enough to know
+that the cost of building the index is often less than the naive approach. Even
+for few elements and not very many queries, say thousands.
+
+Because it's common (at BBP) that someone has precomputed the index for you, we
+start explaining the syntax of queries.
 
 
 Using Existing Indexes
 ----------------------
+If you prefer a hands-on approach you might like to continue with the Jupyter
+Notebook ``basic_tutorial.ipynb`` or any of the examples in ``examples/``.
 
 Given an index stored at ``index_path``, one may want to open the index and
 perform queries.
@@ -40,15 +86,15 @@ shape is a sphere. The detailed documentation of :ref:`queries <Queries>` contai
 examples.
 
 
-Creating Index on the Fly
--------------------------
+Creating An Index on the Fly
+----------------------------
 Work loads the required repeated queries will benefit from using a spatial
 index, even for quite small number of indexed elements. Therefore, it is useful
 to create small indexes on the fly. This section describes the available API for
 this task.
 
-If you're trying to pre-compute an index for later use, you might prefer the :ref`CLI
-applications <CLI Interface>`. 
+If you're trying to pre-compute an index for later use, you might prefer the
+:ref:`CLI applications <CLI Interface>`. 
 
 
 Indexing Nodes

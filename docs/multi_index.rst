@@ -9,7 +9,20 @@ are the segments, somas or synapses. Therefore, one can imagine cutting the
 tree at a certain depth and storing each subtree individually. This isn't quite
 how the multi-index is implemented. Instead we first compute non-overlapping
 volumes such that each area contains roughly the same number of elements. More
-precisely the volumes contain the same number of centers of the elements.
+precisely the volumes contain the same number of centers of the elements. The
+algorithm used is called Sort Tile Recusion (STR), see :numref:`multiindex`.
+
+
+.. _multiindex:
+.. figure:: img/multi_index.png
+   :scale: 20 %
+
+   The non-axis aligned boxes represent the elements in the tree. The
+   gray outlines represent the lowest three levels of the tree. The thick
+   light-gray lines represent the two steps of the STR. First a vertical
+   separator is selected. Then two separate horizontal separators are computed.
+   The yellow box shows the first query performed after opening the index. Only the
+   elements in green need to be loaded into RAM.
 
 There are two advantages to using a multi-index:
 
@@ -28,7 +41,7 @@ paths and one line to create the multi-index). They can be found in the
 
 On BB5 you'll can run MPI parallel jobs as follows:
 
-.. code-block: bash
+.. code-block:: bash
 
    sbatch -n N --mem-per-cpu MEM --account=ACCOUNT --partition=prod SCRIPT
 
@@ -109,7 +122,7 @@ target GID from a user specified list.
 In order to save memory, it can be useful to construct this list only on one
 MPI rank, and let SI deal with distributing them.
 
-.. code-block: python
+.. code-block:: python
 
     from mpi4py import MPI
     from spatial_index import SynapseMultiIndexBuilder
@@ -127,4 +140,6 @@ MPI rank, and let SI deal with distributing them.
     else:
         target_gids = None
 
-    SynapseMutliIndexBuilder.from_sonata_file(edges_file, target_gids, output_dir=output_dir)
+    SynapseMutliIndexBuilder.from_sonata_file(
+        edges_file, target_gids, output_dir=output_dir
+    )

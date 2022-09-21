@@ -20,8 +20,8 @@ from fileinput import FileInput
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
+    'sphinx.ext.autodoc',
     'sphinxcontrib.programoutput',
     'm2r2',
 ]
@@ -58,7 +58,7 @@ release = version
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -100,6 +100,7 @@ todo_include_todos = False
 
 autoclass_content = 'both'
 
+numfig = True
 
 # -- Options for HTML output ----------------------------------------------
 

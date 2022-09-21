@@ -1,30 +1,15 @@
 ========================
 Spatial Index Python API
 ========================
-
-
-High-Level Indexing API
-=======================
-
 .. automodule:: spatial_index
 
-MorphIndexBuilder
------------------
-.. autoclass:: MorphIndexBuilder
-   :members:
-   :inherited-members:
 
-SynapseIndexBuilder
--------------------
-.. autoclass:: SynapseIndexBuilder
-   :members:
-   :inherited-members:
+High-Level Index API
+====================
 
-
-Core Index API
-==============
-
-.. automodule:: spatial_index.core
+Open Index
+----------
+.. autofunction:: open_index
 
 SphereIndex
 -----------
@@ -43,3 +28,45 @@ SynapseIndex
 .. autoclass:: SynapseIndex
    :members:
    :inherited-members:
+
+MorphMultiIndex
+---------------
+.. autoclass:: MorphMultiIndex
+   :members:
+   :inherited-members:
+
+SynapseMultiIndex
+-----------------
+.. autoclass:: SynapseMultiIndex
+   :members:
+   :inherited-members:
+
+
+High-Level Builder API
+======================
+
+MorphIndexBuilder
+-----------------
+.. autoclass:: MorphIndexBuilder
+   :members:
+   :inherited-members:
+
+SynapseIndexBuilder
+-------------------
+.. autoclass:: SynapseIndexBuilder
+   :members:
+   :inherited-members:
+
+MorphMultiIndexBuilder
+----------------------
+.. autoclass:: MorphMultiIndexBuilder
+   :members:
+   :inherited-members:
+
+SynapseMultiIndexBuilder
+------------------------
+.. autoclass:: SynapseMultiIndexBuilder
+   :members:
+   :inherited-members:
+
+

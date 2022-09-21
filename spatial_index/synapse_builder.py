@@ -52,7 +52,8 @@ class SynapseIndexBuilderBase:
                 Warn: None will index all synapses, please mind memory limits.
                 Note: For multi-indexes, this keyword argument only needs to be
                 present on the constructor rank.
-            output_dir: If not `None` the index will be stored in the folder `output_dir`.
+            output_dir: If not ``None`` the index will be stored in the folder
+                ``output_dir``.
         """
         edges = spatial_index.io.open_sonata_edges(edge_filename, population_name)
         index = cls.from_sonata_tgids(
@@ -88,7 +89,7 @@ class SynapseIndexBuilderBase:
     def from_sonata_selection(cls, sonata_edges, selection, **kw):
         """Builds the synapse index from a generic Sonata selection object.
 
-        Any additional keyword arguments are passed on to `cls.create`.
+        Any additional keyword arguments are passed on to ``cls.create``.
         """
         return cls.create(sonata_edges, selection, **kw)
 

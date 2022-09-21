@@ -66,7 +66,7 @@ throw an exception automatically.
 
 The Python side should use 
 
-.. code-block: python
+.. code-block:: python
 
     import spatial_index
 
@@ -86,7 +86,7 @@ Python logger ``spatial_index.logger`` as the callback. Therefore, all log
 messages from the C++ side are handles by the Python logging library. A different
 logger can be registered by
 
-.. code-block: python
+.. code-block:: python
 
     spatial_index.register_logger(some_other_logger)
 
@@ -97,7 +97,7 @@ MPI rank), etc.
 
 On the C++ side please use:
 
-.. code-block: c++
+.. code-block:: c++
 
     #include <spatial_index/logging.hpp>
 
@@ -114,7 +114,7 @@ On the C++ side please use:
 
 While nobody admits using ``printf`` debugging, here's a trick:
 
-.. code-block: c++
+.. code-block:: c++
 
     #include <spatial_index/logging.hpp>
 

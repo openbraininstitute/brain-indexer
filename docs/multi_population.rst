@@ -18,7 +18,7 @@ The difference between single-population indexes and multi-population indexes is
 that multi-population indexes the results of queries is a dictionary of
 single-population results. For example:
 
-.. code-block: python
+.. code-block:: python
 
     >>> index.box_query(*window, fields="gid")
     {
@@ -39,13 +39,13 @@ single-population results. For example:
       }
     }
 
-Keyword Argument: ``populations``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Keyword Argument: populations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The query will be restricted to only these populations. The default it to return
 the results for all indexes. Example:
 
-.. code-block: python
+.. code-block:: python
 
     >>> index.box_query(*window, fields="gid", populations="NodeA__NodeA__chemical")
     {
@@ -61,8 +61,8 @@ the results for all indexes. Example:
     }
 
 
-Keyword Argument: ``population_mode``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Keyword Argument: population_mode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This option is slightly advanced and only interesting if you're writing code
 that should be generic accross both single- and multi-popultion indexes. It
@@ -70,16 +70,17 @@ controls the return type of queries, i.e., it controls if the dict over
 populations is present or not.
 
 There are three options:
-  * ``None`` This is the default. Under this mode the query result for
+
+* ``None`` This is the default. Under this mode the query result for
   multi-population indexes is a dictionary of single-population query results.
   While single-population indexes simply return a single-population result.
 
-  * ``"single"`` This can be used to force a multi-population index to behave
+* ``"single"`` This can be used to force a multi-population index to behave
   like a single population index, i.e., by not wrapping the single-population
   query result in a dict. Clearly, this requires that the query involves exactly
   one population.
 
-  * ``"multi"`` This forces a single-population index to wrap their result as if
+* ``"multi"`` This forces a single-population index to wrap their result as if
   it were a multi-population index. Note that the name of the population is
   unspecified.
 
@@ -95,10 +96,10 @@ multi-population index.
 
 The potential traps:
 
-.. code-block: python
+.. code-block:: python
 
     def special_query(index, window):
-        """Query the index suitable for scientific Usecase A."
+        """Query the index suitable for scientific Usecase A."""
 
         results = index.box_query(*window, fields="gid")
 
@@ -108,7 +109,7 @@ The potential traps:
         # Bad: fails for single-population indexes
         largest_gid = np.max(results["NodeA__NodeA__chemical"]["gid"])
 
-        if largest_gid > 1000: 
+        if largest_gid > 1000:
             print("Large GID spotted.")
 
 
@@ -118,10 +119,10 @@ Usecase 1: Single Population Queries
 The piece of code knows it's only dealing with a single population. In this
 case, we can coerce the result into the single-population format:
 
-.. code-block: python
+.. code-block:: python
 
     def special_query(index, window, population=None):
-        """Query the index suitable for scientific Usecase A."
+        """Query the index suitable for scientific Usecase A."""
 
         results = index.box_query(
             *window, fields="gid", population=population,
@@ -139,10 +140,10 @@ Usecase 2: Multiple Population Queries
 In this usecase the code know how to handle multiple population if present.
 Then, one can choose to always use the multi-population return type:
 
-.. code-block: python
+.. code-block:: python
 
     def special_query(index, window, populations=None):
-        """Print larges GID."
+        """Print larges GID."""
 
         results = index.box_query(
             *window, fields="gid", population=population,
