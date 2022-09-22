@@ -248,14 +248,14 @@ inline void add_IndexTree_is_intersecting_bindings(py::class_<Class>& c) {
         },
         py::arg("point"),
         py::arg("radius"),
-        py::arg("geometry") = std::string("bounding_box"),
+        py::arg("geometry") = std::string("best_effort"),
         R"(
         Checks whether the given sphere intersects any object in the tree.
 
         Args:
             point(array): A len-3 list or np.array[float32] with the center point
             radius(float): The radius of the sphere
-            geometry(str): Either 'bounding_box' or 'best_effort' (default: bounding_box).
+            geometry(str): Either 'bounding_box' or 'best_effort' (default: best_effort).
         )"
     );
 }
@@ -272,7 +272,7 @@ inline void add_IndexTree_find_intersecting_objs_bindings(py::class_<Class>& c) 
         },
         py::arg("centroid"),
         py::arg("radius"),
-        py::arg("geometry") = std::string("bounding_box")
+        py::arg("geometry") = std::string("best_effort")
     );
 }
 
@@ -287,7 +287,7 @@ inline void add_IndexTree_find_intersecting_box_objs_bindings(py::class_<Class>&
         },
         py::arg("corner"),
         py::arg("opposite_corner"),
-        py::arg("geometry") = std::string("bounding_box")
+        py::arg("geometry") = std::string("best_effort")
     );
 }
 
@@ -330,7 +330,7 @@ inline void add_IndexTree_count_intersecting_bindings(py::class_<Class>& c) {
          },
          py::arg("corner"),
          py::arg("opposite_corner"),
-         py::arg("geometry") = std::string("bounding_box")
+         py::arg("geometry") = std::string("best_effort")
     )
     .def("_count_intersecting_sphere",
          [](Class& obj, const array_t& center, CoordType radius, const std::string& geometry) {
@@ -341,7 +341,7 @@ inline void add_IndexTree_count_intersecting_bindings(py::class_<Class>& c) {
          },
          py::arg("center"),
          py::arg("radius"),
-         py::arg("geometry") = std::string("bounding_box")
+         py::arg("geometry") = std::string("best_effort")
     );
 }
 
@@ -592,7 +592,7 @@ inline void add_IndexTree_find_intersecting_box_np(
             },
             py::arg("corner"),
             py::arg("opposite_corner"),
-            py::arg("geometry") = std::string("bounding_box")
+            py::arg("geometry") = std::string("best_effort")
         );
 
     c
@@ -610,7 +610,7 @@ inline void add_IndexTree_find_intersecting_box_np(
             },
             py::arg("center"),
             py::arg("radius"),
-            py::arg("geometry") = std::string("bounding_box")
+            py::arg("geometry") = std::string("best_effort")
         );
     
 }
@@ -742,7 +742,7 @@ inline void add_SynapseIndex_count_intersecting_agg_gid_bindings(py::class_<Clas
         },
         py::arg("corner"),
         py::arg("opposite_corner"),
-        py::arg("geometry") = std::string("bounding_box")
+        py::arg("geometry") = std::string("best_effort")
     )
 
     .def("_count_intersecting_sphere_agg_gid",
@@ -757,7 +757,7 @@ inline void add_SynapseIndex_count_intersecting_agg_gid_bindings(py::class_<Clas
         },
         py::arg("point"),
         py::arg("radius"),
-        py::arg("geometry") = std::string("bounding_box")
+        py::arg("geometry") = std::string("best_effort")
     );
 }
 

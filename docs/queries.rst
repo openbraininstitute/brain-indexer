@@ -197,11 +197,11 @@ are two values:
   cylinder with two half spheres on either end. For capsules efficient
   closed formulas to detect intersection always exist. The final twist is
   that in all cases there is a pre-check to see if the exact bounding boxes
-  of the query shape and of the indexed element intersect.
+  of the query shape and of the indexed element intersect. This is the default.
 
 * ``bounding_box`` The indexed elements are treated as if they were
   equal to their exact minimal bounding box. This is similar to how the FLAT
-  index treated indexed elements. This is the default.
+  index treated indexed elements.
 
 Examples
 ^^^^^^^^

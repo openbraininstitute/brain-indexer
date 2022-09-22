@@ -23,7 +23,7 @@ class IndexInterface(abc.ABC):
 
             accuracy(str):     Specifies the accuracy with which indexed
                 elements are treated. Allowed are either ``"bounding_box"`` or
-                ``"best_effort"``. Default: ``"bounding_box"``
+                ``"best_effort"``. Default: ``"best_effort"``
 
             populations(str,list):  A string or list of strings specifying which
                 populations to query. Ignored by single-population indexes.
@@ -50,7 +50,7 @@ class IndexInterface(abc.ABC):
 
             accuracy(str):     Specifies the accuracy with which indexed
                 elements are treated. Allowed are either ``"bounding_box"`` or
-                ``"best_effort"``. Default: ``"bounding_box"``
+                ``"best_effort"``. Default: ``"best_effort"``
 
             populations(str,list):  A string or list of strings specifying which
                 populations to query. Ignored by single-population indexes.
@@ -74,7 +74,7 @@ class IndexInterface(abc.ABC):
         Arguments:
             accuracy(str):  Specifies the accuracy with which indexed
                 elements are treated. Allowed are either ``"bounding_box"`` or
-                ``"best_effort"``. Default: ``"bounding_box"``
+                ``"best_effort"``. Default: ``"best_effort"``
 
             group_by(str):  Enables first grouping the index elements and then
                 counting the number of elements in each group.
@@ -101,7 +101,7 @@ class IndexInterface(abc.ABC):
         Arguments:
             accuracy(str):  Specifies the accuracy with which indexed
                 elements are treated. Allowed are either ``"bounding_box"`` or
-                ``"best_effort"``. Default: ``"bounding_box"``
+                ``"best_effort"``. Default: ``"best_effort"``
 
             group_by(str):  Enables first grouping the index elements and then
                 counting the number of elements in each group.
@@ -321,7 +321,7 @@ class Index(IndexInterface):
 
     def _enforce_accuracy_default(self, accuracy):
         if accuracy is None:
-            return "bounding_box"
+            return "best_effort"
 
         return accuracy
 
