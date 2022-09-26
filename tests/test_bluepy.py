@@ -6,15 +6,14 @@
 """
 
 import os
-import sys
 import numpy as np
 import spatial_index
 import pytest
 pytest_skipif = pytest.mark.skipif
 pytest_long = pytest.mark.long
 
-BLUECONFIG_2K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v1/BlueConfig"
-CIRCUIT_2K_SI = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v1/circuit2k_si"
+BLUECONFIG_2K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v2/BlueConfig"
+CIRCUIT_2K_SI = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v2/circuit2k_si"
 
 
 def bluepy_check(circuit, result):
@@ -41,7 +40,9 @@ def bluepy_check(circuit, result):
         # endpoint 2 from SpatialIndex
         p2_s = result['endpoints'][1][i]
         # Radius from BluePy
-        r_b = m.sections[section_id - 1].diameters[segment_id] / 2
+        r1 = m.sections[section_id - 1].diameters[segment_id] / 2
+        r2 = m.sections[section_id - 1].diameters[segment_id + 1] / 2
+        r_b = (r1 + r2) / 2
         # Radius from SpatialIndex
         r_s = result['radius'][i]
 
@@ -58,7 +59,7 @@ def test_bluepy_validation():
 
     from bluepy import Circuit
 
-    N_QUERIES = int(sys.argv[1]) if len(sys.argv) > 1 else 20
+    N_QUERIES = 20
 
     indexer = spatial_index.open_index(CIRCUIT_2K_SI)
     # Load the circuit
@@ -75,7 +76,3 @@ def test_bluepy_validation():
                 i += 1
                 bluepy_check(c, result)
                 break
-
-
-if __name__ == "__main__":
-    test_bluepy_validation()

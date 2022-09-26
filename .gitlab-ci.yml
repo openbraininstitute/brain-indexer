@@ -58,7 +58,7 @@ test-examples:
     bb5_ntasks: 5
     bb5_cpus_per_task: 1
     SLURM_OVERLAP: 1
-    DATADIR: /gpfs/bbp.cscs.ch/project/proj12/spatial_index/v1
+    DATADIR: /gpfs/bbp.cscs.ch/project/proj12/spatial_index/v2
 
   script:
     - module load unstable cmake gcc boost hpe-mpi py-mpi4py

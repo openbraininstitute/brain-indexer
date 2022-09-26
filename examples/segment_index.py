@@ -17,7 +17,7 @@ from spatial_index import MorphIndexBuilder
 
 # Loading some small circuits and morphology files on BB5
 
-CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v1/circuit-2k"
+CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v2/circuit-2k"
 NODE_FILE = os.path.join(CIRCUIT_2K, "circuit.mvd3")
 MORPH_FILE = os.path.join(CIRCUIT_2K, "morphologies/ascii")
 INDEX_FILENAME = "example_segment_index"

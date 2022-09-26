@@ -23,7 +23,7 @@
 #include <spatial_index/logging.hpp>
 
 /// Bump the top-level structure version when serialized data structures change
-#define SPATIAL_INDEX_STRUCT_VERSION 2
+#define SPATIAL_INDEX_STRUCT_VERSION 3
 
 namespace spatial_index {
 

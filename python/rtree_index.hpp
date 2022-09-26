@@ -851,7 +851,7 @@ inline static void add_branch(MorphIndexTree& obj,
     for (unsigned i = 0; i < n_segments; i++) {
         // TODO reconsider this choice of using only `radii[i]`; because the
         // input frequently has one radius per cap. Not one radius per cylinder.
-        obj.insert(si::Segment{neuron_id, section_id, i , points[i], points[i + 1], radii[i]});
+        obj.insert(si::Segment{neuron_id, section_id, i , points[i], points[i + 1], (radii[i] + radii[i + 1])/2});
     }
 }
 
