@@ -15,8 +15,11 @@ The documentation of SpatialIndex contains the following sections:
    Introduction <intro>
    Installation <installation>
    Queries <queries>
+   Overlap Detection Details <accuracy>
    Multi Index <multi_index>
    Multiple Populations <multi_population>
+   Morphology Conventions <morphology_conventions>
+   Comparison to FLAT <flat>
    Developer Guide <developer_guide>
    Change Log <CHANGES>
    Python API Reference<api>
