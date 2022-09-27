@@ -182,7 +182,7 @@ if hasattr(core, "SynapseMultiIndexBulkBuilder"):
         def _write_extended_meta_data_section(*a, **kw):
             from mpi4py import MPI
 
-            if MPI.COMM_WORLD == 0:
+            if MPI.COMM_WORLD.Get_rank() == 0:
                 spatial_index.io.write_sonata_meta_data_section(*a, **kw)
 
         @classmethod
