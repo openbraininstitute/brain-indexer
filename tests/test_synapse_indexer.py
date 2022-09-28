@@ -2,7 +2,6 @@
 # This file is part of SpatialIndex, the new-gen spatial indexer for BBP
 # Copyright Blue Brain Project 2020-2021. All rights reserved
 
-import h5py
 import os.path
 import pytest
 from libsonata import Selection
@@ -21,16 +20,14 @@ def test_syn_index():
     index = SynapseIndexBuilder.from_sonata_file(EDGE_2K_FILE, "All")
     print("Index size:", len(index))
 
-    f = h5py.File(EDGE_2K_FILE, 'r')
-    ds = f['/edges/All/0/afferent_center_x']
-    assert len(ds) == len(index)
+    sonata_dataset = spatial_index.io.open_sonata_edges(EDGE_2K_FILE, "All")
+    assert sonata_dataset.size == len(index)
 
     # Way #1 - Get the ids, then query the edge file for ANY data
     ids_in_region = index.box_query([200, 200, 480], [300, 300, 520], fields="id")
     print("Found N synapses:", len(ids_in_region))
-    assert len(ds) > len(ids_in_region) > 0
+    assert sonata_dataset.size > len(ids_in_region) > 0
 
-    sonata_dataset = spatial_index.io.open_sonata_edges(EDGE_2K_FILE, "All")
     z_coords = sonata_dataset.get_attribute("afferent_center_z",
                                             Selection(ids_in_region))
     for z in z_coords:
