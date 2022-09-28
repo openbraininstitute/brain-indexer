@@ -61,11 +61,12 @@ test-examples:
     DATADIR: /gpfs/bbp.cscs.ch/project/proj12/spatial_index/v3
 
   script:
-    - module load unstable cmake gcc boost hpe-mpi py-mpi4py
+    - module load unstable cmake gcc boost hpe-mpi py-mpi4py py-h5py
     - python -m venv venv
     - source venv/bin/activate
-    - pip install ipython jupyter pytest
+    - pip install ipython jupyter pytest pytest-mpi
     - pip install -e .
+    - bash .ci/run_mpi_pytest.sh
     - bash .ci/_run_examples.sh
 
 
@@ -77,7 +78,7 @@ test-bare-ubuntu:
   variables:
     KUBERNETES_MEMORY_LIMIT: 5Gi    # memory overrides
     KUBERNETES_MEMORY_REQUEST: 4Gi  # memory overrides
-    PIP_PACKAGES: pytest h5py
+    PIP_PACKAGES: pytest pytest-mpi h5py
   before_script:
     - !reference [.define-functions]
     - ln -s /usr/bin/python3 /usr/bin/python
@@ -96,7 +97,7 @@ test-spack:
   tags:
     - bb5_map
   variables:
-    PIP_PACKAGES: "pytest h5py"
+    PIP_PACKAGES: pytest pytest-mpi h5py
   before_script:
     - !reference [.bb5, clean-env]
     - !reference [.define-functions]

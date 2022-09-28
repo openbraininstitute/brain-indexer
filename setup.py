@@ -110,7 +110,7 @@ package_info = dict(
             "mpi4py"
         ]
     },
-    tests_require=["pytest", "h5py", ],
+    tests_require=["pytest", "pytest-mpi", "h5py", ],
     setup_requires=(["pytest-runner"] if "test" in sys.argv else [])
 )
 

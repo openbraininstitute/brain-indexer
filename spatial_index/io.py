@@ -1,5 +1,7 @@
 import os
 import json
+import tempfile
+import contextlib
 
 import libsonata
 
@@ -189,3 +191,39 @@ def write_multi_population_meta_data(index_path, element_type, populations):
     }
 
     write_json(meta_data_path, meta_data)
+
+
+@contextlib.contextmanager
+def shared_temporary_directory(*args, mpi_comm=None, **kwargs):
+    """An MPI compatible wrapper for the context manager 'TemporaryDirectory'.
+
+    Will act like a context manager to create a temporary directory on a shared
+    filesystem. When using MPI, we don't want every MPI rank to create their own
+    temporary directory, but rather we want them to share the same directory.
+
+    Note, any positional arguments and any keyword arguments other than `mpi_comm`
+    are passed to `TemporaryDirectory`.
+
+    If `mpi_comm` is `None` then we assume this a sequential run and doesn't use
+    MPI, i.e. is equivalent to `TemporaryDirectory`.
+
+    Examples:
+
+        with shared_temporary_directory(prefix="foo", mpi_comm=comm) as tmp_dir:
+            print(tmp_dir)
+    """
+
+    mpi_rank = mpi_comm.Get_rank() if mpi_comm is not None else 0
+
+    if mpi_rank == 0:
+        with tempfile.TemporaryDirectory(*args, **kwargs) as tmp_dir:
+            if mpi_comm is not None:
+                mpi_comm.bcast(tmp_dir, root=0)
+
+            yield tmp_dir
+
+    else:
+        assert mpi_comm is not None
+
+        tmp_dir = mpi_comm.bcast(None, root=0)
+        yield tmp_dir
