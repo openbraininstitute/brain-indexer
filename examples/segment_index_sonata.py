@@ -13,7 +13,7 @@ from spatial_index import MorphIndexBuilder
 
 
 # Loading some small circuits and morphology files on BB5
-CIRCUIT_1K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v2/circuit-1k"
+CIRCUIT_1K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v3/circuit-1k"
 NODES_FILE = os.path.join(CIRCUIT_1K, "nodes.h5")
 MORPH_FILE = os.path.join(CIRCUIT_1K, "morphologies/ascii")
 

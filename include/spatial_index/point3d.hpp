@@ -8,6 +8,8 @@
 
 #include <array>
 
+#include <spatial_index/version.hpp>
+
 namespace spatial_index {
 
 namespace bg = boost::geometry;
@@ -180,6 +182,16 @@ struct Point3Dx: public Point3D {
             return true;
         return dist2 < norm_sq() * SI_EQUALITY_TOLERANCE;
     }
+
+private:
+    friend class boost::serialization::access;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        if(version == 0) { throw std::runtime_error("Invalid version 0 for Point3Dx."); }
+
+        ar & boost::serialization::base_object<Point3D>(*this);
+    }
 };
 
 //
@@ -237,3 +249,5 @@ inline bool operator==(spatial_index::Point3D const& p1,
 }
 
 }}}  // namespace boost::geometry::model
+
+BOOST_CLASS_VERSION(spatial_index::Point3Dx, SPATIAL_INDEX_STRUCT_VERSION);

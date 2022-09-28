@@ -8,7 +8,8 @@ pwd
 
 rm -r usecase1 || true
 rm -r circuit2k || true
-rm -rf tmp-*
+rm -rf tmp-* || true
+rm -r example_segment_index || true
 
 python examples/segment_index_sonata.py
 python examples/segment_index.py

@@ -17,7 +17,7 @@ from spatial_index import MorphIndexBuilder
 
 # Loading some small circuits and morphology files on BB5
 
-CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v2/circuit-2k"
+CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v3/circuit-2k"
 NODE_FILE = os.path.join(CIRCUIT_2K, "circuit.mvd3")
 MORPH_FILE = os.path.join(CIRCUIT_2K, "morphologies/ascii")
 INDEX_FILENAME = "example_segment_index"
@@ -28,7 +28,7 @@ def build_segment_index():
     builder = MorphIndexBuilder(MORPH_FILE, NODE_FILE)
     builder.process_range((700, 750))  # 50 cells
     # builder.process_all()  # Warning: Might exhaust memory
-    print("Index contains", len(builder.index), "elements. Saving to disk")
+    print("Index contains {len(builder.index)} elements. Saving to disk")
     builder.index.write(INDEX_FILENAME)
     return builder.index
 

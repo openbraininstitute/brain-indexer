@@ -127,6 +127,35 @@ While nobody admits using ``printf`` debugging, here's a trick:
 This is interesting because you can break up the output by MPI rank; and
 therefore get a clean stream of messages from each MPI rank.
 
+Boost Serialization & Struct Versioning
+---------------------------------------
+
+SpatialIndex uses ``boost::serialization`` to write indexes to disk. In order
+to be able to at least detect old indexes; and ideally be able to also open
+them, we need to version each serialized struct.
+
+There are a few things to respect:
+
+* Boost versions individual classes.
+* The base class must be serialized through
+  ``boost::serialization::base_object<Base>(*this)``; and must not use
+  ``static_cast`` since this will silently work but fails to serialize important
+  type information.
+* It (effectively) requires that every class has a private `serialize` method,
+  even if it only serializes its base class. In toy examples it was easy to modify
+  an existing ``serialize`` method. However, adding one to a derived class
+  would never work properly. In particular the difficulty was opening classes
+  serialized through the old protocol, i.e. without a ``serialize`` method in
+  the base.
+
+SpatialIndex defines a constant ``SPATIAL_INDEX_STRUCT_VERSION`` which defines the
+version of the structs that are serialized. This is the global version that every
+struct will use. Therefore, when creating a new class that needs to be
+serialized, e.g., because it's part of something that's being serialized, then
+it must set its version to ``SPATIAL_INDEX_STRUCT_VERSION``; and assert that the
+version is not ``0``. (This last part is only to check that you haven't
+forgotten to set the version.)
+
 Memory mapping
 --------------
 

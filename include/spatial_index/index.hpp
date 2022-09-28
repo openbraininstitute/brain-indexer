@@ -18,12 +18,10 @@
 #include <boost/variant.hpp>
 
 #include <spatial_index/meta_data.hpp>
-#include "geometries.hpp"
-#include "util.hpp"
+#include <spatial_index/geometries.hpp>
+#include <spatial_index/util.hpp>
 #include <spatial_index/logging.hpp>
-
-/// Bump the top-level structure version when serialized data structures change
-#define SPATIAL_INDEX_STRUCT_VERSION 3
+#include <spatial_index/version.hpp>
 
 namespace spatial_index {
 
@@ -84,11 +82,13 @@ struct ShapeId {
         return id == rhs.id;
     }
 
-  protected:
+  private:
     friend class boost::serialization::access;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int /* version*/) {
+    void serialize(Archive& ar, const unsigned int version) {
+        if(version == 0) { throw std::runtime_error("Invalid version 0 for ShapeId."); }
+
         ar & this->id;
     }
 };
@@ -123,16 +123,19 @@ struct SynapseId : public ShapeId {
         return pre_gid_;
     }
 
-  protected:
+  private:
     friend class boost::serialization::access;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int /* version*/) {
-        ar & this->id;
+    void serialize(Archive& ar, const unsigned int version) {
+        if(version == 0) { throw std::runtime_error("Invalid version 0 for SynapseId."); }
+
+        ar & boost::serialization::base_object<ShapeId>(*this);
         ar & post_gid_;
         ar & pre_gid_;
     }
 };
+
 
 inline bool is_gid_safe(identifier_t gid) {
     return (gid & ~mask_bits(N_GID_BITS)) == 0;
@@ -160,7 +163,7 @@ struct MorphPartId : public ShapeId {
         : ShapeId{(gid << N_TOTAL_BITS) + (section_id << N_SEGMENT_BITS) + segment_id}
     {
         if (!(is_gid_safe(gid) && is_section_id_safe(section_id) && is_segment_id_safe(segment_id))) {
-            
+
             log_error("One of the IDs is too large to be encoded in the current data structure!");
 
             if(!is_gid_safe(gid)) {
@@ -187,6 +190,16 @@ struct MorphPartId : public ShapeId {
 
     inline unsigned section_id() const noexcept {
         return util::integer_cast<unsigned>((id & MASK_SECTION_BITS) >> N_SEGMENT_BITS);
+    }
+
+private:
+    friend class boost::serialization::access;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        if(version == 0) { throw std::runtime_error("Invalid version 0 for MorphPartId."); }
+
+        ar & boost::serialization::base_object<ShapeId>(*this);
     }
 };
 
@@ -216,23 +229,18 @@ struct IndexedShape : public IndexT, public ShapeT {
     inline std::ostream& repr(std::ostream& os,
                               const std::string& cls_name="IShape") const;
 
-  protected:
+  private:
     friend class boost::serialization::access;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int version) {
-        // Classes are versioned to SPATIAL_INDEX_STRUCT_VERSION (see detail/index.hpp)
-        // If new fields are introduced please handle them conditionally
-        if(version > SPATIAL_INDEX_STRUCT_VERSION) {
-            throw std::runtime_error(
-                "File format is in a future format. Please update Spatial Index."
-            );
-        }
+        if(version == 0) { throw std::runtime_error("Invalid version 0 for IndexedShape."); }
 
         ar & boost::serialization::base_object<IndexT>(*this);
         ar & boost::serialization::base_object<ShapeT>(*this);
     }
 };
+
 
 class Synapse : public IndexedShape<Sphere, SynapseId> {
     using super = IndexedShape<Sphere, SynapseId>;
@@ -244,7 +252,18 @@ class Synapse : public IndexedShape<Sphere, SynapseId> {
     inline Synapse(identifier_t id, identifier_t post_gid, identifier_t pre_gid, Point3D const& point) noexcept
         : super(std::tie(id, post_gid, pre_gid), point, .0f)
     {}
+
+private:
+    friend class boost::serialization::access;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        if(version == 0) { throw std::runtime_error("Invalid version 0 for Synapse."); }
+
+        ar & boost::serialization::base_object<super>(*this);
+    }
 };
+
 
 
 class Soma: public IndexedShape<Sphere, MorphPartId> {
@@ -254,6 +273,15 @@ class Soma: public IndexedShape<Sphere, MorphPartId> {
     // bring contructors
     using super::IndexedShape;
 
+private:
+    friend class boost::serialization::access;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        if(version == 0) { throw std::runtime_error("Invalid version 0 for Soma."); }
+
+        ar & boost::serialization::base_object<super>(*this);
+    }
 };
 
 
@@ -275,7 +303,18 @@ class Segment: public IndexedShape<Cylinder, MorphPartId> {
                    CoordType const& r) noexcept
         : super(std::tie(gid, section_id, segment_id), center1, center2, r)
     {}
+
+private:
+    friend class boost::serialization::access;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        if(version == 0) { throw std::runtime_error("Invalid version 0 for Segment."); }
+
+        ar & boost::serialization::base_object<super>(*this);
+    }
 };
+
 
 
 class SubtreeId {
@@ -294,11 +333,13 @@ class SubtreeId {
         return id == rhs.id;
     }
 
-  protected:
+  private:
     friend class boost::serialization::access;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int /* version*/) {
+    void serialize(Archive& ar, const unsigned int version) {
+        if(version == 0) { throw std::runtime_error("Invalid version 0 for SubtreeId."); }
+
         ar & id;
         ar & n_elements;
     }
@@ -315,8 +356,17 @@ class IndexedSubtreeBox : public IndexedShape<Box3Dx, SubtreeId> {
     inline IndexedSubtreeBox(size_t id, size_t n_elements, Box3D const& box)
         : super(SubtreeId(id, n_elements), Box3Dx(box)) {}
 
+private:
+    friend class boost::serialization::access;
 
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        if(version == 0) { throw std::runtime_error("Invalid version 0 for IndexedSubtreeBox."); }
+
+        ar & boost::serialization::base_object<super>(*this);
+    }
 };
+
 
 //////////////////////////////////////////////
 // High Level API
@@ -450,6 +500,28 @@ class IndexTree: public IndexTreeMixin<IndexTree<T, A>, T>, public IndexTreeBase
     /// note: this will allocate a full vector. Consider iterating over the tree using
     ///     begin()->end()
     inline decltype(auto) all_ids();
+
+private:
+    friend class boost::serialization::access;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        if(version > SPATIAL_INDEX_STRUCT_VERSION) {
+            throw std::runtime_error(
+                "File format is in a future format. Please update Spatial Index."
+            );
+        }
+
+        if(version <= 3) {
+            log_error("Indexes with version 0, ..., 3 could have one of many conventions. These"
+                      " indexes cannot be loaded safely anymore and must be recreated.");
+
+            auto error_message = boost::format("Invalid index version: %d") % version;
+            throw std::runtime_error(error_message.str());
+        }
+
+        ar & boost::serialization::base_object<super>(*this);
+    }
 };
 
 

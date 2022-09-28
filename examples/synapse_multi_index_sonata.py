@@ -21,7 +21,7 @@ import spatial_index
 from spatial_index import SynapseMultiIndexBuilder
 
 
-CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v2/circuit-2k"
+CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v3/circuit-2k"
 EDGE_FILE = os.path.join(CIRCUIT_2K, "edges.h5")
 OUTPUT_DIR = "tmp-vnwe"
 

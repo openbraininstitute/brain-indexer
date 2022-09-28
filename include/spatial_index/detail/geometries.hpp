@@ -343,3 +343,6 @@ inline std::ostream& operator<<(std::ostream& os, const spatial_index::Box3D& b)
 
 }}}
 
+BOOST_CLASS_VERSION(spatial_index::Sphere, SPATIAL_INDEX_STRUCT_VERSION);
+BOOST_CLASS_VERSION(spatial_index::Box3Dx, SPATIAL_INDEX_STRUCT_VERSION);
+BOOST_CLASS_VERSION(spatial_index::Cylinder, SPATIAL_INDEX_STRUCT_VERSION);

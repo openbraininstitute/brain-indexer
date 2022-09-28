@@ -58,7 +58,11 @@ struct Sphere {
     friend class boost::serialization::access;
 
     template <class Archive>
-    inline void serialize(Archive& ar, const unsigned int /*version*/) {
+    inline void serialize(Archive& ar, const unsigned int version) {
+        if(version == 0) {
+            throw std::runtime_error("Invalid version 0 for Sphere.");
+        }
+
         ar & centroid;
         ar & radius;
     }
@@ -98,8 +102,12 @@ struct Box3Dx : public Box3D {
     friend class boost::serialization::access;
 
     template <class Archive>
-    inline void serialize(Archive& ar, const unsigned int /*version*/) {
-        ar & static_cast<Box3D&>(*this);
+    inline void serialize(Archive& ar, const unsigned int version) {
+        if(version == 0) {
+            throw std::runtime_error("Invalid version 0 for Box3Dx.");
+        }
+
+        ar & boost::serialization::base_object<Box3D>(*this);
     }
 };
 
@@ -203,7 +211,11 @@ struct Cylinder {
     friend class boost::serialization::access;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int /*version*/) {
+    inline void serialize(Archive& ar, const unsigned int version) {
+        if(version == 0) {
+            throw std::runtime_error("Invalid version 0 for Cylinder.");
+        }
+
         ar & p1;
         ar & p2;
         ar & radius;

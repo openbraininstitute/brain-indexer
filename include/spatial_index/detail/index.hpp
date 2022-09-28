@@ -143,7 +143,7 @@ inline IndexTree<T, A>::IndexTree(const std::string& path) {
 
     std::ifstream ifs(filename, std::ios::binary);
     boost::archive::binary_iarchive ia(ifs);
-    ia >> static_cast<super&>(*this);
+    ia >> *this;
 }
 
 
@@ -155,7 +155,7 @@ inline void IndexTree<T, A>::dump(const std::string& index_path) const {
     auto filename = join_path(index_path, heavy_data_relpath);
     std::ofstream ofs(filename, std::ios::binary | std::ios::trunc);
     boost::archive::binary_oarchive oa(ofs);
-    oa << static_cast<const super&>(*this);
+    oa << *this;
 
     auto element_type = value_to_element_type<T>();
     auto meta_data = create_basic_meta_data(element_type);
@@ -370,5 +370,21 @@ struct version<spatial_index::IndexTree<T, A>>
     BOOST_STATIC_CONSTANT(unsigned int, value = SPATIAL_INDEX_STRUCT_VERSION);
 };
 
+template <typename ShapeT, typename IndexT>
+struct version<spatial_index::IndexedShape<ShapeT, IndexT>>
+{
+    BOOST_STATIC_CONSTANT(unsigned int, value = SPATIAL_INDEX_STRUCT_VERSION);
+};
+
 }  // namespace serialization
 }  // namespace boost
+
+
+BOOST_CLASS_VERSION(spatial_index::ShapeId, SPATIAL_INDEX_STRUCT_VERSION);
+BOOST_CLASS_VERSION(spatial_index::SynapseId, SPATIAL_INDEX_STRUCT_VERSION);
+BOOST_CLASS_VERSION(spatial_index::MorphPartId, SPATIAL_INDEX_STRUCT_VERSION);
+BOOST_CLASS_VERSION(spatial_index::Synapse, SPATIAL_INDEX_STRUCT_VERSION);
+BOOST_CLASS_VERSION(spatial_index::Soma, SPATIAL_INDEX_STRUCT_VERSION);
+BOOST_CLASS_VERSION(spatial_index::Segment, SPATIAL_INDEX_STRUCT_VERSION);
+BOOST_CLASS_VERSION(spatial_index::SubtreeId, SPATIAL_INDEX_STRUCT_VERSION);
+BOOST_CLASS_VERSION(spatial_index::IndexedSubtreeBox, SPATIAL_INDEX_STRUCT_VERSION);

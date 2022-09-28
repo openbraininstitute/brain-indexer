@@ -12,17 +12,16 @@ import pytest
 pytest_skipif = pytest.mark.skipif
 pytest_long = pytest.mark.long
 
-BLUECONFIG_2K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v2/BlueConfig"
-CIRCUIT_2K_SI = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v2/circuit2k_si"
+DATADIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v3"
+BLUECONFIG_2K = os.path.join(DATADIR, "BlueConfig")
+CIRCUIT_2K_SI = os.path.join(DATADIR, "circuit-2k/indexes/morphology/in_memory")
 
 
 def bluepy_check(circuit, result):
 
-    i = 0
-    for gid in result['gid']:
+    for i, gid in enumerate(result['gid']):
         # Skip somas.
         if result['is_soma'][i]:
-            i += 1
             continue
 
         # adding one to the gid since BluePy is 1-indexed
@@ -49,7 +48,6 @@ def bluepy_check(circuit, result):
         assert np.allclose(p1_b, p1_s, atol=1e-4)
         assert np.allclose(p2_b, p2_s, atol=1e-4)
         assert np.allclose(r_b, r_s, atol=1e-4)
-        i += 1
 
 
 @pytest_skipif(not os.path.exists(CIRCUIT_2K_SI),

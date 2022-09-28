@@ -239,9 +239,9 @@ void check_signals() {
 }
 
 } // spatial_index::util
+
+
 } // spatial_index
-
-
 
 
 #include "detail/util.hpp"
