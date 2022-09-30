@@ -145,10 +145,11 @@ def _wrap_check_for_multi_population(check_single_population):
 
 
 @_wrap_check_for_multi_population
-def check_query(query, query_shape, *, query_kwargs=None, builtin_fields=None,
-                expected_populations=None):
+def check_query(query, query_shape, *, query_kwargs=None, available_fields=None,
+                builtin_fields=None, expected_populations=None):
     special_fields = ["raw_elements"]
-    all_fields = builtin_fields + special_fields
+
+    all_fields = available_fields + special_fields
 
     for field in all_fields:
         result = query(*query_shape, fields=field, **query_kwargs)
@@ -156,12 +157,17 @@ def check_query(query, query_shape, *, query_kwargs=None, builtin_fields=None,
             result, field, expected_populations=expected_populations
         )
 
-    for k in [1, len(builtin_fields) + 1]:
+    for k in range(1, len(builtin_fields) + 1):
         for fields in itertools.combinations(builtin_fields, k):
             result = query(*query_shape, fields=fields, **query_kwargs)
             assert_valid_dict_result(
                 result, fields, expected_populations=expected_populations
             )
+
+    result = query(*query_shape, fields=available_fields, **query_kwargs)
+    assert_valid_dict_result(
+        result, available_fields, expected_populations=expected_populations
+    )
 
     for field in special_fields:
         with pytest.raises(Exception):
@@ -245,14 +251,14 @@ def deduce_expected_population_mode(index, population_mode):
 
 def check_all_regular_query_api(index, window, sphere, accuracy, population_mode):
     query_kwargs = {"accuracy": accuracy, "population_mode": population_mode}
-    builtin_fields = index.builtin_fields
 
     populations = index.populations
     expected_population_mode = deduce_expected_population_mode(index, population_mode)
 
     check_query(
         index.box_query, window, query_kwargs=query_kwargs,
-        builtin_fields=builtin_fields,
+        available_fields=index.available_fields,
+        builtin_fields=index.builtin_fields,
         populations=populations,
         population_mode=expected_population_mode,
     )
@@ -260,14 +266,16 @@ def check_all_regular_query_api(index, window, sphere, accuracy, population_mode
     reversed_window = (window[1], window[0])
     check_query(
         index.box_query, reversed_window, query_kwargs=query_kwargs,
-        builtin_fields=builtin_fields,
+        available_fields=index.available_fields,
+        builtin_fields=index.builtin_fields,
         populations=populations,
         population_mode=expected_population_mode,
     )
 
     check_query(
         index.sphere_query, sphere, query_kwargs=query_kwargs,
-        builtin_fields=builtin_fields,
+        available_fields=index.available_fields,
+        builtin_fields=index.builtin_fields,
         populations=populations,
         population_mode=expected_population_mode,
     )
@@ -317,7 +325,7 @@ def circuit_10_config(index_variant, element_type):
             CIRCUIT_1K_DIR, f"indexes/{element_type}/{index_variant}"
         )
 
-    elif element_type == "morphology":
+    elif "morphology" in element_type:
         index_path = os.path.join(
             CIRCUIT_10_DIR, f"indexes/{element_type}/{index_variant}"
         )
@@ -363,7 +371,7 @@ def usecase_3_config(index_variant, element_type):
 @pytest.mark.parametrize(
     "element_type,index_variant,accuracy,population_mode",
     itertools.product(
-        ["synapse", "synapse_no_sonata", "morphology"],
+        ["synapse", "synapse_no_sonata", "morphology", "morphology_no_sonata"],
         ["in_memory", "multi_index"],
         [None, "bounding_box", "best_effort"],
         [None, "single", "multi"]
@@ -411,7 +419,7 @@ def test_multi_population_index_api(element_type, index_variant, accuracy,
 @pytest.mark.parametrize(
     "element_type,index_variant",
     itertools.product(
-        ["synapse", "synapse_no_sonata", "morphology"],
+        ["synapse", "morphology"],
         ["in_memory"],
     )
 )
@@ -432,7 +440,7 @@ def test_index_write_api(element_type, index_variant):
 @pytest.mark.parametrize(
     "element_type,index_variant",
     itertools.product(
-        ["synapse"],
+        ["synapse", "morphology"],
         ["in_memory"],
     )
 )

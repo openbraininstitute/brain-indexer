@@ -8,7 +8,7 @@ from spatial_index import logger
 
 from .util import docopt_get_args, is_likely_same_index
 from .util import is_strictly_sensible_filename, is_non_string_iterable
-from .io import write_multi_population_meta_data
+from .io import write_multi_population_meta_data, is_sonata_nodes_file
 from .resolver import open_index, MorphIndexResolver, SynapseIndexResolver
 
 
@@ -241,7 +241,40 @@ def _parse_options_for_builder_args(options, output_dir):
     return index_variant, index_kwargs
 
 
+def _validated_sonata_single_file_population(nodes_file, population):
+    import libsonata
+
+    nodes = libsonata.NodeStorage(nodes_file)
+    populations = nodes.population_names
+
+    if population is not None:
+        message = f"Population '{population}' not found in the file '{nodes_file}'"
+        assert population in populations, message
+
+    else:
+        message = (
+            f"Multiple population in file '{nodes_file}' but no population was selected."
+        )
+        assert len(populations) == 1, message
+
+        population = next(iter(populations))
+
+    return population
+
+
 def _run_spatial_index_nodes(morphology_dir, nodes_file, options, output_dir=None):
+    if is_sonata_nodes_file(nodes_file):
+        population = _validated_sonata_single_file_population(nodes_file, None)
+        _run_spatial_index_sonata_nodes(
+            morphology_dir, nodes_file, population, options, output_dir=output_dir
+        )
+    else:
+        _run_spatial_index_mvd3_nodes(
+            morphology_dir, nodes_file, options, output_dir=output_dir
+        )
+
+
+def _run_spatial_index_mvd3_nodes(morphology_dir, nodes_file, options, output_dir=None):
     index_variant, index_kwargs = _parse_options_for_builder_args(options, output_dir)
 
     Builder = MorphIndexResolver.builder_class(index_variant)

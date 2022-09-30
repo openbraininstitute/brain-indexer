@@ -41,38 +41,76 @@ def small_sonata_conf(element_type):
         raise ValueError("Broken test case.")
 
 
-def check_morphology_from_sonata_file(element_type, index_variant, mpi_comm=None):
+def check_morphology_from_sonata(element_type,
+                                 index_variant,
+                                 build_callback,
+                                 mpi_comm=None):
     mpi_rank = 0 if mpi_comm is None else mpi_comm.Get_rank()
 
-    args = small_sonata_conf(element_type)
     Index = IndexResolver.index_class(element_type, index_variant)
-    Builder = IndexResolver.builder_class(element_type, index_variant)
 
     with shared_temporary_directory(prefix="from_sonata_file", mpi_comm=mpi_comm) as d:
         index_path = os.path.join(d, element_type)
-        Builder.from_sonata_file(*args, output_dir=index_path)
+        build_callback(element_type, index_variant, output_dir=index_path)
 
         if mpi_rank == 0:
             loaded_index = open_index(index_path)
             meta_data = MetaData(index_path)
 
-            print(meta_data._raw_meta_data)
-
             assert isinstance(loaded_index, Index)
             assert meta_data.extended is not None
 
 
+def from_sonata_file_callback(element_type, index_variant, output_dir=None):
+    args = small_sonata_conf(element_type)
+
+    Builder = IndexResolver.builder_class(element_type, index_variant)
+    Builder.from_sonata_file(*args, output_dir=output_dir)
+
+
+def from_sonata_selection_callback(element_type, index_variant, output_dir=None):
+    import libsonata
+
+    args = small_sonata_conf(element_type)
+    selection = libsonata.Selection([0, 1, 2])
+
+    Builder = IndexResolver.builder_class(element_type, index_variant)
+    Builder.from_sonata_selection(*args, selection, output_dir=output_dir)
+
+
+def check_morphology_from_sonata_file(element_type, index_variant, mpi_comm=None):
+    check_morphology_from_sonata(
+        element_type, index_variant, from_sonata_file_callback, mpi_comm=mpi_comm
+    )
+
+
+def check_morphology_from_sonata_selection(element_type, index_variant, mpi_comm=None):
+    check_morphology_from_sonata(
+        element_type, index_variant, from_sonata_selection_callback, mpi_comm=mpi_comm
+    )
+
+
 @pytest.mark.skipif(not os.path.exists(CIRCUIT_10_DIR), reason="Missing data file.")
-@pytest.mark.parametrize("element_type", ["synapse"])
+@pytest.mark.parametrize("element_type", ["synapse", "morphology"])
 def test_morphology_in_memory_from_sonata_file(element_type):
     check_morphology_from_sonata_file(element_type, "in_memory")
 
 
 @pytest.mark.skipif(not os.path.exists(CIRCUIT_10_DIR), reason="Missing data file.")
 @pytest.mark.mpi(min_size=3)
-@pytest.mark.parametrize("element_type", ["synapse"])
+@pytest.mark.parametrize("element_type", ["synapse", "morphology"])
 def test_morphology_multi_index_from_sonata_file(element_type):
     from mpi4py import MPI
 
     mpi_comm = MPI.COMM_WORLD
     check_morphology_from_sonata_file(element_type, "multi_index", mpi_comm=mpi_comm)
+
+
+@pytest.mark.skipif(not os.path.exists(CIRCUIT_10_DIR), reason="Missing data file.")
+@pytest.mark.mpi(min_size=3)
+@pytest.mark.parametrize("element_type", ["morphology"])
+def test_morphology_multi_index_from_sonata_selection(element_type):
+    from mpi4py import MPI
+
+    mpi_comm = MPI.COMM_WORLD
+    check_morphology_from_sonata_selection(element_type, "multi_index", mpi_comm=mpi_comm)

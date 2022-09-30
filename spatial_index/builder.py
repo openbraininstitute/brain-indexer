@@ -1,5 +1,19 @@
 from . import _spatial_index as core
 from .index import SphereIndex
+from .io import write_sonata_meta_data_section
+
+
+class _WriteSONATAMetadataMixin:
+    def _write_extended_meta_data_section(*a, **kw):
+        write_sonata_meta_data_section(*a, **kw)
+
+
+class _WriteSONATAMetadataMultiMixin:
+    def _write_extended_meta_data_section(*a, **kw):
+        from mpi4py import MPI
+
+        if MPI.COMM_WORLD.Get_rank() == 0:
+            write_sonata_meta_data_section(*a, **kw)
 
 
 class SphereIndexBuilderBase:

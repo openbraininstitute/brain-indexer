@@ -8,6 +8,7 @@ import spatial_index
 from . import _spatial_index as core
 from .util import gen_ranges, bcast_sonata_selection
 from .index import SynapseIndex
+from .builder import _WriteSONATAMetadataMixin, _WriteSONATAMetadataMultiMixin
 from .chunked_builder import ChunkedProcessingMixin, MultiIndexBuilderMixin
 
 
@@ -108,7 +109,9 @@ class SynapseIndexBuilderBase:
         return libsonata.Selection(new_ranges)
 
 
-class SynapseIndexBuilder(SynapseIndexBuilderBase, ChunkedProcessingMixin):
+class SynapseIndexBuilder(SynapseIndexBuilderBase,
+                          _WriteSONATAMetadataMixin,
+                          ChunkedProcessingMixin):
     """Builder for in-memory synapse indexes."""
 
     # Chunks are 1 Sonata range (of 100k synapses). Pick the value
@@ -132,14 +135,13 @@ class SynapseIndexBuilder(SynapseIndexBuilderBase, ChunkedProcessingMixin):
             spatial_index.logger.info("Writing index to file: %s", output_dir)
             self._core_builder._dump(output_dir)
 
-    def _write_extended_meta_data_section(*a, **kw):
-        spatial_index.io.write_sonata_meta_data_section(*a, **kw)
-
 
 # Only provide MPI MultiIndex builders if enabled at the core
 if hasattr(core, "SynapseMultiIndexBulkBuilder"):
 
-    class SynapseMultiIndexBuilder(MultiIndexBuilderMixin, SynapseIndexBuilderBase):
+    class SynapseMultiIndexBuilder(MultiIndexBuilderMixin,
+                                   _WriteSONATAMetadataMultiMixin,
+                                   SynapseIndexBuilderBase):
         """Builder for multi-index synapse indexes.
 
         Note: this requires MPI support. Guidance on choosing the number of
@@ -178,12 +180,6 @@ if hasattr(core, "SynapseMultiIndexBulkBuilder"):
 
         def _write_index_if_needed(self, output_dir):
             pass
-
-        def _write_extended_meta_data_section(*a, **kw):
-            from mpi4py import MPI
-
-            if MPI.COMM_WORLD.Get_rank() == 0:
-                spatial_index.io.write_sonata_meta_data_section(*a, **kw)
 
         @classmethod
         def _make_sonata_selection(cls, sonata_edges, target_gids, **kw):

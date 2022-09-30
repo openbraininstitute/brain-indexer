@@ -345,33 +345,57 @@ class Index(IndexInterface):
         accuracy = self._enforce_accuracy_default(accuracy)
         return method(*query_shape, geometry=accuracy)
 
+    @classmethod
+    def _open_core_from_meta_data(cls, meta_data, **kwargs):
+        return spatial_index.io.open_core_from_meta_data(
+            meta_data, resolver=cls._resolver(), **kwargs
+        )
 
-class SynapseIndexBase(Index):
-    def __init__(self, core_index, sonata_edges=None):
+
+class SONATAIndex(Index):
+    def __init__(self, core_index, sonata_dataset=None):
         super().__init__(core_index)
 
         self._available_fields = self.builtin_fields
 
-        if sonata_edges is not None:
-            self._sonata_edges = sonata_edges
+        if sonata_dataset is not None:
+            self._sonata_dataset = sonata_dataset
             self._multi_field_box_query = self._sonata_multi_field_box_query
             self._single_field_box_query = self._sonata_single_field_box_query
 
-            self._available_fields += self._sonata_edges.attribute_names
+            self._available_fields += self._sonata_dataset.attribute_names
 
     @property
     def available_fields(self):
         return list(self._available_fields)
 
+    @classmethod
+    def from_meta_data(cls, meta_data, **kwargs):
+        core_index = cls._open_core_from_meta_data(meta_data, **kwargs)
+
+        if extended_conf := meta_data.extended:
+
+            sonata_dataset = cls._open_sonata_dataset(
+                extended_conf.path("dataset_path"),
+                extended_conf.value("population"),
+            )
+
+            return cls(core_index, sonata_dataset)
+
+        else:
+            return cls(core_index)
+
     def _sonata_multi_field_box_query(self, query_shape, *,
                                       fields=None, accuracy=None, methods=None):
+
+        id_key = self._id_key_for_sonata_selection
 
         available_builtin_fields = self.builtin_fields
         special_fields = self._deduce_special_fields(methods)
 
         builtin_fields = filter(
             lambda f: f in available_builtin_fields,
-            set(fields).union(["id"])
+            set(fields).union([id_key])
         )
         sonata_fields = set(fields).difference(available_builtin_fields + special_fields)
 
@@ -390,7 +414,7 @@ class SynapseIndexBase(Index):
         )
 
         if sonata_fields:
-            selection = libsonata.Selection(result['id'])
+            selection = libsonata.Selection(result[id_key])
 
             for field in sonata_fields:
                 result[field] = self._sonata_query(selection=selection, field=field)
@@ -408,8 +432,9 @@ class SynapseIndexBase(Index):
             )
 
         else:
+            id_key = self._id_key_for_sonata_selection
             ids = super()._single_field_box_query(
-                query_shape, field="id", accuracy=accuracy, methods=methods,
+                query_shape, field=id_key, accuracy=accuracy, methods=methods,
             )
 
             selection = libsonata.Selection(ids)
@@ -419,34 +444,35 @@ class SynapseIndexBase(Index):
         return [key for key in methods.keys() if key != "_np"]
 
     def _sonata_query(self, *, selection, field):
-        return self._sonata_edges.get_attribute(field, selection)
+        return self._sonata_dataset.get_attribute(field, selection)
 
-    @classmethod
-    def from_meta_data(cls, meta_data, **kwargs):
-        core_index = cls._open_core_from_meta_data(meta_data, **kwargs)
 
-        if extended_conf := meta_data.extended:
-            sonata_edges = spatial_index.io.open_sonata_edges(
-                extended_conf.path("dataset_path"),
-                extended_conf.value("population")
-            )
-            return cls(core_index, sonata_edges)
-
-        else:
-            return cls(core_index)
-
-    @classmethod
-    def _open_core_from_meta_data(cls, meta_data, **kwargs):
-        return spatial_index.io.open_core_from_meta_data(
-            meta_data, resolver=spatial_index.SynapseIndexResolver, **kwargs
-        )
+class SynapseIndexBase(SONATAIndex):
+    def __init__(self, core_index, sonata_edges=None):
+        super().__init__(core_index, sonata_edges)
 
     @property
     def element_type(self):
         return "synapse"
 
+    @property
+    def _id_key_for_sonata_selection(self):
+        """The key which defines the 'ID' for sonata.
 
-class SynapseIndex(SynapseIndexBase):
+        For synapses the correct IDs are 'id'.
+        """
+        return "id"
+
+    @classmethod
+    def _open_sonata_dataset(cls, path, population):
+        return spatial_index.io.open_sonata_edges(path, population)
+
+    @classmethod
+    def _resolver(cls):
+        return spatial_index.SynapseIndexResolver
+
+
+class _WriteSONATAInMemoryIndex:
     def write(self, index_path, *, sonata_filename=None, population=None):
         """Saves the index to disk.
 
@@ -465,6 +491,10 @@ class SynapseIndex(SynapseIndexBase):
                 )
 
 
+class SynapseIndex(SynapseIndexBase, _WriteSONATAInMemoryIndex):
+    pass
+
+
 class SynapseMultiIndex(SynapseIndexBase):
     pass
 
@@ -479,7 +509,10 @@ class _FromMetaDataWithOutSonata:
         )
 
 
-class MorphIndexBase(Index, _FromMetaDataWithOutSonata):
+class MorphIndexBase(SONATAIndex):
+    def __init__(self, core_index, sonata_nodes=None):
+        super().__init__(core_index, sonata_nodes)
+
     @classmethod
     def _resolver(cls):
         return spatial_index.MorphIndexResolver
@@ -487,6 +520,18 @@ class MorphIndexBase(Index, _FromMetaDataWithOutSonata):
     @property
     def element_type(self):
         return "morphology"
+
+    @classmethod
+    def _open_sonata_dataset(cls, path, population):
+        return spatial_index.io.open_sonata_nodes(path, population)
+
+    @property
+    def _id_key_for_sonata_selection(self):
+        """The key which defines the 'ID' for sonata.
+
+        For synapses the correct IDs are 'id'.
+        """
+        return "gid"
 
 
 class _WriteInMemoryIndex:
@@ -499,7 +544,7 @@ class _WriteInMemoryIndex:
             self._core_index._dump(index_path)
 
 
-class MorphIndex(MorphIndexBase, _WriteInMemoryIndex):
+class MorphIndex(MorphIndexBase, _WriteSONATAInMemoryIndex):
     pass
 
 

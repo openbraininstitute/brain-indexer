@@ -16,6 +16,8 @@ import quaternion as npq
 
 import spatial_index
 from . import _spatial_index as core
+
+from .builder import _WriteSONATAMetadataMixin, _WriteSONATAMetadataMultiMixin
 from .chunked_builder import ChunkedProcessingMixin, MultiIndexBuilderMixin
 from .index import MorphIndex
 
@@ -145,7 +147,7 @@ class MorphIndexBuilderBase:
 
     @classmethod
     def from_sonata_file(cls, morphology_dir, node_filename, pop_name, target_gids=None,
-                         **kw):
+                         output_dir=None, **kw):
         """ Creates a node index from a sonata node file.
 
         Args:
@@ -154,10 +156,18 @@ class MorphIndexBuilderBase:
             pop_name: The name of the population
             target_gids: A list/array of target gids to index. Default: None
                 Warn: None will index all synapses, please mind memory limits
-
+            output_dir: If not ``None`` the index will be stored in the folder
+                ``output_dir``.
         """
-        return cls.create(morphology_dir, node_filename, pop_name, target_gids,
-                          **kw)
+        index = cls.create(morphology_dir, node_filename, pop_name, target_gids,
+                           output_dir=output_dir, **kw)
+
+        if output_dir is not None:
+            cls._write_extended_meta_data_section(
+                output_dir, node_filename, pop_name
+            )
+
+        return index
 
     @classmethod
     def from_mvd_file(cls, morphology_dir, node_filename, target_gids=None,
@@ -167,13 +177,22 @@ class MorphIndexBuilderBase:
 
     @classmethod
     def from_sonata_selection(cls, morphology_dir, node_filename, pop_name,
-                              selection, **kw):
+                              selection, output_dir=None, **kw):
         """ Builds the synapse index from a generic Sonata selection object"""
-        return cls.create(morphology_dir, node_filename, pop_name,
-                          selection.flatten(), **kw)
+        index = cls.create(morphology_dir, node_filename, pop_name,
+                           selection.flatten(), output_dir=output_dir, **kw)
+
+        if output_dir is not None:
+            cls._write_extended_meta_data_section(
+                output_dir, node_filename, pop_name
+            )
+
+        return index
 
 
-class MorphIndexBuilder(MorphIndexBuilderBase, ChunkedProcessingMixin):
+class MorphIndexBuilder(MorphIndexBuilderBase,
+                        _WriteSONATAMetadataMixin,
+                        ChunkedProcessingMixin):
     """A MorphIndexBuilder is a helper class to create a `MorphIndex`
     from a node file (mvd or Sonata) and a morphology library.
     """
@@ -198,7 +217,10 @@ class MorphIndexBuilder(MorphIndexBuilderBase, ChunkedProcessingMixin):
 # Only provide MPI MultiIndex builders if enabled at the core
 if hasattr(core, "MorphMultiIndexBulkBuilder"):
 
-    class MorphMultiIndexBuilder(MultiIndexBuilderMixin, MorphIndexBuilderBase):
+    class MorphMultiIndexBuilder(MultiIndexBuilderMixin,
+                                 _WriteSONATAMetadataMultiMixin,
+                                 MorphIndexBuilderBase):
+
         def __init__(self, morphology_dir, nodes_file, population="", gids=None,
                      output_dir=None):
             super().__init__(morphology_dir, nodes_file, population=population, gids=gids)

@@ -150,8 +150,8 @@ def open_core_from_meta_data(meta_data, *, max_cache_size_mb=None, resolver=None
         raise ValueError("Invalid 'meta_data'.")
 
 
-def open_sonata_edges(sonata_filename, population_name):
-    storage = libsonata.EdgeStorage(sonata_filename)
+def _open_sonata_dataset(sonata_filename, population_name, storage_class):
+    storage = storage_class(sonata_filename)
     if population_name is None:
         if len(storage.population_names) > 1:
             raise RuntimeError("No population chosen, multiple available")
@@ -161,6 +161,23 @@ def open_sonata_edges(sonata_filename, population_name):
         )
 
     return storage.open_population(population_name)
+
+
+def open_sonata_edges(sonata_filename, population_name):
+    return _open_sonata_dataset(sonata_filename, population_name, libsonata.EdgeStorage)
+
+
+def open_sonata_nodes(sonata_filename, population_name):
+    return _open_sonata_dataset(sonata_filename, population_name, libsonata.NodeStorage)
+
+
+def is_sonata_nodes_file(sonata_filename):
+    try:
+        libsonata.NodeStorage(sonata_filename)
+    except RuntimeError:
+        return False
+
+    return True
 
 
 def write_sonata_meta_data_section(index_path, edge_filename, population_name):
