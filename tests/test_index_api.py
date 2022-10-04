@@ -12,7 +12,7 @@ from spatial_index.util import is_non_string_iterable
 from spatial_index import MultiPopulationIndex
 
 
-DATA_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v3"
+DATA_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v4"
 CIRCUIT_10_DIR = os.path.join(DATA_DIR, "circuit-10")
 CIRCUIT_1K_DIR = os.path.join(DATA_DIR, "circuit-1k")
 USECASE_3_DIR = os.path.join(DATA_DIR, "sonata_usecases/usecase3")

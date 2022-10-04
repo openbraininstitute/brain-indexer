@@ -17,8 +17,8 @@ from spatial_index import MorphIndexBuilder
 
 # Loading some small circuits and morphology files on BB5
 
-CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v3/circuit-2k"
-NODE_FILE = os.path.join(CIRCUIT_2K, "circuit.mvd3")
+CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v4/circuit-2k"
+NODE_FILE = os.path.join(CIRCUIT_2K, "nodes.h5")
 MORPH_FILE = os.path.join(CIRCUIT_2K, "morphologies/ascii")
 INDEX_FILENAME = "example_segment_index"
 
@@ -86,7 +86,7 @@ def build_query_segment_index(min_corner=[-50, 0, 0], max_corner=[0, 50, 50]):
 if __name__ == "__main__":
     nargs = len(sys.argv)
     if nargs not in (1, 3):
-        print("Usage:", sys.argv[0], "[ <node_file_(mvd/sonata)> <morphology_dir> ]")
+        print("Usage:", sys.argv[0], "[ <node_file_sonata> <morphology_dir> ]")
         sys.exit(1)
     if len(sys.argv) == 3:
         NODE_FILE, MORPH_FILE = sys.argv[1:3]

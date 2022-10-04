@@ -1,7 +1,7 @@
 """
     Blue Brain Project - Spatial-Index
 
-    Test indexing circuits, from mvd and morphology libraries
+    Test indexing circuits, from SONATA and morphology libraries
 """
 import os
 
@@ -20,7 +20,6 @@ except ImportError:
 
 
 _CURDIR = os.path.dirname(__file__)
-FILETEST = "tests/data/circuit_mod.mvd3"
 MORPHOLOGY_FILES = [
     os.path.join(_CURDIR, "data/soma_spherical.h5"),
     os.path.join(_CURDIR, "data/soma_extended.h5")
@@ -67,33 +66,6 @@ def test_morph_loading():
     nptest.assert_almost_equal(soma_rad, 4.41688, decimal=6)
     m2_s3_p12 = section_pts[m2.morph.section_offsets[2] + 12]
     nptest.assert_allclose(m2_s3_p12, [25.1764, 3.07876, 34.16223], rtol=1e-6)
-
-
-def test_serial_exec():
-    builder = MorphIndexBuilder(MORPHOLOGY_FILES[1], FILETEST)
-    builder.process_range((0, 1))  # Process first neuron
-    index = builder.index
-    assert len(index) > 1700
-    objs_in_region = index.box_query(
-        [100, 50, 100], [200, 100, 200],
-        fields="raw_elements"
-    )
-    assert len(objs_in_region) > 0
-
-    m = _3DMorphology(
-        morphio.Morphology(MORPHOLOGY_FILES[1]),
-        builder._mvd.rotations(0)[0],
-        builder._mvd.positions(0)[0],
-    )
-    _, _, final_section_pts = m.compute_final_points()
-
-    for obj in objs_in_region:
-        assert 49 <= obj.centroid[1] <= 101  # centroid can be sightly outside the area
-        # Compare obtained centroid to raw point extracted from mvd and processed
-        seq_point_i = m.morph.section_offsets[obj.section_id - 1] + obj.segment_id
-        point_built_from_mvd = final_section_pts[seq_point_i]
-        # The point is the start of the segment, hence give good tolerance
-        nptest.assert_allclose(obj.centroid, point_built_from_mvd, atol=0.5)
 
 
 class Test2Info:

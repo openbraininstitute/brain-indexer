@@ -8,7 +8,7 @@ from spatial_index import logger
 
 from .util import docopt_get_args, is_likely_same_index
 from .util import is_strictly_sensible_filename, is_non_string_iterable
-from .io import write_multi_population_meta_data, is_sonata_nodes_file
+from .io import write_multi_population_meta_data
 from .resolver import open_index, MorphIndexResolver, SynapseIndexResolver
 
 
@@ -20,25 +20,32 @@ def spatial_index_nodes(args=None):
         spatial-index-nodes --help
 
     Options:
-        -v, --verbose            Increase verbosity level
-        -o, --out=<folder>       The index output folder [default: out]
-        --multi-index            Whether to create a multi-index
+        -v, --verbose              Increase verbosity level
+        -o, --out=<folder>         The index output folder [default: out]
+        --multi-index              Whether to create a multi-index
+        --population <population>  The population to index.
     """
     options = docopt_get_args(spatial_index_nodes, args)
-    _run_spatial_index_nodes(options["morphology_dir"], options["nodes_file"], options)
+    _run_spatial_index_nodes(
+        options["morphology_dir"],
+        options["nodes_file"],
+        options.get("population"),
+        options
+    )
 
 
 def spatial_index_synapses(args=None):
     """spatial-index-synapses
 
     Usage:
-        spatial-index-synapses [options] <edges_file> [<population>]
+        spatial-index-synapses [options] <edges_file>
         spatial-index-synapses --help
 
     Options:
-        -v, --verbose            Increase verbosity level
-        -o, --out=<folder>       The index output folder [default: out]
-        --multi-index            Whether to create a multi-index
+        -v, --verbose              Increase verbosity level
+        -o, --out=<folder>         The index output folder [default: out]
+        --multi-index              Whether to create a multi-index
+        --population <population>  The population to index.
     """
     options = docopt_get_args(spatial_index_synapses, args)
     _run_spatial_index_synapses(options["edges_file"], options.get("population"), options)
@@ -79,7 +86,7 @@ def spatial_index_circuit(args=None):
     circuit_config, json_config = _sonata_circuit_config(options["circuit_file"])
     populations = _validated_populations(options, circuit_config)
 
-    if is_non_string_iterable(populations):
+    if populations is not None and is_non_string_iterable(populations):
         _spatial_index_circuit_multi_population(
             options, circuit_config, json_config, populations
         )
@@ -95,7 +102,7 @@ def _spatial_index_circuit_single_population(options, circuit_config, json_confi
     if options['segments']:
         nodes_file = _sonata_nodes_file(json_config, population)
         morphology_dir = _sonata_morphology_dir(circuit_config, population)
-        _run_spatial_index_sonata_nodes(
+        _run_spatial_index_nodes(
             morphology_dir, nodes_file, population, options, output_dir=output_dir
         )
 
@@ -159,7 +166,11 @@ def _validated_single_population(options, circuit_config, population):
     available_populations = _sonata_available_populations(options, circuit_config)
 
     assert population in available_populations, f"{population=}, {available_populations=}"
-    assert is_strictly_sensible_filename(population)
+
+    message = (
+        "SpatialIndex needs to be checked before it can use 'exotic' population names."
+    )
+    assert is_strictly_sensible_filename(population), message
 
     return population
 
@@ -167,35 +178,62 @@ def _validated_single_population(options, circuit_config, population):
 def _validated_populations(options, circuit_config):
     populations = options["populations"]
 
-    if not populations:
-        populations = _sonata_available_populations(options, circuit_config)
+    if populations:
+        if is_non_string_iterable(populations):
+            for pop in populations:
+                _validated_single_population(options, circuit_config, pop)
 
-        if len(populations) != 1:
-            logger.error(
-                "The input files contain multiple populations, but `--population`"
-                " wasn't used. Please use `--population` to list all populations"
-                " to be indexed."
-            )
-            raise ValueError("Invalid `--populations` for multiple populations.")
+        else:
+            _validated_single_population(options, circuit_config, populations)
 
-        populations = next(iter(populations))
-
-    if is_non_string_iterable(populations):
-        for pop in populations:
-            _validated_single_population(options, circuit_config, pop)
+        return populations
 
     else:
-        _validated_single_population(options, circuit_config, populations)
+        available_populations = _sonata_available_populations(options, circuit_config)
 
-    return populations
+        if len(available_populations) == 0:
+            raise ValueError("No populations found.")
+
+        if len(available_populations) > 1:
+            logger.error(
+                "Detected multiple populations {available_populations}."
+                " Please select a population with '--populations'."
+            )
+            raise ValueError("Too many populations to select a fallback value.")
+
+        # Any falsey `populations`, e.g., `[]`, `""`, ... means default.
+        return next(iter(available_populations))
 
 
 def _sonata_select_by_population(iterable, key, population):
+    if len(iterable) == 1:
+        # If the circuit config only contains a single nodes/edges file,
+        # then that must be the right one.
+        #
+        # This helps with files that are not in BBP SONATA format, i.e.
+        # those that are missing a field "populations".
+        return next(iter(iterable))[key]
+
     def matches_population(n):
-        return population == "All" or population in n.get("populations", dict())
+        return population is None or population in n.get("populations", dict())
+
+    for n in iterable:
+        if "populations" not in n:
+            logger.warning(
+                "The circuit config file isn't BBP compliant, it's missing"
+                " 'populations'. SpatialIndex might fail to obtain the correct"
+                " input files from this circuit config."
+            )
+
+            break
 
     selection = [n[key] for n in iterable if matches_population(n)]
-    assert len(selection) == 1, "Couln't determine a unique '{}'.".format(key)
+
+    message = (
+        f"Couldn't determine a unique '{key}', possible edges"
+        f" files: {selection}, population: {population}."
+    )
+    assert len(selection) == 1, message
 
     return selection[0]
 
@@ -241,50 +279,8 @@ def _parse_options_for_builder_args(options, output_dir):
     return index_variant, index_kwargs
 
 
-def _validated_sonata_single_file_population(nodes_file, population):
-    import libsonata
-
-    nodes = libsonata.NodeStorage(nodes_file)
-    populations = nodes.population_names
-
-    if population is not None:
-        message = f"Population '{population}' not found in the file '{nodes_file}'"
-        assert population in populations, message
-
-    else:
-        message = (
-            f"Multiple population in file '{nodes_file}' but no population was selected."
-        )
-        assert len(populations) == 1, message
-
-        population = next(iter(populations))
-
-    return population
-
-
-def _run_spatial_index_nodes(morphology_dir, nodes_file, options, output_dir=None):
-    if is_sonata_nodes_file(nodes_file):
-        population = _validated_sonata_single_file_population(nodes_file, None)
-        _run_spatial_index_sonata_nodes(
-            morphology_dir, nodes_file, population, options, output_dir=output_dir
-        )
-    else:
-        _run_spatial_index_mvd3_nodes(
-            morphology_dir, nodes_file, options, output_dir=output_dir
-        )
-
-
-def _run_spatial_index_mvd3_nodes(morphology_dir, nodes_file, options, output_dir=None):
-    index_variant, index_kwargs = _parse_options_for_builder_args(options, output_dir)
-
-    Builder = MorphIndexResolver.builder_class(index_variant)
-    Builder.create(
-        morphology_dir, nodes_file, **index_kwargs
-    )
-
-
-def _run_spatial_index_sonata_nodes(morphology_dir, nodes_file, population, options,
-                                    output_dir=None):
+def _run_spatial_index_nodes(morphology_dir, nodes_file, population, options,
+                             output_dir=None):
     index_variant, index_kwargs = _parse_options_for_builder_args(options, output_dir)
 
     Builder = MorphIndexResolver.builder_class(index_variant)

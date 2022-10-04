@@ -118,13 +118,12 @@ Indexing Morphologies
 ~~~~~~~~~~~~~~~~~~~~~
 In SI the term *morphologies* refers to discrete neurons consisting of somas and segments.
 
-Morphology indexes can be build directly from mvd3 and SONATA input files. For example by using
+Morphology indexes can be build directly from SONATA input files. For example by using
 `MorphIndexBuilder` as follows:
 
 .. code-block:: python
 
     index = MorphIndexBuilder.from_sonata_file(morph_dir, nodes_h5)
-    index = MorphIndexBuilder.from_mvd_file(morph_dir, nodes_mvd)
 
 where ``morph_dir`` is the path of the directory containing the morphologies in
 either ASCII, SWC or HDF5 format. Both function have a keyword argument which

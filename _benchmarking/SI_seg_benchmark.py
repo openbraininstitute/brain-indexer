@@ -8,7 +8,7 @@ print("SEGMENT INDEX BENCHMARKING IN PROGRESS... PLEASE WAIT!")
 
 N_QUERIES = int(sys.argv[1]) if len(sys.argv) > 1 else 10000
 
-# CIRCUIT_FILE = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-2k/circuit.mvd3"
+# CIRCUIT_FILE = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-2k/nodes.h5"
 # CIRCUIT_FILE = "/gpfs/bbp.cscs.ch/home/bellotta/proj/TestData/circuitBuilding_1000neurons/circuits/circuit.mvd3"
 # CIRCUIT_FILE = "/gpfs/bbp.cscs.ch/project/proj42/circuits/rat.CA1/20180309/circuit.mvd3"
 CIRCUIT_FILE = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-thalamus/circuit.mvd3"
@@ -17,6 +17,7 @@ CIRCUIT_FILE = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-thalam
 # MORPH_FILE = "/gpfs/bbp.cscs.ch/project/proj42/entities/morphologies/20180215/ascii"
 MORPH_FILE = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-thalamus/morph_release/ascii"
 
+assert not CIRCUIT_FILE.endswith(".mvd3"), "Update script to use sonata."
 
 # Serial Execution timing
 start_global = timer()

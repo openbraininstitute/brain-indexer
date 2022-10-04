@@ -14,7 +14,7 @@ from line_profiler import LineProfiler
 
 # Loading some small circuits and morphology files on BB5
 CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-2k"
-CIRCUIT_FILE = os.path.join(CIRCUIT_2K, "circuit.mvd3")
+CIRCUIT_FILE = os.path.join(CIRCUIT_2K, "nodes.h5")
 MORPH_FILE = os.path.join(CIRCUIT_2K, "morphologies/ascii")
 
 

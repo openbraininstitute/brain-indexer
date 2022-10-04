@@ -171,13 +171,30 @@ def open_sonata_nodes(sonata_filename, population_name):
     return _open_sonata_dataset(sonata_filename, population_name, libsonata.NodeStorage)
 
 
-def is_sonata_nodes_file(sonata_filename):
-    try:
-        libsonata.NodeStorage(sonata_filename)
-    except RuntimeError:
-        return False
+def _validated_sonata_population_name(sonata_dataset, population_name):
+    population_names = sonata_dataset.population_names
 
-    return True
+    if population_name is not None:
+        message = f"Population '{population_name}' not found."
+        assert population_name in population_names, message
+
+    else:
+        message = "Multiple populations but no population was selected."
+        assert len(population_names) == 1, message
+
+        population_name = next(iter(population_names))
+
+    return population_name
+
+
+def validated_sonata_nodes_population_name(nodes_file, population_name):
+    nodes = libsonata.NodeStorage(nodes_file)
+    return _validated_sonata_population_name(nodes, population_name)
+
+
+def validated_sonata_edges_population(edges_file, population_name):
+    edges = libsonata.EdgeStorage(edges_file)
+    return _validated_sonata_population_name(edges, population_name)
 
 
 def write_sonata_meta_data_section(index_path, edge_filename, population_name):

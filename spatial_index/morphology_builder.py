@@ -3,14 +3,12 @@
 # This file is part of SpatialIndex, the new-gen spatial indexer for BBP
 # Copyright Blue Brain Project 2020-2021. All rights reserved
 
-import itertools
 import warnings; warnings.simplefilter("ignore")  # NOQA
 
 from collections import namedtuple
 from os import path as ospath
 
 import morphio
-import mvdtool
 import numpy as np
 import quaternion as npq
 
@@ -20,6 +18,8 @@ from . import _spatial_index as core
 from .builder import _WriteSONATAMetadataMixin, _WriteSONATAMetadataMultiMixin
 from .chunked_builder import ChunkedProcessingMixin, MultiIndexBuilderMixin
 from .index import MorphIndex
+from .io import open_sonata_nodes, validated_sonata_nodes_population_name
+
 
 morphio.set_ignored_warning(morphio.Warning.only_child)
 MorphInfo = namedtuple("MorphInfo", "soma, points, radius, branch_offsets")
@@ -65,23 +65,23 @@ class MorphologyLib:
 
 
 class MorphIndexBuilderBase:
-    def __init__(self, morphology_dir, nodes_file, population="", gids=None):
+    def __init__(self, morphology_dir, nodes_file, population=None, gids=None):
         """Initializes a node index builder
 
         Args:
             morphology_dir (str): The file/directory where morphologies reside
-            nodes_file (str): The Sonata/mvd nodes file
+            nodes_file (str): The SONATA nodes file
             population (str, optional): The nodes population. Defaults to "" (default).
             gids ([type], optional): A selection of gids to index. Defaults to None (All)
         """
-        mvd = mvdtool.open(nodes_file, population)
+        population = validated_sonata_nodes_population_name(nodes_file, population)
+        self._sonata_nodes = open_sonata_nodes(nodes_file, population)
 
         if gids is None:
-            gids = range(0, len(mvd))
+            gids = range(0, self._sonata_nodes.size)
         else:
             gids = np.sort(np.array(gids, dtype=int))
 
-        self._mvd = mvd
         self._gids = gids
 
         self.morph_lib = MorphologyLib(morphology_dir)
@@ -91,14 +91,12 @@ class MorphIndexBuilderBase:
         return len(self._gids)
 
     def rototranslate(self, morph, position, rotation):
+        # npq requries quaternion in the order: (w, x, y, z)
+
         morph = self.morph_lib.get(morph)
-
-        # mvd files use (x, y, z, w) representation for quaternions. npq uses (w, x, y, z)
-        rotation_vector = np.roll(rotation, 1)
-
         if rotation is not None:
             points = npq.rotate_vectors(
-                npq.quaternion(*rotation_vector).normalized(),
+                npq.quaternion(*rotation).normalized(),
                 morph.points
             )
 
@@ -128,22 +126,23 @@ class MorphIndexBuilderBase:
         """
         slice_ = slice(*sub_range)
         cur_gids = self._gids[slice_]
-        actual_indices = slice_.indices(len(self._gids))
-        assert actual_indices[2] > 0, "Step cannot be negative"
-        # gid vec is sorted. check if range is contiguous
-        if len(cur_gids) and cur_gids[0] + len(cur_gids) == cur_gids[-1] + 1:
-            index_args = (cur_gids[0], len(cur_gids))
-        else:
-            index_args = (np.array(cur_gids),)  # numpy can init from a range obj
 
-        mvd = self._mvd
-        morph_names = mvd.morphologies(*index_args)
-        positions = mvd.positions(*index_args)
-        rotations = mvd.rotations(*index_args) if mvd.rotated else itertools.repeat(None)
+        sonata_nodes = self._sonata_nodes
+        for gid in cur_gids:
+            morph_name = sonata_nodes.get_attribute("morphology", gid)
 
-        for gid, morph, pos, rot in zip(cur_gids, morph_names, positions, rotations):
-            rotopoints = self.rototranslate(morph, pos, rot)
-            self.process_cell(gid, morph, rotopoints, pos)
+            pos_keys = ["x", "y", "z"]
+            pos = np.array(
+                [sonata_nodes.get_attribute(key, gid) for key in pos_keys]
+            )
+
+            orientation_keys = [f"orientation_{key}" for key in ["w", "x", "y", "z"]]
+            rot = np.array(
+                [sonata_nodes.get_attribute(key, gid) for key in orientation_keys]
+            )
+
+            rotopoints = self.rototranslate(morph_name, pos, rot)
+            self.process_cell(gid, morph_name, rotopoints, pos)
 
     @classmethod
     def from_sonata_file(cls, morphology_dir, node_filename, pop_name, target_gids=None,
@@ -170,12 +169,6 @@ class MorphIndexBuilderBase:
         return index
 
     @classmethod
-    def from_mvd_file(cls, morphology_dir, node_filename, target_gids=None,
-                      **kw):
-        """ Build a synpase index from an mvd file"""
-        return cls.create(morphology_dir, node_filename, "", target_gids, **kw)
-
-    @classmethod
     def from_sonata_selection(cls, morphology_dir, node_filename, pop_name,
                               selection, output_dir=None, **kw):
         """ Builds the synapse index from a generic Sonata selection object"""
@@ -194,9 +187,9 @@ class MorphIndexBuilder(MorphIndexBuilderBase,
                         _WriteSONATAMetadataMixin,
                         ChunkedProcessingMixin):
     """A MorphIndexBuilder is a helper class to create a `MorphIndex`
-    from a node file (mvd or Sonata) and a morphology library.
+    from a SONATA nodes file and a morphology library.
     """
-    def __init__(self, morphology_dir, nodes_file, population="", gids=None):
+    def __init__(self, morphology_dir, nodes_file, population=None, gids=None):
         super().__init__(morphology_dir, nodes_file, population, gids)
         self._core_builder = core.MorphIndex()
 
@@ -221,7 +214,7 @@ if hasattr(core, "MorphMultiIndexBulkBuilder"):
                                  _WriteSONATAMetadataMultiMixin,
                                  MorphIndexBuilderBase):
 
-        def __init__(self, morphology_dir, nodes_file, population="", gids=None,
+        def __init__(self, morphology_dir, nodes_file, population=None, gids=None,
                      output_dir=None):
             super().__init__(morphology_dir, nodes_file, population=population, gids=gids)
 

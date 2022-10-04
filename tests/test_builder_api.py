@@ -11,8 +11,8 @@ from spatial_index import IndexResolver
 from spatial_index.io import MetaData, shared_temporary_directory
 
 
-CIRCUIT_10_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v3/circuit-10"
-CIRCUIT_1K_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v3/circuit-1k"
+CIRCUIT_10_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v4/circuit-10"
+CIRCUIT_1K_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v4/circuit-1k"
 
 
 def small_synpase_sonata_conf():

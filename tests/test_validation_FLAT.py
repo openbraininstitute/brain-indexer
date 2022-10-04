@@ -18,8 +18,9 @@ pytest_long = pytest.mark.long
 
 # Loading some small circuits and morphology files on BB5
 CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-2k"
-CIRCUIT_FILE = os.path.join(CIRCUIT_2K, "circuit.mvd3")
+CIRCUIT_FILE = os.path.join(CIRCUIT_2K, "nodes.h5")
 MORPH_FILE = os.path.join(CIRCUIT_2K, "morphologies/ascii")
+POPULATION = "All"
 
 
 def do_multi_index_query_serial(corner, opposite_corner):
@@ -27,8 +28,8 @@ def do_multi_index_query_serial(corner, opposite_corner):
     from spatial_index import MorphMultiIndexBuilder
 
     output_dir = "tmp-jdiwo"
-    MorphMultiIndexBuilder.from_mvd_file(
-        MORPH_FILE, CIRCUIT_FILE,
+    MorphMultiIndexBuilder.from_sonata_file(
+        MORPH_FILE, CIRCUIT_FILE, POPULATION,
         target_gids=range(700, 1200),
         output_dir=output_dir
     )
@@ -39,9 +40,11 @@ def do_multi_index_query_serial(corner, opposite_corner):
 
 
 def do_query_serial(corner, opposite_corner):
-    index = MorphIndexBuilder.from_mvd_file(MORPH_FILE, CIRCUIT_FILE,
-                                            target_gids=range(700, 1200),
-                                            progress=True)
+    index = MorphIndexBuilder.from_sonata_file(
+        MORPH_FILE, CIRCUIT_FILE, POPULATION,
+        target_gids=range(700, 1200),
+        progress=True
+    )
 
     idx = index.box_query(corner, opposite_corner, fields="ids")
     return idx

@@ -10,6 +10,7 @@ from .util import gen_ranges, bcast_sonata_selection
 from .index import SynapseIndex
 from .builder import _WriteSONATAMetadataMixin, _WriteSONATAMetadataMultiMixin
 from .chunked_builder import ChunkedProcessingMixin, MultiIndexBuilderMixin
+from .io import open_sonata_edges, validated_sonata_edges_population
 
 
 class SynapseIndexBuilderBase:
@@ -56,7 +57,10 @@ class SynapseIndexBuilderBase:
             output_dir: If not ``None`` the index will be stored in the folder
                 ``output_dir``.
         """
-        edges = spatial_index.io.open_sonata_edges(edge_filename, population_name)
+        population_name = validated_sonata_edges_population(
+            edge_filename, population_name
+        )
+        edges = open_sonata_edges(edge_filename, population_name)
         index = cls.from_sonata_tgids(
             edges, target_gids=target_gids, output_dir=output_dir, **kw
         )

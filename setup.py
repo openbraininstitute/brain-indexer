@@ -101,7 +101,6 @@ package_info = dict(
         "numpy-quaternion",
         "libsonata",
         "morphio",
-        "mvdtool>=2.4.1",
         "docopt",
         "tqdm",
     ],

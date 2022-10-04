@@ -12,9 +12,9 @@ import pytest
 pytest_skipif = pytest.mark.skipif
 pytest_long = pytest.mark.long
 
-DATADIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v3"
-BLUECONFIG_2K = os.path.join(DATADIR, "BlueConfig")
-CIRCUIT_2K_SI = os.path.join(DATADIR, "circuit-2k/indexes/morphology/in_memory")
+DATADIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v4"
+BLUECONFIG_2K = os.path.join(DATADIR, "bluepy_validation/BlueConfig")
+CIRCUIT_2K_SI = os.path.join(DATADIR, "bluepy_validation/indexes/morphology/in_memory")
 
 
 def bluepy_check(circuit, result):
