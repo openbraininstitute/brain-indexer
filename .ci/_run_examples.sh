@@ -10,6 +10,7 @@ rm -r usecase1 || true
 rm -r circuit2k || true
 rm -rf tmp-* || true
 rm -r example_segment_index || true
+rm -rf multi_index_2k || true
 
 python examples/segment_index_sonata.py
 python examples/segment_index.py
@@ -27,6 +28,7 @@ bash .ci/test_circuit_config-usecase4.sh
 # are not yet compatible with SpatialIndex.
 # bash .ci/test_circuit_config-usecase5.sh
 bash examples/run_ipynb.sh examples/basic_tutorial.ipynb
+bash examples/run_ipynb.sh examples/advanced_tutorial.ipynb 3
 
 set +x
 echo "[`date`] Run Finished"

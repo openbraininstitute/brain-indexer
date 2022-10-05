@@ -88,8 +88,8 @@ examples.
 
 Creating An Index on the Fly
 ----------------------------
-Work loads the required repeated queries will benefit from using a spatial
-index, even for quite small number of indexed elements. Therefore, it is useful
+Workflows that require repeated queries will benefit from using a spatial
+index, even for quite a small number of indexed elements. Therefore, it is useful
 to create small indexes on the fly. This section describes the available API for
 this task.
 

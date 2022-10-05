@@ -28,7 +28,7 @@ By including ``spatial_index/index.hpp`` and ``spatial_index/util.hpp`` the user
 access to the whole API which is highly flexible due to templates. For instance
 the IndexTree class can be templated to any of the defined structures or new
 user defined geometries, providing the user with a boost index rtree object
-which automamtically supports serialization and higher level API functions.
+which automatically supports serialization and higher level API functions.
 
 Please refer to the unit tests (under ``tests/cpp/unit_tests.cpp``) to see examples
 on how to create several kinds of IndexTrees.

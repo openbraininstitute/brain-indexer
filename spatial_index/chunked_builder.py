@@ -59,7 +59,13 @@ class MultiIndexBuilderMixin:
             # Credit: https://stackoverflow.com/a/57025941
             return (n & (n - 1) == 0) and n != 0
 
-        assert is_power_of_two(comm_size - 1)
+        if not is_power_of_two(comm_size - 1):
+            spatial_index.logger.error("SpatialIndex requires that the number of MPI "
+                                       "ranks is equal to `N = 2**k + 1`, "
+                                       "e.g., 3, 5, 9, ... Please ensure you're using `"
+                                       "mpirun -np N` or `srun -n N` with a valid number "
+                                       "of MPI ranks N.")
+            raise ValueError(f"Invalid communicator size, comm_size={comm_size}.")
 
         work_queue = MultiIndexWorkQueue(comm)
 

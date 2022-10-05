@@ -165,7 +165,7 @@ if hasattr(core, "SynapseMultiIndexBulkBuilder"):
             constructor need to have valid values. Some keyword-arguments
             point to MB of data, e.g. ``target_gids``; those sometimes don't
             need to present on all MPI ranks. When a particular keyword argument
-            is optional this is clearly stated in the API documentatio stated in
+            is optional this is clearly stated in the API documentation stated in
             the API documentation.
 
             Please consult the User Guide for tips on using SI in an MPI parallel

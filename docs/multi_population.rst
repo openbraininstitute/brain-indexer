@@ -65,9 +65,9 @@ Keyword Argument: population_mode
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This option is slightly advanced and only interesting if you're writing code
-that should be generic accross both single- and multi-popultion indexes. It
-controls the return type of queries, i.e., it controls if the dict over
-populations is present or not.
+that should be generic across both single and multi-population indexes. It
+controls the return type of queries, i.e., it controls if the dict that sorts
+the populations is present or not.
 
 There are three options:
 

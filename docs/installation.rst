@@ -57,3 +57,12 @@ and install as editable with pip
     python -m venv <name of the virtualenv>
     pip install -e .
 
+**Please keep in mind that some dependecies are necessary.** 
+
+On BB5 you can simply load the following modules:
+
+.. code-block:: bash
+
+    module load unstable gcc cmake boost hpe-mpi
+
+On other systems you might need to install them manually if you don't have already `cmake`, `boost`, `gcc` and `mpi` installed.

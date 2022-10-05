@@ -142,8 +142,8 @@ Sphere Indexes
 Indexes of Spheres support the following fields:
 
 * ``"id"`` which is the ID of the synapse,
-* ``"centroid"`` which is the GID of the post-synaptic neuron,
-* ``"radius"`` which is the GID of the pre-synaptic neuron,
+* ``"centroid"`` which is the center of the sphere,
+* ``"radius"`` which is the radius of the sphere,
 
 The partially supported field is:
 

@@ -10,7 +10,7 @@ tree at a certain depth and storing each subtree individually. This isn't quite
 how the multi-index is implemented. Instead we first compute non-overlapping
 volumes such that each area contains roughly the same number of elements. More
 precisely the volumes contain the same number of centers of the elements. The
-algorithm used is called Sort Tile Recusion (STR), see :numref:`multiindex`.
+algorithm used is called Sort Tile Recursion (STR), see :numref:`multiindex`.
 
 
 .. _multiindex:
