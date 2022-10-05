@@ -15,6 +15,8 @@ class _WriteSONATAMetadataMultiMixin:
         if MPI.COMM_WORLD.Get_rank() == 0:
             write_sonata_meta_data_section(*a, **kw)
 
+        MPI.COMM_WORLD.Barrier()
+
 
 class SphereIndexBuilderBase:
     def __init__(self):
