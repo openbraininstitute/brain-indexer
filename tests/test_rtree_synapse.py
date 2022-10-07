@@ -47,7 +47,7 @@ def _test_rtree(index):
     assert n_elems_within == 4
 
     aggregated_per_gid = index.box_counts(
-        [-1., -1., -1.], [1., 1., 1.], group_by="gid"
+        [-1., -1., -1.], [1., 1., 1.], group_by="post_gid"
     )
     assert aggregated_per_gid[1] == 2
     assert aggregated_per_gid[2] == 1
@@ -55,12 +55,21 @@ def _test_rtree(index):
     assert aggregated_per_gid[4] == 1
 
     aggregated_2 = index.box_counts(
-        [-5., -5., -5.], [5., 5., 5.], group_by="gid"
+        [-5., -5., -5.], [5., 5., 5.], group_by="post_gid"
     )
     assert aggregated_2[1] == 2
     assert aggregated_2[2] == 1
     assert aggregated_2[3] == 3
     assert aggregated_2[4] == 1
+
+    # This is a backward compatibility check.
+    aggregated_old = index.box_counts(
+        [-5., -5., -5.], [5., 5., 5.], group_by="gid"
+    )
+
+    assert aggregated_2.keys() == aggregated_old.keys()
+    for a, b in zip(aggregated_2.values(), aggregated_old.values()):
+        assert a == b
 
 
 def test_synapse_query_aggregate():

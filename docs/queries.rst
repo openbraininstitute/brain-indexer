@@ -240,14 +240,14 @@ synapses from N source populations into a single target population, one can
 group the synapses by the GID of the target neuron; and then count the number
 of synapses per target GID.
 
-This is enabled through the keyword argument ``group_by="gid"``.
+This is enabled through the keyword argument ``group_by="post_gid"``.
 
 .. code-block:: python
 
    # The keys of the dictionary are the target GIDs, and
    # the values are the number of synapses are contained in
-   # `window` with the specified target GID.
-   >>> index.box_counts(*window, group_by="gid")
+   # `box` with the specified target GID.
+   >>> index.box_counts(*box, group_by="post_gid")
    {
      2379: 23,
      293: 1,

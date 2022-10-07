@@ -4,6 +4,8 @@ import functools
 import libsonata
 
 import spatial_index
+
+from . import logger
 from .io import write_sonata_meta_data_section
 from .util import is_non_string_iterable, strip_singleton_non_string_iterable
 
@@ -209,7 +211,7 @@ class Index(IndexInterface):
         }
 
         if hasattr(self._core_index, "_count_intersecting_agg_gid"):
-            self._box_counts["gid"] = getattr(
+            self._box_counts["post_gid"] = getattr(
                 self._core_index,
                 "_count_intersecting_agg_gid"
             )
@@ -219,7 +221,7 @@ class Index(IndexInterface):
         }
 
         if hasattr(self._core_index, "_count_intersecting_sphere_agg_gid"):
-            self._sphere_counts["gid"] = getattr(
+            self._sphere_counts["post_gid"] = getattr(
                 self._core_index,
                 "_count_intersecting_sphere_agg_gid"
             )
@@ -337,6 +339,15 @@ class Index(IndexInterface):
 
     def _counts(self, query_shape, *,
                 group_by=None, accuracy=None, methods=None):
+
+        if group_by == "gid":
+            logger.warning(
+                "The group_by option 'gid' has been renamed 'post_gid'."
+                " The string 'gid' will not be supported in 1.0. Please"
+                " update the callsite."
+            )
+
+            group_by = "post_gid"
 
         method = methods.get(group_by, None)
         if method is None:

@@ -49,7 +49,7 @@ def test_syn_index():
     total_in_region = index.box_counts([200, 200, 480], [300, 300, 520])
     assert len(ids_in_region) == total_in_region
 
-    aggregated = index.box_counts([200, 200, 480], [300, 300, 520], group_by="gid")
+    aggregated = index.box_counts([200, 200, 480], [300, 300, 520], group_by="post_gid")
     print("Synapses belong to {} neurons".format(len(aggregated)))
     assert len(aggregated) == 19
     assert aggregated[351] == 2
