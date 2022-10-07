@@ -30,7 +30,7 @@ def do_multi_index_query_serial(corner, opposite_corner):
     output_dir = "tmp-jdiwo"
     MorphMultiIndexBuilder.from_sonata_file(
         MORPH_FILE, CIRCUIT_FILE, POPULATION,
-        target_gids=range(700, 1200),
+        gids=range(700, 1200),
         output_dir=output_dir
     )
 
@@ -42,7 +42,7 @@ def do_multi_index_query_serial(corner, opposite_corner):
 def do_query_serial(corner, opposite_corner):
     index = MorphIndexBuilder.from_sonata_file(
         MORPH_FILE, CIRCUIT_FILE, POPULATION,
-        target_gids=range(700, 1200),
+        gids=range(700, 1200),
         progress=True
     )
 

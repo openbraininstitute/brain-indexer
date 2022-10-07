@@ -14,6 +14,7 @@ import quaternion as npq
 
 import spatial_index
 from . import _spatial_index as core
+from . import logger
 
 from .builder import _WriteSONATAMetadataMixin, _WriteSONATAMetadataMultiMixin
 from .chunked_builder import ChunkedProcessingMixin, MultiIndexBuilderMixin
@@ -145,7 +146,7 @@ class MorphIndexBuilderBase:
             self.process_cell(gid, morph_name, rotopoints, pos)
 
     @classmethod
-    def from_sonata_file(cls, morphology_dir, node_filename, pop_name, target_gids=None,
+    def from_sonata_file(cls, morphology_dir, node_filename, pop_name, gids=None,
                          output_dir=None, **kw):
         """ Creates a node index from a sonata node file.
 
@@ -153,12 +154,24 @@ class MorphIndexBuilderBase:
             node_filename: The SONATA node filename
             morphology_dir: The directory containing the morphology files
             pop_name: The name of the population
-            target_gids: A list/array of target gids to index. Default: None
+            gids: A list/array of target gids to index. Default: None
                 Warn: None will index all synapses, please mind memory limits
             output_dir: If not ``None`` the index will be stored in the folder
                 ``output_dir``.
         """
-        index = cls.create(morphology_dir, node_filename, pop_name, target_gids,
+        if "target_gids" in kw:
+            logger.warn(
+                "The keyword argument 'target_gids' has been renamed to"
+                " 'gids' and will be removed before 1.0."
+            )
+
+            if gids is not None:
+                raise ValueError("Incompatible values for target_gids and gids.")
+
+            gids = kw["target_gids"]
+            del kw["target_gids"]
+
+        index = cls.create(morphology_dir, node_filename, pop_name, gids,
                            output_dir=output_dir, **kw)
 
         if output_dir is not None:

@@ -78,6 +78,20 @@ def from_sonata_selection_callback(element_type, index_variant, output_dir=None)
     Builder.from_sonata_selection(*args, selection, output_dir=output_dir)
 
 
+def from_sonata_file_gids_callback(element_type, index_variant, output_dir=None):
+    args = small_sonata_conf(element_type)
+
+    Builder = IndexResolver.builder_class(element_type, index_variant)
+    Builder.from_sonata_file(*args, gids=[0, 1], output_dir=output_dir)
+
+
+def from_sonata_file_target_gids_callback(element_type, index_variant, output_dir=None):
+    args = small_sonata_conf(element_type)
+
+    Builder = IndexResolver.builder_class(element_type, index_variant)
+    Builder.from_sonata_file(*args, target_gids=[0, 1], output_dir=output_dir)
+
+
 def check_morphology_from_sonata_file(element_type, index_variant, mpi_comm=None):
     check_morphology_from_sonata(
         element_type, index_variant, from_sonata_file_callback, mpi_comm=mpi_comm
@@ -113,4 +127,17 @@ def test_morphology_multi_index_from_sonata_selection(element_type):
     from mpi4py import MPI
 
     mpi_comm = MPI.COMM_WORLD
-    check_morphology_from_sonata_selection(element_type, "multi_index", mpi_comm=mpi_comm)
+    check_morphology_from_sonata(
+        element_type, "multi_index", from_sonata_selection_callback, mpi_comm=mpi_comm
+    )
+
+    check_morphology_from_sonata(
+        element_type, "multi_index", from_sonata_file_gids_callback, mpi_comm=mpi_comm
+    )
+
+    # This checks that some backwards compatibility code works. Remove then `target_gids`
+    # becomes unsupported.
+    check_morphology_from_sonata(
+        element_type, "multi_index", from_sonata_file_target_gids_callback,
+        mpi_comm=mpi_comm
+    )
