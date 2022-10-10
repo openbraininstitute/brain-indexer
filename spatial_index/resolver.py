@@ -1,8 +1,8 @@
 from spatial_index import core
 
-from .morphology_builder import MorphIndexBuilder, MorphMultiIndexBuilder
+from .morphology_builder import MorphIndexBuilder
+from .synapse_builder import SynapseIndexBuilder
 
-from .synapse_builder import SynapseIndexBuilder, SynapseMultiIndexBuilder
 from .builder import SphereIndexBuilder
 
 from .index import MorphIndex, MorphMultiIndex
@@ -60,6 +60,11 @@ class SynapseIndexResolver(_SingleKindIndexResolverBase):
 
     This class is for all classes related to indexes of synapses.
     """
+    try:
+        from .synapse_builder import SynapseMultiIndexBuilder  # noqa
+    except ImportError:
+        SynapseMultiIndexBuilder = None
+
     _core_classes = {
         core._MetaDataConstants.in_memory_key: core.SynapseIndex,
         core._MetaDataConstants.multi_index_key: core.SynapseMultiIndex,
@@ -81,6 +86,11 @@ class MorphIndexResolver(_SingleKindIndexResolverBase):
 
     This class is for all classes related to indexes of morphologies.
     """
+    try:
+        from .morphology_builder import MorphMultiIndexBuilder  # noqa
+    except ImportError:
+        MorphMultiIndexBuilder = None
+
     _core_classes = {
         core._MetaDataConstants.in_memory_key: core.MorphIndex,
         core._MetaDataConstants.multi_index_key: core.MorphMultiIndex,

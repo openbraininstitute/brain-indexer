@@ -29,7 +29,17 @@ try:
     from .morphology_builder import MorphMultiIndexBuilder  # noqa
     from .synapse_builder import SynapseMultiIndexBuilder  # noqa
 except ImportError:
-    logging.warning("MPI MultiIndex builders have been disabled")
+    import textwrap
+    logger.warning(
+        "\n".join(textwrap.wrap(
+            "The C++ backend of SpatialIndex was compiled without MPI support."
+            " Therefore multi-index builders have been disabled. This could be"
+            " because you're using a wheel, which (currently) don't support MPI."
+            " If you need to create a big index you'll need to use multi-indexes"
+            " and therefore a version built with MPI. Please install using Spack"
+            " or directly from source."
+        ))
+    )
 
 from .morphology_builder import MorphIndexBuilder  # noqa
 from .synapse_builder import SynapseIndexBuilder  # noqa

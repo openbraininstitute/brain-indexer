@@ -7,6 +7,11 @@ You can use ``pip install --index
 https://bbpteam.epfl.ch/repository/devpi/simple spatial_index`` to install
 SpatialIndex after you created and activated your virtualenv.
 
+Please note that
+this method of installation will deactivate any MPI capabilities and therefore
+it's necessary to use another installation method if you need to index
+large circuits with multi-index support.
+
 Alternatively, to create a Virtual Environment and install SpatialIndex, a
 script is supplied that performs all the operations necessary to create a
 Virtual Environment and install SpatialIndex. The script is available in the
