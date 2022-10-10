@@ -126,7 +126,7 @@ def _spatial_index_circuit_multi_population(options, circuit_config, json_config
             options, circuit_config, json_config, pop, output_dir=output_dir
         )
 
-    element_type = "synpase" if options["synapses"] else "morphology"
+    element_type = "synapse" if options["synapses"] else "morphology"
     write_multi_population_meta_data(basedir, element_type, populations)
 
 

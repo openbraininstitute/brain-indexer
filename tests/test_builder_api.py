@@ -15,7 +15,7 @@ CIRCUIT_10_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v4/circuit-10"
 CIRCUIT_1K_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v4/circuit-1k"
 
 
-def small_synpase_sonata_conf():
+def small_synapse_sonata_conf():
     filename = os.path.join(CIRCUIT_1K_DIR, "edges.h5")
     population = "All"
 
@@ -32,7 +32,7 @@ def small_morphology_sonata_conf():
 
 def small_sonata_conf(element_type):
     if element_type == "synapse":
-        return small_synpase_sonata_conf()
+        return small_synapse_sonata_conf()
 
     elif element_type == "morphology":
         return small_morphology_sonata_conf()
