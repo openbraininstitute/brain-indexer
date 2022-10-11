@@ -7,15 +7,6 @@ from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext
 
 
-# Main source of the version. Dont rename, used by Cmake
-try:
-    v = subprocess.run(['git', 'describe', '--tags'],
-                       stdout=subprocess.PIPE).stdout.strip().decode()
-    __version__ = v[: v.rfind("-")].replace("-", ".dev") if "-" in v else v
-except Exception as e:
-    raise RuntimeError("Could not get version from Git repo") from e
-
-
 class CMakeExtension(Extension):
     def __init__(self, name, sourcedir='', cmake_opts=None):
         Extension.__init__(self, name, sources=[])
@@ -35,17 +26,17 @@ class CMakeBuild(build_ext):
         print("Building lib to:", self.outdir)
         cmake_args = [
             '-DEXTENSION_OUTPUT_DIRECTORY=' + self.outdir,
-            '-DPYTHON_EXECUTABLE=' + sys.executable
+            '-DPYTHON_EXECUTABLE=' + sys.executable,
         ] + ext.cmake_opts
 
-        cfg = 'Debug' if self.debug else 'RelWithDebInfo'
-        cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
+        cfg = 'Debug' if self.debug else 'Release'
+        cmake_args += [
+            '-DCMAKE_BUILD_TYPE=' + cfg,
+        ]
         build_args = ['--config', cfg, '--', '-j4']
 
         env = os.environ.copy()
-        env['CXXFLAGS'] = "{} -DVERSION_INFO='{}'".format(
-            env.get('CXXFLAGS', ''),
-            self.distribution.get_version())
+        env['CXXFLAGS'] = "{}".format(env.get('CXXFLAGS', ''))
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
         try:
@@ -76,7 +67,7 @@ class CMakeBuild(build_ext):
 
 package_info = dict(
     name="spatial-index",
-    version=__version__,
+    use_scm_version=True,
     packages=["spatial_index"],
     ext_modules=[CMakeExtension(
         'spatial_index._spatial_index',
@@ -85,7 +76,6 @@ package_info = dict(
             '-DSI_MPI={}'.format(
                 os.environ["SI_MPI"] if "SI_MPI" in os.environ else "On"
             ),
-            '-DSI_VERSION=' + __version__
         ]
     )],
     entry_points=dict(console_scripts=[
@@ -110,7 +100,7 @@ package_info = dict(
         ]
     },
     tests_require=["pytest", "pytest-mpi", ],
-    setup_requires=(["pytest-runner"] if "test" in sys.argv else [])
+    setup_requires=(["setuptools_scm", "pytest-runner" if "test" in sys.argv else ""])
 )
 
 

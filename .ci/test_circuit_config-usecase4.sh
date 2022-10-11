@@ -21,7 +21,7 @@ spatial-index-circuit segments "${circuit_config_file}" \
     --populations NodeA NodeB \
     -o "${segments_spi}"
 
-python << EOF
+python3 << EOF
 import spatial_index
 index = spatial_index.open_index("${segments_spi}")
 sphere = [0.0, 0.0, 0.0], 1000.0
@@ -41,7 +41,7 @@ spatial-index-circuit synapses "${circuit_config_file}" \
     VirtualPopA__NodeA__chemical VirtualPopB__NodeB__chemical \
     -o "${synapses_spi}"
 
-python << EOF
+python3 << EOF
 import spatial_index
 index = spatial_index.open_index("${synapses_spi}")
 sphere = [0.0, 0.0, 0.0], 1000.0

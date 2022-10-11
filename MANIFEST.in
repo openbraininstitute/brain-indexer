@@ -1,5 +1,13 @@
-include CMakeLists.txt
-recursive-include 3rdparty *
-recursive-include include *
-recursive-include python *
+graft 3rdparty/pybind11
+prune 3rdparty/pybind11/tests
+prune 3rdparty/pybind11/.github
+prune 3rdparty/pybind11/docs
 
+exclude .gitmodules
+exclude .gitignore
+exclude .gitlab-ci.yml
+
+prune .ci
+prune ci
+prune tests
+prune _benchmarking

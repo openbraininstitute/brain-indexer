@@ -1,14 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-include("CMake/version.cmake")
-if(NOT DEFINED SI_VERSION)
-    get_git_version(SI_VERSION)
-endif()
-sanitize_version(SI_VERSION "${SI_VERSION}")
-message(STATUS "Building Spatial-Index ${SI_VERSION}")
-
-project(SpatialIndex VERSION ${SI_VERSION}
-                     DESCRIPTION "BBP Spatial indexing tools"
+project(SpatialIndex DESCRIPTION "BBP Spatial indexing tools"
                      LANGUAGES CXX)
 
 option(SI_MPI "Build with MPI support" ON)
@@ -47,7 +39,7 @@ if(SI_UNIT_TESTS)
         list(APPEND BOOST_REQ_COMPONENTS timer)
     endif()
 endif()
-find_package(Boost 1.59.0 REQUIRED COMPONENTS ${BOOST_REQ_COMPONENTS})
+find_package(Boost 1.79.0 REQUIRED COMPONENTS ${BOOST_REQ_COMPONENTS})
 find_package(Threads REQUIRED QUIET)
 
 # MPI

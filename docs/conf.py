@@ -5,6 +5,7 @@ import os
 import time
 from fileinput import FileInput
 
+import importlib.metadata
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -49,7 +50,7 @@ author = u'BlueBrain HPC'
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-from setup import __version__ as version
+version = importlib.metadata.version("spatial_index")
 # The full version, including alpha/beta/rc tags.
 release = version
 

@@ -1,4 +1,3 @@
-#!/bin/env python
 """
     Blue Brain Project - Spatial-Index
 
