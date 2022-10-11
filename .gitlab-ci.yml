@@ -169,6 +169,46 @@ build-wheels:
     - when: manual
       allow_failure: true
 
+test-wheels:
+  stage: publish
+  needs: ["build-wheels"]
+  tags: [kubernetes]
+  image: bbpgitlab.epfl.ch:5050/hpc/spatial-index/ubuntu_20.04_devel
+  variables:
+    KUBERNETES_MEMORY_LIMIT: 5Gi    # memory overrides
+    KUBERNETES_MEMORY_REQUEST: 4Gi  # memory overrides
+    PIP_PACKAGES: pytest pytest-mpi
+  before_script:
+    - !reference [.define-functions]
+    - ln -s /usr/bin/python3 /usr/bin/python
+    - !reference [.setup-venv]
+  script:
+    - apt-get update
+    - pip install wheelhouse/spatial_index-*-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+    - mv spatial_index _dont_interfere
+    - pytest
+
+test-sdist:
+  stage: publish
+  needs: ["build-package"]
+  tags: [kubernetes]
+  image: bbpgitlab.epfl.ch:5050/hpc/spatial-index/ubuntu_20.04_devel
+  variables:
+    KUBERNETES_MEMORY_LIMIT: 5Gi    # memory overrides
+    KUBERNETES_MEMORY_REQUEST: 4Gi  # memory overrides
+    PIP_PACKAGES: pytest pytest-mpi
+  before_script:
+    - !reference [.define-functions]
+    - ln -s /usr/bin/python3 /usr/bin/python
+    - !reference [.setup-venv]
+  script:
+    - apt-get update
+    - apt install -y wget
+    - scripts/install_boost.sh
+    - pip install dist/spatial-index-*.tar.gz
+    - mv spatial_index _dont_interfere
+    - pytest
+
 publish-package:
   tags: []
   needs: ["build-package", "build-wheels"]
