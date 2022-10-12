@@ -1,5 +1,12 @@
+Conventions
+===========
+
+In order to use SpatialIndex with other neurscientific tools certain conventions
+need to be followed. This page details these assumptions for synapse and
+morphology indexes.
+
 Morphology Conventions
-======================
+----------------------
 
 This page describes the conventions used for defining the radius and the IDs in
 morphology indexes.
@@ -31,3 +38,12 @@ MorphIO. Furthermore, consistent with both BluePy and MorphIO, uniforcations
 have been removed. Meaning each section contains all segments between to
 neighbouring branching points; and branching points always join three or more
 sections.
+
+Synapse Conventions
+-------------------
+
+This section describes the conventions used for defining the shape and the ID in
+synapse indexes.
+
+The shape of a synapse is a point. The point is the ``afferent_center_*`` as
+defined in SONATA edge files. The IDs follow the SONATA conventions.

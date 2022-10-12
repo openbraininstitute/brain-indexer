@@ -18,7 +18,7 @@ The documentation of SpatialIndex contains the following sections:
    Overlap Detection Details <accuracy>
    Multi Index <multi_index>
    Multiple Populations <multi_population>
-   Morphology Conventions <morphology_conventions>
+   Morphology and Synapse Conventions <conventions>
    Comparison to FLAT <flat>
    Developer Guide <developer_guide>
    Change Log <CHANGES>
