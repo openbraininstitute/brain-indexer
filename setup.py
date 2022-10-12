@@ -67,6 +67,7 @@ class CMakeBuild(build_ext):
 
 package_info = dict(
     name="spatial-index",
+    python_requires='>=3.8.0',
     use_scm_version=True,
     packages=["spatial_index"],
     ext_modules=[CMakeExtension(

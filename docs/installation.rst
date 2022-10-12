@@ -42,7 +42,8 @@ following modules:
     module load unstable gcc cmake boost hpe-mpi
 
 On other systems you might need to install them manually. The dependecies are
-modern versions of `cmake`, `gcc` and `mpi`; and `boost==1.79.0`.
+modern versions of ``python>=3.8.0``, ``cmake``, ``gcc`` and ``mpi``; and
+``boost==1.79.0``.
 
 Clone the repository:
 
