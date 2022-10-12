@@ -34,6 +34,9 @@ class _SingleKindIndexResolverBase:
     @classmethod
     def builder_class(cls, index_variant):
         """The builder required to build the index."""
+        if index_variant not in cls._builder_classes:
+            raise ValueError(f"Invalid index_variant: {index_variant}")
+
         return cls._resolve(index_variant, classes=cls._builder_classes)
 
 
@@ -62,8 +65,9 @@ class SynapseIndexResolver(_SingleKindIndexResolverBase):
     """
     try:
         from .synapse_builder import SynapseMultiIndexBuilder  # noqa
+        si_has_mpi = True
     except ImportError:
-        SynapseMultiIndexBuilder = None
+        si_has_mpi = False
 
     _core_classes = {
         core._MetaDataConstants.in_memory_key: core.SynapseIndex,
@@ -77,8 +81,11 @@ class SynapseIndexResolver(_SingleKindIndexResolverBase):
 
     _builder_classes = {
         core._MetaDataConstants.in_memory_key: SynapseIndexBuilder,
-        core._MetaDataConstants.multi_index_key: SynapseMultiIndexBuilder,
     }
+
+    if si_has_mpi:
+        key = core._MetaDataConstants.multi_index_key
+        _builder_classes[key] = SynapseMultiIndexBuilder
 
 
 class MorphIndexResolver(_SingleKindIndexResolverBase):
@@ -88,8 +95,10 @@ class MorphIndexResolver(_SingleKindIndexResolverBase):
     """
     try:
         from .morphology_builder import MorphMultiIndexBuilder  # noqa
+        si_has_mpi = True
     except ImportError:
         MorphMultiIndexBuilder = None
+        si_has_mpi = False
 
     _core_classes = {
         core._MetaDataConstants.in_memory_key: core.MorphIndex,
@@ -103,8 +112,11 @@ class MorphIndexResolver(_SingleKindIndexResolverBase):
 
     _builder_classes = {
         core._MetaDataConstants.in_memory_key: MorphIndexBuilder,
-        core._MetaDataConstants.multi_index_key: MorphMultiIndexBuilder,
     }
+
+    if si_has_mpi:
+        key = core._MetaDataConstants.multi_index_key
+        _builder_classes[key] = MorphMultiIndexBuilder
 
 
 class IndexResolver:
