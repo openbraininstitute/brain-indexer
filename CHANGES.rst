@@ -1,6 +1,42 @@
 Change Log
 ==========
 
+Version 0.9.0
+-------------
+**October 2022**
+
+**Breaking Changes**
+  * Implementation details w.r.t ``boost::serialize`` require a breaking change
+    in how indexes are stored. Old indexes cannot be loaded anymore and need to
+    be recreated.
+  * Remove MVD3 support. Only SONATA is supported. If you need MVD3 you must
+    convert the circuit to the new format.
+  * The keyword argument ``target_gids`` for ``MorphologyBuilder.from_sonata_file`` has been
+    renamed ``gids``. Please update your code before version 1.0 as the old name will be removed.
+  * The key ``gid`` for ``group_by`` has been renamed ``post_gid`` to reflect that the grouping is
+    happening according to the value of ``post_gid``. Please update your code
+    before version 1.0 as the old name will be removed.
+
+**Features**
+  * ``accuracy="best_effort"`` is now the default.
+  * The radius of a segment is equal to the average of the radius at the two
+    endpoints.
+
+**Improvements**
+  * Improves documentation.
+  * Improvements due to QA feedback.
+  * Bug fixes.
+  * Improve unit-testing with MPI.
+  * Improve CI: checking wheels and sdist.
+  * Improve integration tests: all usecases1-5
+
+Version 0.8.3
+-------------
+**September 2022**
+
+**Improvements**
+  * Improves documentation.
+
 Version 0.8.2
 --------------
 **September 2022**
