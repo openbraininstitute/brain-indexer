@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 1.0.0
+-------------
+**October 2022**
+
+No changes since version ``0.9.0``.
+
 Version 0.9.0
 -------------
 **October 2022**
