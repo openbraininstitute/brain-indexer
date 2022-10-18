@@ -100,14 +100,16 @@ def spatial_index_circuit(args=None):
 def _spatial_index_circuit_single_population(options, circuit_config, json_config,
                                              population, output_dir):
     if options['segments']:
-        nodes_file = _sonata_nodes_file(json_config, population)
+        props = circuit_config.node_population_properties(population)
+        nodes_file = props.elements_path
         morphology_dir = _sonata_morphology_dir(circuit_config, population)
         _run_spatial_index_nodes(
             morphology_dir, nodes_file, population, options, output_dir=output_dir
         )
 
     elif options['synapses']:
-        edges_file = _sonata_edges_file(json_config, population)
+        props = circuit_config.edge_population_properties(population)
+        edges_file = props.elements_path
         _run_spatial_index_synapses(
             edges_file, population, options, output_dir=output_dir
         )
@@ -220,39 +222,6 @@ def _validated_populations(options, circuit_config):
         return next(iter(available_populations))
 
 
-def _sonata_select_by_population(iterable, key, population):
-    if len(iterable) == 1:
-        # If the circuit config only contains a single nodes/edges file,
-        # then that must be the right one.
-        #
-        # This helps with files that are not in BBP SONATA format, i.e.
-        # those that are missing a field "populations".
-        return next(iter(iterable))[key]
-
-    def matches_population(n):
-        return population is None or population in n.get("populations", dict())
-
-    for n in iterable:
-        if "populations" not in n:
-            logger.warning(
-                "The circuit config file isn't BBP compliant, it's missing"
-                " 'populations'. SpatialIndex might fail to obtain the correct"
-                " input files from this circuit config."
-            )
-
-            break
-
-    selection = [n[key] for n in iterable if matches_population(n)]
-
-    message = (
-        f"Couldn't determine a unique '{key}', possible edges"
-        f" files: {selection}, population: {population}."
-    )
-    assert len(selection) == 1, message
-
-    return selection[0]
-
-
 def _sonata_circuit_config(config_file):
     import libsonata
     import json
@@ -261,16 +230,6 @@ def _sonata_circuit_config(config_file):
     json_config = json.loads(circuit_config.expanded_json)
 
     return circuit_config, json_config
-
-
-def _sonata_nodes_file(config, population):
-    nodes = config["networks"]["nodes"]
-    return _sonata_select_by_population(nodes, key="nodes_file", population=population)
-
-
-def _sonata_edges_file(config, population):
-    edges = config["networks"]["edges"]
-    return _sonata_select_by_population(edges, key="edges_file", population=population)
 
 
 def _sonata_morphology_dir(config, population):
