@@ -367,13 +367,13 @@ namespace serialization {
 template <typename T, typename A>
 struct version<spatial_index::IndexTree<T, A>>
 {
-    BOOST_STATIC_CONSTANT(unsigned int, value = SPATIAL_INDEX_STRUCT_VERSION);
+    constexpr static unsigned int value = SPATIAL_INDEX_STRUCT_VERSION;
 };
 
 template <typename ShapeT, typename IndexT>
 struct version<spatial_index::IndexedShape<ShapeT, IndexT>>
 {
-    BOOST_STATIC_CONSTANT(unsigned int, value = SPATIAL_INDEX_STRUCT_VERSION);
+    constexpr static unsigned int value = SPATIAL_INDEX_STRUCT_VERSION;
 };
 
 }  // namespace serialization
