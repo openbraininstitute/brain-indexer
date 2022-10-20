@@ -33,6 +33,16 @@ for result in results.values():
   assert result.size != 0
 EOF
 
+# We want this to fail until 'astrocytes' are supported.
+if [ $(spatial-index-circuit segments "${circuit_config_file}" \
+                                      --populations astrocyteA \
+                                      -o "${segments_spi}" &> /dev/null) ]
+then
+  echo "'--populations astrocyteA' was accepted, but should not have been."
+  exit -1
+fi
+
+
 spatial-index-circuit synapses "${circuit_config_file}" \
     --populations nodeA__nodeA__chemical astrocyteA__astrocyteA__electrical_synapse \
     -o "${synapses_spi}"

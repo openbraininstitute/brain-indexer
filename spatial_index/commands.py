@@ -182,7 +182,24 @@ def _sonata_available_populations(options, circuit_config):
 def _validated_single_population(options, circuit_config, population):
     available_populations = _sonata_available_populations(options, circuit_config)
 
-    assert population in available_populations, f"{population=}, {available_populations=}"
+    if options["segments"]:
+        properties = circuit_config.node_population_properties(population)
+        supported_types = ["biophysical"]
+
+    elif options["synapses"]:
+        properties = circuit_config.edge_population_properties(population)
+        supported_types = ["electrical", "chemical", "synapse_astrocyte"]
+        # These are needed to function with `libsonata`.
+        supported_types += ["electrical_synapse", "chemical_synapse"]
+
+    else:
+        raise NotImplementedError("Missing case.")
+
+    if properties.type not in supported_types:
+        raise ValueError(f"{properties.type=} not in {supported_types} for {population=}")
+
+    if population not in available_populations:
+        raise ValueError(f"{population=} not in {available_populations=}")
 
     message = (
         "SpatialIndex needs to be checked before it can use 'exotic' population names."
@@ -206,6 +223,7 @@ def _validated_populations(options, circuit_config):
         return populations
 
     else:
+        # Any falsey `populations`, e.g., `[]`, `""`, ... means default.
         available_populations = _sonata_available_populations(options, circuit_config)
 
         if len(available_populations) == 0:
@@ -218,8 +236,10 @@ def _validated_populations(options, circuit_config):
             )
             raise ValueError("Too many populations to select a fallback value.")
 
-        # Any falsey `populations`, e.g., `[]`, `""`, ... means default.
-        return next(iter(available_populations))
+        population = next(iter(available_populations))
+        _validated_single_population(options, circuit_config, population)
+
+        return population
 
 
 def _sonata_circuit_config(config_file):
