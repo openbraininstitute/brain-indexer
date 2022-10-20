@@ -217,6 +217,9 @@ def _validated_populations(options, circuit_config):
             for pop in populations:
                 _validated_single_population(options, circuit_config, pop)
 
+            if len(populations) == 1:
+                return next(iter(populations))
+
         else:
             _validated_single_population(options, circuit_config, populations)
 
