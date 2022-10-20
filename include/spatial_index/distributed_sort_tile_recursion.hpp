@@ -102,14 +102,19 @@ LocalSTRParams infer_local_str_params(
     const DistributedSTRParams &distributed_str_params);
 
 
-/* \brief Evenly distribute ranks across dimensions.
- *  Given `n` MPI ranks find `m[0]`, `m[1]`, `m[2]` such
- *  that `n == m[0] * m[1] * m[2]` and the difference between all
- *  `m[k]` is reasonably small.
- *
- *  \warning Current implementation only supports powers of two.
- */
+/// \brief Evenly distribute ranks across dimensions.
+///
+/// Given `n` MPI ranks find `m[0]`, `m[1]`, `m[2]` such
+/// that `n == m[0] * m[1] * m[2]` and the difference between all
+/// `m[k]` is reasonably small.
+///
+/// \warning Current implementation only supports powers of two.
+///
 std::array<int, 3> rank_distribution(int comm_size);
+
+
+/// \brief Is `comm_size` a valid MPI communicator size for the C++ backend?
+bool is_valid_comm_size(int comm_size);
 
 
 /// Uses `SerialSTRParams::from_heuristics` as a heuristic.

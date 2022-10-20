@@ -4,6 +4,7 @@ import numpy as np
 
 import spatial_index
 
+from . import core
 from .util import ranges_with_progress, gen_ranges
 from .util import register_mpi_excepthook, balanced_chunk
 
@@ -55,16 +56,17 @@ class MultiIndexBuilderMixin:
         mpi_rank = comm.Get_rank()
         comm_size = comm.Get_size()
 
-        def is_power_of_two(n):
-            # Credit: https://stackoverflow.com/a/57025941
-            return (n & (n - 1) == 0) and n != 0
+        def is_valid_comm_size(comm_size):
+            return core.is_valid_comm_size(comm_size - 1)
 
-        if not is_power_of_two(comm_size - 1):
-            spatial_index.logger.error("SpatialIndex requires that the number of MPI "
-                                       "ranks is equal to `N = 2**k + 1`, "
-                                       "e.g., 3, 5, 9, ... Please ensure you're using `"
-                                       "mpirun -np N` or `srun -n N` with a valid number "
-                                       "of MPI ranks N.")
+        if not is_valid_comm_size(comm_size):
+            spatial_index.logger.error(
+                "SpatialIndex requires that the number of MPI "
+                "ranks is equal to `N = 2**n * 3**m * 5**l + 1`, "
+                "e.g., 2 + 1, 4*3 + 1, 72 + 1 ... Please ensure you're using "
+                "`mpirun -np N` or `srun -n N` with a valid number "
+                "of MPI ranks N."
+            )
             raise ValueError(f"Invalid communicator size, comm_size={comm_size}.")
 
         work_queue = MultiIndexWorkQueue(comm)

@@ -34,6 +34,7 @@ if(SI_MPI)
     si_mpi_unit_test("test_multi_index")
     si_mpi_unit_test("test_random_trees")
     si_mpi_unit_test("test_serial_sort_tile_recursion")
+    si_unit_test("test_distributed_sort_tile_recursion")
 endif()
 
 

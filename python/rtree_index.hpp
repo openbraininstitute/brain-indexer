@@ -1321,5 +1321,20 @@ inline void create_MetaDataConstants_bindings(py::module& m) {
     });
 }
 
+
+inline void create_is_valid_comm_size_bindings(py::module& m) {
+    m.def(
+        "is_valid_comm_size",
+        [](int comm_size) { return is_valid_comm_size(comm_size); },
+        R"(
+        Is `comm_size` a valid MPI communicator size for the backend?
+
+        The C++ backend requires that the communicator has a certain number of rank.
+        Note, that this requirement is different from the Python requirements. Which
+        usually needs an additional rank for some load balancing.
+        )"
+    );
+}
+
 }  // namespace py_bindings
 }  // namespace spatial_index

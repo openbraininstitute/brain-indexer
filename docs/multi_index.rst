@@ -53,13 +53,13 @@ amount of RAM:
 * or by changing ``MEM``.
 
 The total amount of RAM is (approximately) ``N * MEM``. Currently, ``N`` must
-be of the form ``2**k + 1``. For ``MEM`` probably only the values ``2G``, ``4G``
-and ``8G`` make sense. Given that each node of the cluster has roughly 360GB of
-RAM and 40 physical cores, each node can support up to 80 MPI ranks (through
-hyper-threading) with 4GB of RAM each. Therefore, when using less than 4GB per
-rank, not the entire available RAM on each node can be used. Hence, values
-below ``2G`` are likely an inefficient use of the cluster (unless measurements
-say otherwise).
+be of the form ``2**n * 3**m * 5**l + 1``. For ``MEM`` probably only the values
+``2G``, ``4G`` and ``8G`` make sense. Given that each node of the cluster has
+roughly 360GB of RAM and 40 physical cores, each node can support up to 80 MPI
+ranks (through hyper-threading) with 4GB of RAM each. Therefore, when using
+less than 4GB per rank, not the entire available RAM on each node can be used.
+Hence, values below ``2G`` are likely an inefficient use of the cluster (unless
+measurements say otherwise).
 
 The following table contains a values for ``N`` and ``MEM`` for selected
 circuits, along with a rough measurment of the runtime. Note that the

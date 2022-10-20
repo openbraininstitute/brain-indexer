@@ -59,18 +59,66 @@ LocalSTRParams infer_local_str_params(const SerialSTRParams& overall_str_params,
     return LocalSTRParams{local_parts};
 }
 
-
-std::array<int, 3> rank_distribution(int comm_size) {
-    assert(is_power_of_two(comm_size));
-
-    auto dist = std::array<int, 3>{0, 0, 0};
-    auto log2_n = int_log2(comm_size);
-    for (int k = 0; k < log2_n; ++k) {
-        dist[k % 3] += 1;
+/// \brief Can n be factored into the given prime factors?
+bool is_factorizable(int n, const std::vector<int>& p){
+    if(n == 0) {
+        return false;
     }
 
-    for(auto &dk : dist) {
-        dk = int_pow2(dk);
+    for(auto pp : p) {
+        while(n % pp == 0) {
+            n = n / pp;
+        }
+    }
+
+    return n == 1;
+}
+
+/// \brief Factorize a number into given prime factors.
+///
+/// This assumes that the all prime factors are listed in `primes`
+/// and will throw if this isn't the case.
+///
+/// Compute `k` such that:
+///   n == \prod_i p[i]**k[i].
+std::vector<int> factorize(int n, const std::vector<int>& p){
+    if(!is_factorizable(n, p)) {
+        throw std::runtime_error("Invalid n.");
+    }
+
+    auto k = std::vector<int>(p.size());
+    for(size_t i = 0; i < p.size(); ++i) {
+        while(n % p[i] == 0) {
+            k[i] += 1;
+            n = n / p[i];
+        }
+    }
+
+    return k;
+}
+
+bool is_valid_comm_size(int comm_size) {
+    return is_factorizable(comm_size, {2, 3, 5});
+}
+
+std::array<int, 3> rank_distribution(int comm_size) {
+    assert(is_valid_comm_size(comm_size));
+
+    auto primes = std::vector<int>{5, 3, 2};
+    auto decomp = factorize(comm_size, primes);
+
+    auto dist = std::array<int, 3>{1, 1, 1};
+    for (int k = 0; k < 3; ++k) {
+        for(int i = 0; i < decomp[k]; ++i) {
+            auto m = std::min(dist[0], std::min(dist[1], dist[2]));
+
+            for(int l = 0; l < 3; ++l) {
+                if(dist[l] == m) {
+                    dist[l] *= primes[k];
+                    break;
+                }
+            }
+        }
     }
 
     assert(dist[0] * dist[1] * dist[2] == comm_size);
