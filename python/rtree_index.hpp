@@ -1017,7 +1017,7 @@ inline void add_MorphIndex_add_neuron_bindings(py::class_<Class>& c) {
                 }
 
                 // Check that the max offset is less than the number of points
-                for(size_t i = 0; i < n_branches-1; ++i) {
+                for(size_t i = 0; i < util::safe_integer_cast<size_t>(n_branches-1); ++i) {
                     if(offsets[i] > offsets[i+1]) {
                         throw py::value_error("The 'branch_offsets' must be non-decreasing.");
                     }
