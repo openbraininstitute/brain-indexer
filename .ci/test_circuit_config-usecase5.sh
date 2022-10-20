@@ -18,7 +18,7 @@ segments_spi="${output_dir}/circuit-segments"
 synapses_spi="${output_dir}/circuit-synapses"
 
 spatial-index-circuit segments "${circuit_config_file}" \
-    --populations nodeA astrocyteA \
+    --populations nodeA \
     -o "${segments_spi}"
 
 python3 << EOF
@@ -28,11 +28,9 @@ sphere = [0.0, 0.0, 0.0], 1000.0
 
 results = index.sphere_query(*sphere, fields="gid")
 assert "nodeA" in results
-assert "astrocyteA" in results
 
 for result in results.values():
-    assert result.size != 0
-
+  assert result.size != 0
 EOF
 
 spatial-index-circuit synapses "${circuit_config_file}" \

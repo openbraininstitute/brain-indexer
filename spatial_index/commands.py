@@ -151,13 +151,28 @@ def spatial_index_compare(args=None):
 
 def _sonata_available_populations(options, circuit_config):
     if options["segments"]:
-        available_populations = circuit_config.node_populations
+        detected_populations = circuit_config.node_populations
+        unsupported_types = ["virtual"]
+        get_properties = circuit_config.node_population_properties
 
     elif options["synapses"]:
-        available_populations = circuit_config.edge_populations
+        detected_populations = circuit_config.edge_populations
+        unsupported_types = []
+        get_properties = circuit_config.edge_population_properties
 
     else:
         raise NotImplementedError("Missing circuit kind.")
+
+    def is_supported(population):
+        props = get_properties(population)
+        return props.type not in unsupported_types
+
+    available_populations = list(filter(is_supported, detected_populations))
+
+    if not available_populations:
+        raise ValueError(
+            f"No supported populations found. Detected: {detected_populations}"
+        )
 
     return available_populations
 
