@@ -210,6 +210,7 @@ struct IndexedShape : public IndexT, public ShapeT {
     typedef IndexT id_type;
 
     inline IndexedShape() = default;
+    IndexedShape(const IndexedShape&) = default;
 
     template <typename IdTup>
     inline IndexedShape(IdTup ids, const ShapeT& shape)
@@ -224,6 +225,8 @@ struct IndexedShape : public IndexT, public ShapeT {
     inline IndexedShape(IdTup ids, const Point3D& p1, T&&... shape_data)
         : IndexT{ids}
         , ShapeT{p1, std::forward<T>(shape_data)...} {}
+
+    IndexedShape& operator=(const IndexedShape&) = default;
 
     // subclasses can easily create a string representation
     inline std::ostream& repr(std::ostream& os,
@@ -328,6 +331,8 @@ class SubtreeId {
 
     SubtreeId(size_t id, size_t n_elements)
     : id(id), n_elements(n_elements) {}
+
+    SubtreeId& operator=(const SubtreeId&) = default;
 
     inline bool operator==(const ShapeId& rhs) const noexcept {
         return id == rhs.id;
