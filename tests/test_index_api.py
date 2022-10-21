@@ -188,12 +188,25 @@ def assert_valid_counts(counts):
     assert counts > 0
 
 
+@_wrap_assert_for_multi_population
+def assert_valid_empty(result):
+    assert result is False
+
+
 @_wrap_check_for_multi_population
 def check_counts(counts_method, query_shape, query_kwargs=None,
                  expected_populations=None):
 
     counts = counts_method(*query_shape, group_by=None, **query_kwargs)
     assert_valid_counts(counts, expected_populations=expected_populations)
+
+
+@_wrap_check_for_multi_population
+def check_empty(empty_method, query_shape, query_kwargs=None,
+                expected_populations=None):
+
+    result = empty_method(*query_shape, **query_kwargs)
+    assert_valid_empty(result, expected_populations=expected_populations)
 
 
 def check_element_type(index):
@@ -302,6 +315,24 @@ def check_all_counts_api(index, window, sphere, accuracy, population_mode):
 
     check_counts(
         index.sphere_counts, sphere, query_kwargs=query_kwargs,
+        populations=populations,
+        population_mode=expected_population_mode,
+    )
+
+    check_empty(
+        index.box_empty, window, query_kwargs=query_kwargs,
+        populations=populations,
+        population_mode=expected_population_mode,
+    )
+
+    check_empty(
+        index.box_empty, reversed_window, query_kwargs=query_kwargs,
+        populations=populations,
+        population_mode=expected_population_mode,
+    )
+
+    check_empty(
+        index.sphere_empty, sphere, query_kwargs=query_kwargs,
         populations=populations,
         population_mode=expected_population_mode,
     )

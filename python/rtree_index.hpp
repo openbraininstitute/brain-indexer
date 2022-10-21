@@ -242,21 +242,25 @@ count_intersecting_agg_gid(Class& obj, const Shape& query_shape, const std::stri
 template<typename Class>
 inline void add_IndexTree_is_intersecting_bindings(py::class_<Class>& c) {
     c
-    .def("_is_intersecting",
+    .def("_is_intersecting_sphere",
         [](Class& obj, const array_t& point, const coord_t radius, const std::string& geometry) {
             return detail::is_intersecting(obj, si::Sphere{mk_point(point), radius}, geometry);
         },
         py::arg("point"),
         py::arg("radius"),
-        py::arg("geometry") = std::string("best_effort"),
-        R"(
-        Checks whether the given sphere intersects any object in the tree.
+        py::arg("geometry") = std::string("best_effort")
+    );
 
-        Args:
-            point(array): A len-3 list or np.array[float32] with the center point
-            radius(float): The radius of the sphere
-            geometry(str): Either 'bounding_box' or 'best_effort' (default: best_effort).
-        )"
+    c
+    .def("_is_intersecting_box",
+         [](Class& obj, const array_t& c1, const array_t& c2, const std::string& geometry) {
+             return detail::is_intersecting(
+                 obj, si::make_query_box(mk_point(c1), mk_point(c2)), geometry
+             );
+         },
+         py::arg("corner"),
+         py::arg("opposite_corner"),
+         py::arg("geometry") = std::string("best_effort")
     );
 }
 

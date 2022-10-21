@@ -120,6 +120,64 @@ class IndexInterface(abc.ABC):
         pass
 
     @abc.abstractmethod
+    def box_empty(self, corner, opposite_corner, *,
+                  accuracy=None, populations=None, population_mode=None):
+        """Checks whether the given box intersects any object in the tree.
+
+        This is equivalent to
+
+        .. code-block:: python
+
+            index.box_counts(*box, accuracy=accuracy) == 0
+
+        but will return as soon as any element has been found.
+
+        Arguments:
+            accuracy(str):  Specifies the accuracy with which indexed
+                elements are treated. Allowed are either ``"bounding_box"`` or
+                ``"best_effort"``. Default: ``"best_effort"``
+
+            populations(str,list):  A string or list of strings specifying which
+                populations to query. Ignored by single-population indexes.
+
+            population_mode(str):  (advanced) Defines if the query uses the
+                single- or multi-population return type. Available: ``None``
+                (native), ``"single"`` (single-population), ``"multi"``
+                (multi-population). Please consult the User Guide for a detailed
+                explanation.
+        """
+        pass
+
+    @abc.abstractmethod
+    def sphere_empty(self, center, radius, *,
+                     accuracy=None, populations=None, population_mode=None):
+        """Checks whether the given sphere intersects any object in the tree.
+
+        This is equivalent to
+
+        .. code-block:: python
+
+            index.box_counts(*sphere, accuracy=accuracy) == 0
+
+        but will return as soon as any element has been found.
+
+        Arguments:
+            accuracy(str):  Specifies the accuracy with which indexed
+                elements are treated. Allowed are either ``"bounding_box"`` or
+                ``"best_effort"``. Default: ``"best_effort"``
+
+            populations(str,list):  A string or list of strings specifying which
+                populations to query. Ignored by single-population indexes.
+
+            population_mode(str):  (advanced) Defines if the query uses the
+                single- or multi-population return type. Available: ``None``
+                (native), ``"single"`` (single-population), ``"multi"``
+                (multi-population). Please consult the User Guide for a detailed
+                explanation.
+        """
+        pass
+
+    @abc.abstractmethod
     def bounds(self, populations=None, population_mode=None):
         """The joint minimal bounding box of all elements in the index.
 
@@ -264,6 +322,22 @@ class Index(IndexInterface):
             group_by=group_by,
             accuracy=accuracy,
             methods=self._sphere_counts
+        )
+
+    @_wrap_single_as_multi_population
+    def box_empty(self, corner, opposite_corner, *, accuracy=None):
+        accuracy = self._enforce_accuracy_default(accuracy)
+        return not self._core_index._is_intersecting_box(
+            corner, opposite_corner,
+            geometry=accuracy
+        )
+
+    @_wrap_single_as_multi_population
+    def sphere_empty(self, center, radius, *, accuracy=None):
+        accuracy = self._enforce_accuracy_default(accuracy)
+        return not self._core_index._is_intersecting_sphere(
+            center, radius,
+            geometry=accuracy
         )
 
     def __len__(self):
@@ -615,6 +689,14 @@ class MultiPopulationIndex(IndexInterface):
     @_wrap_as_multi_population
     def sphere_counts(self, index, *args, **kwargs):
         return index.sphere_counts(*args, **kwargs)
+
+    @_wrap_as_multi_population
+    def box_empty(self, index, *args, **kwargs):
+        return index.box_empty(*args, **kwargs)
+
+    @_wrap_as_multi_population
+    def sphere_empty(self, index, *args, **kwargs):
+        return index.sphere_empty(*args, **kwargs)
 
     @_wrap_as_multi_population
     def bounds(self, index, *args, **kwargs):

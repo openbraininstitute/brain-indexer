@@ -253,3 +253,23 @@ This is enabled through the keyword argument ``group_by="post_gid"``.
      293: 1,
      ...
    }
+
+Existence Queries
+-----------------
+A variant of counting queries is to know if no element intersects the query shape. This
+could be implemented as:
+
+.. code-block:: python
+
+    >>> index.box_counts(*box) == 0
+
+However, this can't take advantage of the short circuiting trick, i.e., to
+return ``True`` as soon as the first element has been found. Therefore,
+SpatialIndex provides a method for this.
+
+.. code-block:: python
+
+    >>> index.box_empty(*box)
+    >>> index.sphere_empty(*sphere)
+
+Both methods support the keyword argument ``accuracy``, see :ref:`regular indexes <kw-accuracy>`.

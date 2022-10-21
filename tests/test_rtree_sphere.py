@@ -99,9 +99,9 @@ def test_is_intersecting():
     radii = np.full(3, 0.2, dtype=np.float32)
     t = IndexClass(centroids, radii)
     for xpos in [-1, 0.5, 1.5, 2.5]:
-        assert t._is_intersecting([xpos, 0, 0], 0.1) is False
+        assert t._is_intersecting_sphere([xpos, 0, 0], 0.1) is False
     for xpos in [-0.2, -0.1, .0, 0.1, 1.2, 2.2]:
-        assert t._is_intersecting([xpos, 0, 0], 0.1)
+        assert t._is_intersecting_sphere([xpos, 0, 0], 0.1)
 
 
 def test_intersection_none():
