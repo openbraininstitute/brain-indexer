@@ -70,25 +70,27 @@ test-examples:
     - bash .ci/_run_examples.sh
 
 
-test-bare-ubuntu:
+test-ubuntu:
   stage: test
   needs: []
   tags: [kubernetes]
-  image: bbpgitlab.epfl.ch:5050/hpc/spatial-index/ubuntu_20.04_devel
+  image: bbpgitlab.epfl.ch:5050/hpc/personal/bsd-292/ubuntu_22.04/builder
+  parallel:
+    matrix:
+      - SI_BOOST_VERSION: ["1.79.0", "1.80.0"]
   variables:
     KUBERNETES_MEMORY_LIMIT: 5Gi    # memory overrides
     KUBERNETES_MEMORY_REQUEST: 4Gi  # memory overrides
-    PIP_PACKAGES: pytest pytest-mpi
-  before_script:
-    - !reference [.define-functions]
-    # Needed for `.setup-venv`.
-    - ln -s /usr/bin/python3 /usr/bin/python
-    - !reference [.setup-venv]
   script:
-    - apt-get update
+    - apt install -y python3-dev
+    - apt install -y python3-venv
     - apt install -y libopenmpi-dev
-    - apt install -y wget
-    - scripts/install_boost.sh
+    - source ${SPACK_ROOT}/share/spack/setup-env.sh
+    - spack install boost@${SI_BOOST_VERSION}+serialization+filesystem
+    - spack load boost@${SI_BOOST_VERSION}
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - pip install wheel cmake pytest pytest-mpi
     - pip install -v -e .
     - pytest
 
@@ -195,19 +197,20 @@ test-sdist:
   stage: publish
   needs: ["build-package"]
   tags: [kubernetes]
-  image: bbpgitlab.epfl.ch:5050/hpc/spatial-index/ubuntu_20.04_devel
+  image: bbpgitlab.epfl.ch:5050/hpc/personal/bsd-292/ubuntu_22.04/builder
   variables:
     KUBERNETES_MEMORY_LIMIT: 5Gi    # memory overrides
     KUBERNETES_MEMORY_REQUEST: 4Gi  # memory overrides
-    PIP_PACKAGES: pytest pytest-mpi
-  before_script:
-    - !reference [.define-functions]
-    - ln -s /usr/bin/python3 /usr/bin/python
-    - !reference [.setup-venv]
   script:
-    - apt-get update
-    - apt install -y wget
-    - scripts/install_boost.sh
+    - apt install -y python3-dev
+    - apt install -y python3-venv
+    - apt install -y libopenmpi-dev
+    - source ${SPACK_ROOT}/share/spack/setup-env.sh
+    - spack install boost@1.79.0+serialization+filesystem
+    - spack load boost@1.79.0
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - pip install cmake pytest pytest-mpi
     - pip install dist/spatial-index-*.tar.gz
     - mv spatial_index _dont_interfere
     - pytest

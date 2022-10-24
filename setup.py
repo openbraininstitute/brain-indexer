@@ -24,6 +24,7 @@ class CMakeBuild(build_ext):
         self.outdir = os.path.abspath(os.path.dirname(
             self.get_ext_fullpath(ext.name)))
         print("Building lib to:", self.outdir)
+        print("Python interpreter: ", sys.executable)
         cmake_args = [
             '-DEXTENSION_OUTPUT_DIRECTORY=' + self.outdir,
             '-DPYTHON_EXECUTABLE=' + sys.executable,
