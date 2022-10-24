@@ -1326,6 +1326,7 @@ inline void create_MetaDataConstants_bindings(py::module& m) {
 }
 
 
+#if SI_MPI == 1
 inline void create_is_valid_comm_size_bindings(py::module& m) {
     m.def(
         "is_valid_comm_size",
@@ -1339,6 +1340,7 @@ inline void create_is_valid_comm_size_bindings(py::module& m) {
         )"
     );
 }
+#endif
 
 }  // namespace py_bindings
 }  // namespace spatial_index
