@@ -98,10 +98,11 @@ def test_is_intersecting():
     centroids = arange_centroids(3)
     radii = np.full(3, 0.2, dtype=np.float32)
     t = IndexClass(centroids, radii)
+    kwargs = {"geometry": "best_effort"}
     for xpos in [-1, 0.5, 1.5, 2.5]:
-        assert t._is_intersecting_sphere([xpos, 0, 0], 0.1) is False
+        assert t._is_intersecting_sphere([xpos, 0, 0], 0.1, **kwargs) is False
     for xpos in [-0.2, -0.1, .0, 0.1, 1.2, 2.2]:
-        assert t._is_intersecting_sphere([xpos, 0, 0], 0.1)
+        assert t._is_intersecting_sphere([xpos, 0, 0], 0.1, **kwargs)
 
 
 def test_intersection_none():
