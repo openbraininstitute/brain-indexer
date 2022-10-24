@@ -13,7 +13,6 @@
 #include <boost/serialization/split_free.hpp>
 #include <boost/serialization/variant.hpp>
 
-#include <boost/interprocess/managed_mapped_file.hpp>
 #include <boost/geometry/index/rtree.hpp>
 #include <boost/variant.hpp>
 
@@ -529,76 +528,6 @@ private:
     }
 };
 
-
-// Using Memory-Mapped-File for X-Large indices
-// ============================================
-
-namespace bip = boost::interprocess;
-
-template <typename T>
-using MemDiskAllocator = bip::allocator<T, bip::managed_mapped_file::segment_manager>;
-
-template <typename T>
-using MemDiskRtree = IndexTree<T, MemDiskAllocator<T>>;
-
-/// \brief Class that manages a MemDiskRtree in a managed mapped file
-/// Can be used as a holder type for pybind11 so it handles the mapped file itself
-template <typename T>
-class MemDiskPtr {
-
-  public:
-    using value_type = T;
-
-    // Req for holder type
-    T* get() const noexcept { return tree_; }
-    T* operator->() const noexcept { return get(); }
-
-    /// Enable move ctor and assignment operator
-    MemDiskPtr(MemDiskPtr&&) = default;
-    MemDiskPtr& operator=(MemDiskPtr&&) = default;
-
-
-    /// \brief The factory for a MemDiskRtree object fully living in a memory mapped file.
-    ///
-    /// IndexTreeMemDisk are special objects which hold the managed_mapped_file
-    ///    used as memory for its rtree superclass. Therefore we must initialize
-    ///    in advance.
-    /// \param index_path The path of a directory where to store the index and meta data.
-    /// \param size_mb The initial capacity, in MegaBytes
-    /// \param close_shrink If true will shrink the mem file to contents
-    static MemDiskPtr<T> create(const std::string& index_path,
-                                size_t size_mb,
-                                bool close_shrink);
-
-    /// \brief Opens a MemDiskRtree from a memory mapped file for reading
-    static MemDiskPtr<T> open(const std::string& index_path);
-
-    /// \brief Flush and close the current object.
-    /// \note The object is not usable after this function
-    inline void close();
-
-    ~MemDiskPtr() {
-        close();  // Ensure object is sync'ed back to mem-file
-    }
-
-    /// Ctor from a raw ptr (wont manage the mapped file)
-    MemDiskPtr(T* t) : mapped_file_(), tree_(t) { }  // for pybind11
-
-  protected:
-    inline MemDiskPtr(std::unique_ptr<bip::managed_mapped_file>&& mapped_file,
-                      const std::string& close_shrink_fname="");
-
-    std::unique_ptr<bip::managed_mapped_file> mapped_file_;
-    std::string close_shrink_fname_;
-    T* tree_;  // raw pointer since destruction is not desired
-};
-
-
-template <typename T>
-using IndexTreeMemDisk = MemDiskPtr<MemDiskRtree<T>>;
-
-
 }  // namespace spatial_index
 
 #include "detail/index.hpp"
-#include "detail/index_memdisk.hpp"

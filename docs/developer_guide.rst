@@ -156,16 +156,26 @@ it must set its version to ``SPATIAL_INDEX_STRUCT_VERSION``; and assert that the
 version is not ``0``. (This last part is only to check that you haven't
 forgotten to set the version.)
 
+History
+-------
+
+This section contains summaries of things that have been attempted in the past,
+but have been removed without leaving any (obvious) traces behind.
+
 Memory mapping
---------------
+^^^^^^^^^^^^^^
 
-At the moment, the Python interface for memory mapped files has been removed.
-However the underlying C++ APIs are still available for development and testing purposes.
-Since most of the functionalities of memory mapping has been superseded by the Multi-Index,
-please expect this feature to be removed completely in the future.
+Memory mapping refers to mapping parts of a file into the virtual address
+space. Hence the "memory" can be allocated from the file.
 
-Memory mapped files are a seamless extension of regular in-memory indexes.
-However, after running out of memory the hard-drive is used a backup RAM. This
-works well when combined with fast storage media such as NVME SSDs; and
-probably to a lesser extent regular SSDs and hard-drives. It definitely isn't
-performant when memory mapping file on GPFS.
+This was used to create an R-Tree which was backed by memory stored on disk.
+Thereby one could create "in-memory" indexes even if this would have required
+a few TB of RAM.
+
+The approach was reasonably efficient when the backing disk was an NVME disk.
+However, for GPFS was way too slow for this to work.
+
+The Git history contains two commits in which this functionality was removed. In
+the first step only the Python bindings were removed. In a second step all memory
+mapping code was removed. At time of removal this functionality was complete (but
+might have bit rotted slightly).

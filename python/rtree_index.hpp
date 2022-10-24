@@ -511,52 +511,6 @@ inline py::class_<Class> create_IndexTree_bindings(py::module& m,
 }
 
 
-/// Bindings for IndexTreeMemDisk<T>, based on generic IndexTree<T> bindings
-
-template <
-    typename T,
-    typename SomaT = T,
-    typename Class = si::IndexTree<T>,
-    std::enable_if_t<std::is_same<Class, si::MemDiskRtree<T>>::value, int> = 0
->
-inline py::class_<Class> create_IndexTree_bindings(py::module& m, const char* class_name) {
-    using MemDiskManager = si::MemDiskPtr<Class>;
-
-    return generic_IndexTree_bindings<T, SomaT, Class, MemDiskManager>(m, class_name)
-    .def_static("open",
-        [](const std::string& filename) {
-            return MemDiskManager::open(filename);
-        },
-        py::return_value_policy::take_ownership,
-        R"(
-        Opens a SpatialIndex from a memory mapped file.
-
-        Args:
-            filename(str): The path of the memory mapped file.
-        )"
-    )
-
-    /// Build tree allocated in disk
-    .def_static("create",
-        [](const std::string& filename, size_t size_mb, bool close_shrink) {
-            return MemDiskManager::create(filename, size_mb, close_shrink);
-        },
-        py::return_value_policy::take_ownership,
-        R"(
-        Creates a SpatialIndex where memory is mapped to a file.
-
-        Args:
-            filename(str): The file path to read the spatial index from.
-            size_mb (int): The size of the file to allocate (avoid resizes)
-            close_shrink (bool): Whether to shrink the mem mapped file to contents (experimental!)
-        )",
-        py::arg("fname"),
-        py::arg("size_mb") = 1024,  // 1GB
-        py::arg("close_shrink") = false
-    )
-    ;
-}
-
 ///
 /// 1.0 - Sphere index
 ///

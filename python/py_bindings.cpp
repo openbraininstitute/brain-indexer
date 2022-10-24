@@ -18,7 +18,6 @@ void check_signals() {
 
 }}  // namespace spatial_index::py_bindings
 
-PYBIND11_DECLARE_HOLDER_TYPE(T, si::MemDiskPtr<T>);
 
 PYBIND11_MODULE(_spatial_index, m) {
 
@@ -88,12 +87,6 @@ PYBIND11_MODULE(_spatial_index, m) {
     si_python::create_SphereIndex_bindings(m, "SphereIndex");
     si_python::create_SynapseIndex_bindings(m, "SynapseIndex");
     si_python::create_MorphIndex_bindings(m, "MorphIndex");
-
-    // Experimental memory from mem-mapped file
-    using MorphIndexTreeMemDisk = si::MemDiskRtree<si::MorphoEntry>;
-    si_python::create_MorphIndex_bindings<MorphIndexTreeMemDisk>(m, "MorphIndexMemDisk");
-    using SynIndexMemDisk = si::MemDiskRtree<si::Synapse>;
-    si_python::create_SynapseIndex_bindings<SynIndexMemDisk>(m, "SynapseIndexMemDisk");
 
     // Experimental distributed/lazy R-trees.
     si_python::create_MorphMultiIndex_bindings(m, "MorphMultiIndex");

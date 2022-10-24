@@ -45,4 +45,3 @@ endif()
 
 
 si_cpp_example("test_clean")
-si_cpp_example("disk_mem_tree")
