@@ -74,7 +74,7 @@ test-ubuntu:
   stage: test
   needs: []
   tags: [kubernetes]
-  image: bbpgitlab.epfl.ch:5050/hpc/personal/bsd-292/ubuntu_22.04/builder
+  image: bbpgitlab.epfl.ch:5050/hpc/spacktainerizer/ubuntu_22.04/builder
   parallel:
     matrix:
       - SI_BOOST_VERSION: ["1.79.0", "1.80.0"]
@@ -197,7 +197,7 @@ test-sdist:
   stage: publish
   needs: ["build-package"]
   tags: [kubernetes]
-  image: bbpgitlab.epfl.ch:5050/hpc/personal/bsd-292/ubuntu_22.04/builder
+  image: bbpgitlab.epfl.ch:5050/hpc/spacktainerizer/ubuntu_22.04/builder
   variables:
     KUBERNETES_MEMORY_LIMIT: 5Gi    # memory overrides
     KUBERNETES_MEMORY_REQUEST: 4Gi  # memory overrides
