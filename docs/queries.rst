@@ -96,6 +96,7 @@ Section Type
 ^^^^^^^^^^^^
 The field ``section_type`` contains information on the nature of the section.
 In particular it categorizes the various sections of the circuit in 4 types:
+
 * soma
 * axon
 * basal dendrite
@@ -103,7 +104,7 @@ In particular it categorizes the various sections of the circuit in 4 types:
 
 The information is fetched directly from the SONATA files. You can find
 more information 
-`here <https://github.com/AllenInstitute/sonata/blob/master/docs/SONATA_DEVELOPER_GUIDE.md#representing-biophysical-neuron-morphologies>`.
+`here <https://github.com/AllenInstitute/sonata/blob/master/docs/SONATA_DEVELOPER_GUIDE.md#representing-biophysical-neuron-morphologies>`_.
 
 
 Examples
