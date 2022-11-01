@@ -21,7 +21,7 @@ from .io import open_sonata_nodes, validated_sonata_nodes_population_name
 
 
 morphio.set_ignored_warning(morphio.Warning.only_child)
-MorphInfo = namedtuple("MorphInfo", "soma, points, radius, branch_offsets")
+MorphInfo = namedtuple("MorphInfo", "soma, points, radius, branch_offsets, section_type")
 
 
 class MorphologyLib:
@@ -43,6 +43,7 @@ class MorphologyLib:
             points=morph.points,
             radius=morph.diameters / 2.,
             branch_offsets=morph.section_offsets,
+            section_type=morph.section_types,
         )
         self._morphologies[morph_name] = morph_infos
         return morph_infos
@@ -115,7 +116,8 @@ class MorphIndexBuilderBase:
         soma_center = soma_center + position  # Avoid +=
         self._core_builder._add_soma(gid, soma_center, soma_rad)
         self._core_builder._add_neuron(
-            gid, points, morph.radius, morph.branch_offsets[:-1], False
+            gid, points, morph.radius, morph.branch_offsets[:-1],
+            morph.section_type, False
         )
 
     def process_range(self, sub_range=(None,)):

@@ -76,13 +76,14 @@ For morphology indexes the supported fields are:
 
 * ``"gid"`` which is the GID of the neuron,
 * ``"section_id"`` which is the section ID of the neuron,
-* ``"segement_id"`` which is the segment ID of the neuron,
+* ``"segment_id"`` which is the segment ID of the neuron,
 * ``"ids"`` the three ids as a numpy structured array,
 * ``"centroid"`` the center of the sphere or cylinder,
 * ``endpoints`` which, for segments, is a tuple of the two centers of the caps
   of the cylinder. For somas only the first array of points is valid and
   represents the center of the soma.
 * ``radius`` which is the radius of either the sphere or cylinder.
+* ``section_type`` which is the type of the section, see `Section Type`_.
 * ``is_soma`` an array of booleans which are ``True`` if that element is a soma.
 
 The partially supported field is:
@@ -90,6 +91,19 @@ The partially supported field is:
 * ``"raw_elements"`` in rare cases one may be interested in a list
   of Python objects, i.e., a ``core.MorphoEntry`` which is a C++
   variant that represents either a soma or a segment.
+
+Section Type
+^^^^^^^^^^^^
+The field ``section_type`` contains information on the nature of the section.
+In particular it categorizes the various sections of the circuit in 4 types:
+* soma
+* axon
+* basal dendrite
+* apical dendrite
+
+The information is fetched directly from the SONATA files. You can find
+more information 
+`here <https://github.com/AllenInstitute/sonata/blob/master/docs/SONATA_DEVELOPER_GUIDE.md#representing-biophysical-neuron-morphologies>`.
 
 
 Examples

@@ -286,6 +286,16 @@ private:
     }
 };
 
+/**
+ * \brief enum to describe the type of segment
+ */
+enum class SectionType : unsigned char {
+    undefined = 0,
+    soma = 1,
+    axon = 2,
+    basal_dendrite = 3,
+    apical_dendrite = 4
+};
 
 class Segment: public IndexedShape<Cylinder, MorphPartId> {
     using super = IndexedShape<Cylinder, MorphPartId>;
@@ -295,26 +305,52 @@ class Segment: public IndexedShape<Cylinder, MorphPartId> {
     using super::IndexedShape;
 
     /**
-     * \brief Initialize the Segment directly from ids and gemetric properties
+     * \brief Initialize the Segment directly from ids and geometric properties
      **/
     inline Segment(identifier_t gid,
                    unsigned section_id,
                    unsigned segment_id,
                    Point3D const& center1,
                    Point3D const& center2,
-                   CoordType const& r) noexcept
-        : super(std::tie(gid, section_id, segment_id), center1, center2, r)
+                   CoordType const& r,
+                   SectionType const& section_type = SectionType::undefined) noexcept
+        : super(std::tie(gid, section_id, segment_id), center1, center2, r), section_type_(section_type)
     {}
+
+    inline SectionType section_type() const noexcept {
+        return section_type_;
+    };
+
+protected:
+    // section type
+    SectionType section_type_;
 
 private:
     friend class boost::serialization::access;
 
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int version) {
+    template<class Archive>
+    void save(Archive & ar, const unsigned int /*version*/) const
+    {
+        ar << boost::serialization::base_object<super>(*this);
+        ar << section_type_;
+    }
+
+    template<class Archive>
+    void load(Archive & ar, const unsigned int version)
+    {
         if(version == 0) { throw std::runtime_error("Invalid version 0 for Segment."); }
 
-        ar & boost::serialization::base_object<super>(*this);
+        ar >> boost::serialization::base_object<super>(*this);
+
+        if (version <= 4) {
+            section_type_ = SectionType::undefined;
+        }
+        else {
+            ar >> section_type_;
+        }
     }
+
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
 
 

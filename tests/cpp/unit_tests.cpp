@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(SynapseTree) {
 
 BOOST_AUTO_TEST_CASE(SegmentTree) {
     auto segs = util::make_vec<Segment>(N_ITEMS, util::identity<>(), util::constant<unsigned>(0), util::constant<unsigned>(0),
-                                        centers, centers2, radius);
+                                        centers, centers2, radius, util::constant<SectionType>(SectionType::undefined));
     IndexTree<Segment> rtree(segs);
 
     TESTS_INTERSECTING_CHECKS(true, false, false, true);
@@ -141,13 +141,13 @@ BOOST_AUTO_TEST_CASE(VariantNeuronPieces) {
     auto somas = util::make_vec<Soma>(N_ITEMS, util::identity<>(), centers, radius);
 
     IndexTree<MorphoEntry> rtree(somas);
-    rtree.insert(Segment{10ul, 0u, 0u, centers[0], centers2[0], radius[0]});
+    rtree.insert(Segment{10ul, 0u, 0u, centers[0], centers2[0], radius[0], SectionType::undefined});
 
     TESTS_INTERSECTING_CHECKS(true, false, true, true);
     TEST_INTERSECTING_IDS({2}, {}, {0}, {10});
 
     // Extra test... add a segment that spans across all test geometries
-    rtree.insert(Segment{20ul, 0u, 0u, centers[0], centers[2], 10.0f});
+    rtree.insert(Segment{20ul, 0u, 0u, centers[0], centers[2], 10.0f, SectionType::undefined});
 
     TESTS_INTERSECTING_CHECKS(true, true, true, true);
 

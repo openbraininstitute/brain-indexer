@@ -12,7 +12,7 @@ import pytest
 pytest_skipif = pytest.mark.skipif
 pytest_long = pytest.mark.long
 
-DATADIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v4"
+DATADIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v5"
 BLUECONFIG_2K = os.path.join(DATADIR, "bluepy_validation/BlueConfig")
 CIRCUIT_2K_SI = os.path.join(DATADIR, "bluepy_validation/indexes/morphology/in_memory")
 
@@ -44,10 +44,15 @@ def bluepy_check(circuit, result):
         r_b = (r1 + r2) / 2
         # Radius from SpatialIndex
         r_s = result['radius'][i]
+        # Section type from SpatialIndex
+        t_s = result['section_type'][i]
+        # Section type from BluePy
+        t_b = m.sections[section_id - 1].type
 
         assert np.allclose(p1_b, p1_s, atol=1e-4)
         assert np.allclose(p2_b, p2_s, atol=1e-4)
         assert np.allclose(r_b, r_s, atol=1e-4)
+        assert t_b == t_s
 
 
 @pytest_skipif(not os.path.exists(CIRCUIT_2K_SI),

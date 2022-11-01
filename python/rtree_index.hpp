@@ -315,6 +315,7 @@ inline void add_MorphIndex_find_intersecting_box_np(py::class_<Class>& c) {
             "centroid"_a=centroid,
             "radius"_a=pyutil::to_pyarray(results.radius),
             "endpoints"_a=py::make_tuple(endpoint1, endpoint2),
+            "section_type"_a=pyutil::to_pyarray(results.section_type),
             "is_soma"_a=pyutil::to_pyarray(results.is_soma)
         );
     };
@@ -804,12 +805,11 @@ inline static void add_branch(MorphIndexTree& obj,
                               unsigned section_id,
                               const unsigned n_segments,
                               const point_t* points,
-                              const coord_t* radii) {
+                              const coord_t* radii,
+                              const SectionType type) {
     // loop over segments. id is i + 1
     for (unsigned i = 0; i < n_segments; i++) {
-        // TODO reconsider this choice of using only `radii[i]`; because the
-        // input frequently has one radius per cap. Not one radius per cylinder.
-        obj.insert(si::Segment{neuron_id, section_id, i , points[i], points[i + 1], (radii[i] + radii[i + 1])/2});
+        obj.insert(si::Segment{neuron_id, section_id, i, points[i], points[i + 1], (radii[i] + radii[i + 1])/2, type});
     }
 }
 
@@ -818,8 +818,8 @@ inline void add_MorphIndex_insert_bindings(py::class_<Class>& c) {
     c
     .def("_insert",
         [](Class& obj, const id_t gid, const unsigned section_id, const unsigned segment_id,
-                       const array_t& p1, const array_t& p2, const coord_t radius) {
-            obj.insert(si::Segment{gid, section_id, segment_id, mk_point(p1), mk_point(p2), radius});
+                       const array_t& p1, const array_t& p2, const coord_t radius, unsigned int type) {
+            obj.insert(si::Segment{gid, section_id, segment_id, mk_point(p1), mk_point(p2), radius, static_cast<SectionType>(type)});
         },
         R"(
         Inserts a new segment object in the tree.
@@ -831,6 +831,7 @@ inline void add_MorphIndex_insert_bindings(py::class_<Class>& c) {
             p1(array): A len-3 list or np.array[float32] with the cylinder first point
             p2(array): A len-3 list or np.array[float32] with the cylinder second point
             radius(float): The radius of the cylinder
+            type(int): The type of the section (undefined, soma, axon, basal dendrite or apical dendrite).
         )"
     );
 }
@@ -841,7 +842,7 @@ inline void add_MorphIndex_place_bindings(py::class_<Class>& c) {
     .def("_place",
         [](Class& obj, const array_t& region_corners,
                        const id_t gid, const unsigned section_id, const unsigned segment_id,
-                       const array_t& p1, const array_t& p2, const coord_t radius) {
+                       const array_t& p1, const array_t& p2, const coord_t radius, unsigned int type) {
             if (region_corners.ndim() != 2 || region_corners.size() != 6) {
                 throw std::invalid_argument("Please provide a 2x3[float32] array");
             }
@@ -852,7 +853,7 @@ inline void add_MorphIndex_place_bindings(py::class_<Class>& c) {
                     point_t(c0[0], c0[1], c0[2]),
                     point_t(c1[0], c1[1], c1[2])
                 ),
-                si::Segment{gid, section_id, segment_id, mk_point(p1), mk_point(p2), radius}
+                si::Segment{gid, section_id, segment_id, mk_point(p1), mk_point(p2), radius, static_cast<SectionType>(type)}
             );
         },
         R"(
@@ -866,6 +867,7 @@ inline void add_MorphIndex_place_bindings(py::class_<Class>& c) {
             p1(array): A len-3 list or np.array[float32] with the cylinder first point
             p2(array): A len-3 list or np.array[float32] with the cylinder second point
             radius(float): The radius of the cylinder
+            type(int): The type of the section (undefined, soma, axon, basal dendrite or apical dendrite).
         )"
     );
 }
@@ -875,10 +877,11 @@ inline void add_MorphIndex_add_branch_bindings(py::class_<Class>& c) {
     c
     .def("_add_branch",
         [](Class& obj, const id_t gid, const unsigned section_id, const array_t& centroids_np,
-                       const array_t& radii_np) {
+                       const array_t& radii_np, unsigned int type) {
             const auto& point_radii = convert_input(centroids_np, radii_np);
             add_branch(obj, gid, section_id, unsigned(radii_np.size() - 1), point_radii.first,
-                       point_radii.second.data(0));
+                      point_radii.second.data(0), SectionType(type));
+
         },
         R"(
         Adds a branch, i.e., a line of cylinders.
@@ -919,7 +922,7 @@ inline void add_MorphIndex_add_neuron_bindings(py::class_<Class>& c) {
     c
     .def("_add_neuron",
         [](Class& obj, const id_t gid, const array_t& centroids_np, const array_t& radii_np,
-                       const array_offsets& branches_offset_np,
+                       const array_offsets& branches_offset_np, const array_types& section_types_np,
                        bool has_soma) {
             const auto& point_radii = convert_input(centroids_np, radii_np);
             // Get raw pointers to data
@@ -928,6 +931,7 @@ inline void add_MorphIndex_add_neuron_bindings(py::class_<Class>& c) {
             const auto radii = point_radii.second.data(0);
             const auto n_branches = branches_offset_np.size();
             const auto offsets = branches_offset_np.template unchecked<1>().data(0);
+            const auto types = section_types_np.template unchecked<1>().data(0);
 
             // Check if at least one point was provided when has_soma==True
             if (has_soma && centroids_np.shape(0) == 0) {
@@ -996,17 +1000,22 @@ inline void add_MorphIndex_add_neuron_bindings(py::class_<Class>& c) {
                 const unsigned p_start = offsets[branch_i];
                 const unsigned n_segments = offsets[branch_i + 1] - p_start - 1;
                 add_branch(obj, gid, branch_i + 1, n_segments, points + p_start,
-                           radii + p_start);
+                           radii + p_start, SectionType(types[branch_i]));
             }
             // Last
             if (n_branches) {
                 const unsigned p_start = offsets[n_branches - 1];
                 const unsigned n_segments = npoints - p_start - 1;
-                add_branch(obj, gid, n_branches, n_segments, points + p_start, radii + p_start);
+                add_branch(
+                    obj, gid, n_branches, n_segments,
+                    points + p_start,
+                    radii + p_start,
+                    SectionType(types[n_branches - 1])
+                );
             }
         },
         py::arg("gid"), py::arg("points"), py::arg("radii"), py::arg("branch_offsets"),
-        py::arg("has_soma") = true,
+        py::arg("section_types"), py::arg("has_soma") = true,
         R"(
         Bulk add a neuron (1 soma and lines of segments) to the spatial index.
 
@@ -1063,6 +1072,7 @@ inline void add_MorphIndex_fields_bindings(py::class_<Class>& c) {
                 "centroid",
                 "endpoints",
                 "radius",
+                "section_type",
                 "is_soma"
             };
         },

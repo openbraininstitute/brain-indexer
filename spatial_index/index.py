@@ -647,7 +647,7 @@ class SphereIndex(SphereIndexBase, _WriteInMemoryIndex):
     pass
 
 
-# TODO integrage other types of indexes like `PointIndex` and `SphereIndex`
+# TODO integrate other types of indexes like `PointIndex` and `SphereIndex`
 
 
 def _wrap_as_multi_population(func):

@@ -78,6 +78,18 @@ PYBIND11_MODULE(_spatial_index, m) {
 
     si_python::create_MetaDataConstants_bindings(m);
 
+    using namespace pybind11::literals;
+    m.attr("SectionType") = py::module::import("enum").attr("IntEnum")(
+        "SectionType",
+        py::dict(
+            "undefined"_a=static_cast<unsigned char>(si::SectionType::undefined),
+            "soma"_a=static_cast<unsigned char>(si::SectionType::soma),
+            "axon"_a=static_cast<unsigned char>(si::SectionType::axon),
+            "basal_dendrite"_a=static_cast<unsigned char>(si::SectionType::basal_dendrite),
+            "apical_dendrite"_a=static_cast<unsigned char>(si::SectionType::apical_dendrite)
+        )
+    );
+
     PYBIND11_NUMPY_DTYPE(si::gid_segm_t, gid, section_id, segment_id);  // struct as numpy dtype
 
     si_python::create_Sphere_bindings(m);

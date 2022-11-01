@@ -24,6 +24,7 @@ def register_logger(new_logger):
 register_logger(logging.getLogger(__name__))
 # --------------
 
+from ._spatial_index import SectionType # noqa
 
 try:
     from .morphology_builder import MorphMultiIndexBuilder  # noqa

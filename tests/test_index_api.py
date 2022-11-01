@@ -24,8 +24,8 @@ def expected_builtin_fields(index):
 
     elif index.element_type == "morphology":
         return ["gid", "section_id", "segment_id",
-                "ids", "centroid",
-                "radius", "endpoints",
+                "ids", "centroid", "radius",
+                "endpoints", "section_type",
                 "is_soma"]
 
     elif index.element_type == "sphere":

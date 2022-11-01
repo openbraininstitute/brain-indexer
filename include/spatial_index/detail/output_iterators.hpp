@@ -55,7 +55,7 @@ struct id_getter_for<boost::variant<S1, S...>> {
     using type = typename id_getter_for<S1>::type;
 };
 
-// Three overloaded functions to export endpoints.
+// Overloaded functions to export endpoints.
 // These are added mainly to allow export as numpy.
 // Depending on the object they can return a quiet_NaN
 // as a second endpoint if the object doesn't have an endpoint.
@@ -70,10 +70,6 @@ inline Point3D get_endpoint(const Segment& seg, bool first) {
     return first ? seg.p1 : seg.p2;
 }
 
-
-// Structures that contains the results of a query.
-// Necessary to export data as numpy arrays.
-
 inline bool get_is_soma(const Segment&) {
     return false;
 }
@@ -85,6 +81,21 @@ inline bool get_is_soma(const Soma&) {
 inline bool get_is_soma(const MorphoEntry& element) {
     return boost::apply_visitor([](const auto& v) { return get_is_soma(v); }, element);
 }
+
+inline SectionType get_section_type(const Segment& seg) {
+    return seg.section_type();
+}
+
+inline SectionType get_section_type(const Soma&) {
+    return SectionType::soma;
+}
+
+inline SectionType get_section_type(const MorphoEntry& element) {
+    return boost::apply_visitor([](const auto& v) { return get_section_type(v); }, element);
+}
+
+// Structures that contains the results of a query.
+// Necessary to export data as numpy arrays.
 
 template<typename Element>
 struct query_result;
@@ -99,6 +110,7 @@ struct query_result<MorphoEntry> {
     std::vector<CoordType> radius;
     std::vector<Point3D> endpoint1;
     std::vector<Point3D> endpoint2;
+    std::vector<SectionType> section_type;
     boost::container::vector<bool> is_soma;
 };
 
@@ -207,6 +219,7 @@ struct iter_entry_getter<MorphoEntry> : public detail::iter_append_only<iter_ent
                 output_.radius.push_back(t.radius);
                 output_.endpoint1.push_back(detail::get_endpoint(t, 1));
                 output_.endpoint2.push_back(detail::get_endpoint(t, 0));
+                output_.section_type.push_back(detail::get_section_type(t));
                 output_.is_soma.push_back(detail::get_is_soma(t));
             },
             element);

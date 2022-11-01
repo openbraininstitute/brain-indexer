@@ -24,6 +24,7 @@ using id_t = si::identifier_t;
 using array_t = py::array_t<coord_t, py::array::c_style | py::array::forcecast>;
 using array_ids = py::array_t<id_t, py::array::c_style | py::array::forcecast>;
 using array_offsets = py::array_t<unsigned, py::array::c_style | py::array::forcecast>;
+using array_types = py::array_t<unsigned int, py::array::c_style | py::array::forcecast>;
 
 
 inline auto convert_input(array_t const& centroids, array_t const& radii) {
