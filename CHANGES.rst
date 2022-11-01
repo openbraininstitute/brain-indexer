@@ -1,6 +1,25 @@
 Change Log
 ==========
 
+Version 1.1.0
+-------------
+**November 2022**
+
+**Features**
+  * Integrates ``section_type`` in index. This allows to retrieve information on the 
+    type of section (i.e. ``soma``, ``axon``, ``basal_dendrite``, ``apical_dendrite``)
+    directly from the query.
+  * Add ``box_empty`` and ``sphere_empty`` functions to check if a specific area is empty.
+
+**Improvements**
+  * Ignore ``virtual`` populations in circuit config files.
+  * Populations with unsupported types are not allowed anymore.
+  * Relaxed requirement on number of MPI ranks: now can be in the form ``2**n * 3**m * 5**l + 1``.
+  * Workaround for ``BOOST_STATIC_CONSTANT`` build issue.
+  * Multiple improvements to CI.
+  * Removed memory mapped files support entirely.
+  * Multiple fixes and improvements to the implementation.
+  
 Version 1.0.0
 -------------
 **October 2022**
