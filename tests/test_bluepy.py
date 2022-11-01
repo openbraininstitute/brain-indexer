@@ -17,15 +17,27 @@ BLUECONFIG_2K = os.path.join(DATADIR, "bluepy_validation/BlueConfig")
 CIRCUIT_2K_SI = os.path.join(DATADIR, "bluepy_validation/indexes/morphology/in_memory")
 
 
-def bluepy_check(circuit, result):
+class BluepyCache:
+    def __init__(self, circuit):
+        self._circuit = circuit
+        self._morphs = dict()
 
+    def get(self, gid):
+        gid = int(gid)
+        if gid not in self._morphs:
+            self._morphs[gid] = self._circuit.morph.get(gid, transform=True)
+
+        return self._morphs[gid]
+
+
+def bluepy_check(bluepy_cache, result):
     for i, gid in enumerate(result['gid']):
         # Skip somas.
         if result['is_soma'][i]:
             continue
 
         # adding one to the gid since BluePy is 1-indexed
-        m = circuit.morph.get(int(gid + 1), transform=True)
+        m = bluepy_cache.get(gid + 1)
 
         section_id = result['section_id'][i]
         segment_id = result['segment_id'][i]
@@ -62,11 +74,10 @@ def test_bluepy_validation():
 
     from bluepy import Circuit
 
-    N_QUERIES = 20
+    N_QUERIES = 200
 
     indexer = spatial_index.open_index(CIRCUIT_2K_SI)
-    # Load the circuit
-    c = Circuit(BLUECONFIG_2K)
+    bluepy_cache = BluepyCache(Circuit(BLUECONFIG_2K))
 
     i = 0
     while i < N_QUERIES:
@@ -77,5 +88,5 @@ def test_bluepy_validation():
             result = indexer.box_query(min_point, max_point)
             if not result['gid'].size == 0:
                 i += 1
-                bluepy_check(c, result)
+                bluepy_check(bluepy_cache, result)
                 break
