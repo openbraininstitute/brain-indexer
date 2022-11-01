@@ -399,6 +399,7 @@ def usecase_3_config(index_variant, element_type):
 
 @pytest.mark.skipif(not os.path.exists(CIRCUIT_10_DIR),
                     reason="Circuit directory not available")
+@pytest.mark.long
 @pytest.mark.parametrize(
     "element_type,index_variant,accuracy,population_mode",
     itertools.product(
@@ -429,6 +430,7 @@ def test_sphere_index_query_api(element_type, index_variant, accuracy, populatio
 
 @pytest.mark.skipif(not os.path.exists(USECASE_3_DIR),
                     reason="Circuit directory not available")
+@pytest.mark.long
 @pytest.mark.parametrize(
     "element_type,index_variant,accuracy,population_mode",
     itertools.product(
