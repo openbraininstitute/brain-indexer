@@ -6,8 +6,9 @@ import sys
 import numpy as np
 
 _CURDIR = os.path.dirname(__file__)
-# EDGE_FILE = "/gpfs/bbp.cscs.ch/project/proj16/leite/circuit_o1v6_edges.h5"
+
 EDGE_FILE = "/gpfs/bbp.cscs.ch/project/proj42/circuits/CA1.O1/mooc-circuit/sonata/edges/edges.h5"
+POPULATION = "hippocampus_neurons__hippocampus_neurons__chemical"
 N_QUERIES = 10000
 
 max_points = np.random.uniform(low=175, high=180, size=(N_QUERIES, 3)).astype(np.float32)
@@ -18,9 +19,7 @@ print ("SYNAPSE INDEX BENCHMARKING IN PROGRESS... PLEASE WAIT!")
 start_global = timer()
 start = timer()
 
-# index = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, "All")
-index = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, "hippocampus_neurons__hippocampus_neurons__chemical")
-# index = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, "default")
+index = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, POPULATION)
 
 end = timer()
 index_time = end - start

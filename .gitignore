@@ -108,3 +108,6 @@ venv.bak/
 
 # qt
 CMakeLists.txt.user
+
+# vscode
+.vscode

@@ -156,6 +156,12 @@ build-package:
   tags: []
   rules:
     - when: always
+# The following lines are a workaround to for this issue:
+# https://gitlab.com/gitlab-org/gitlab-runner/-/issues/29370
+# Feel free to remove them once the issue is fixed.
+  artifacts:
+    paths:
+      - "${PYTHON_PROJECT_DIR}/dist/*.tar.gz"
 
 build-wheels:
   tags: [kubernetes]
