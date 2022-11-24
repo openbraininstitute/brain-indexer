@@ -107,12 +107,12 @@ The constructor accepts all the components (gids, points, and radii) as individu
 
 .. code-block:: python
 
-    from spatial_index import SphereIndex
+    from spatial_index import SphereIndexBuilder
     import numpy as np
     ids = np.arange(3, dtype=np.intp)
     centroids = np.array([[0, 0, 0], [1, 0, 0], [2, 0, 0]], dtype=np.float32)
     radius = np.ones(3, dtype=np.float32)
-    index = SphereIndex(centroids, radius, ids)
+    index = SphereIndexBuilder.from_numpy(centroids, radius, ids)
 
 Indexing Morphologies
 ~~~~~~~~~~~~~~~~~~~~~
