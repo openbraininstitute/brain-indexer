@@ -7,6 +7,7 @@ from tqdm import tqdm
 import numpy as np
 
 import spatial_index
+import libsonata
 
 
 def gen_ranges(limit, blocklen, low=0):
@@ -254,6 +255,20 @@ def is_box_query_contained(lhs, rhs, corner, opposite_corner, atol):
         spatial_index.logger.info(f"The two indexes diff:\n{lhs_ids}\n{rhs_ids}")
 
     return is_equal
+
+
+def chunk_sonata_selection(selection, chunk_size):
+    # Some selections may be extremely large. We split them so
+    # memory overhead is smaller and progress can be monitored
+    new_ranges = []
+    for first, last in selection.ranges:
+        count = last - first
+        if count > chunk_size:
+            new_ranges.extend(list(gen_ranges(last, chunk_size, first)))
+        else:
+            new_ranges.append((first, last))
+
+    return libsonata.Selection(new_ranges)
 
 
 def bcast_sonata_selection(selection, *, root=None, mpi_comm=None):

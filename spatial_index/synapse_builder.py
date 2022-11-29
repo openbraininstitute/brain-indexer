@@ -6,7 +6,7 @@ import numpy
 
 import spatial_index
 from . import _spatial_index as core
-from .util import gen_ranges, bcast_sonata_selection
+from .util import chunk_sonata_selection, bcast_sonata_selection
 from .index import SynapseIndex
 from .builder import _WriteSONATAMetadataMixin, _WriteSONATAMetadataMultiMixin
 from .chunked_builder import ChunkedProcessingMixin, MultiIndexBuilderMixin
@@ -100,17 +100,7 @@ class SynapseIndexBuilderBase:
 
     @classmethod
     def _normalize_selection(cls, selection):
-        # Some selections may be extremely large. We split them so
-        # memory overhead is smaller and progress can be monitored
-        new_ranges = []
-        for first, last in selection.ranges:
-            count = last - first
-            if count > cls.MAX_SYN_COUNT_RANGE:
-                new_ranges.extend(list(gen_ranges(last, cls.MAX_SYN_COUNT_RANGE, first)))
-            else:
-                new_ranges.append((first, last))
-
-        return libsonata.Selection(new_ranges)
+        return chunk_sonata_selection(selection, cls.MAX_SYN_COUNT_RANGE)
 
 
 class SynapseIndexBuilder(SynapseIndexBuilderBase,
@@ -186,10 +176,14 @@ if hasattr(core, "SynapseMultiIndexBulkBuilder"):
             pass
 
         @classmethod
-        def _make_sonata_selection(cls, sonata_edges, target_gids, **kw):
+        def _mpi_comm(cls):
             from mpi4py import MPI
 
-            comm = MPI.COMM_WORLD
+            return MPI.COMM_WORLD
+
+        @classmethod
+        def _make_sonata_selection(cls, sonata_edges, target_gids, **kw):
+            comm = cls._mpi_comm()
             mpi_rank = comm.Get_rank()
             root = cls.constructor_rank(mpi_comm=comm)
 
@@ -201,3 +195,18 @@ if hasattr(core, "SynapseMultiIndexBulkBuilder"):
                 selection = None
 
             return bcast_sonata_selection(selection, root=root, mpi_comm=comm)
+
+        @classmethod
+        def _normalize_selection(cls, selection):
+            comm = cls._mpi_comm()
+            comm_size = comm.Get_size()
+
+            chunk_size = cls.MAX_SYN_COUNT_RANGE
+            while chunk_size >= 1:
+                candidate_selection = chunk_sonata_selection(selection, chunk_size)
+                if len(candidate_selection.ranges) >= comm_size - 1:
+                    return candidate_selection
+
+                chunk_size = chunk_size // 8
+
+            raise ValueError("Unable to create a suitable selection.")
