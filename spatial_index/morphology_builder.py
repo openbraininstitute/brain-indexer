@@ -212,7 +212,7 @@ class MorphIndexBuilder(MorphIndexBuilderBase,
 
     @property
     def index(self):
-        return MorphIndex(self._core_builder)
+        return MorphIndex(self._core_builder, self._sonata_nodes)
 
     def _write_index_if_needed(self, output_dir):
         if output_dir is not None:
