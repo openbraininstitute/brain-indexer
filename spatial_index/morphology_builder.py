@@ -160,7 +160,7 @@ class MorphIndexBuilderBase:
                 ``output_dir``.
         """
         if "target_gids" in kw:
-            logger.warn(
+            logger.warning(
                 "The keyword argument 'target_gids' has been renamed to"
                 " 'gids' and will be removed before 1.0."
             )
