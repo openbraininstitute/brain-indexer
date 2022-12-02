@@ -3,6 +3,13 @@ prune 3rdparty/pybind11/tests
 prune 3rdparty/pybind11/.github
 prune 3rdparty/pybind11/docs
 
+graft 3rdparty/zisa.sfc
+prune 3rdparty/zisa.sfc/bin
+prune 3rdparty/zisa.sfc/conanfile.txt
+prune 3rdparty/zisa.sfc/test
+prune 3rdparty/zisa.sfc/docs
+prune 3rdparty/zisa.sfc/.github
+
 exclude .gitmodules
 exclude .gitignore
 exclude .gitlab-ci.yml

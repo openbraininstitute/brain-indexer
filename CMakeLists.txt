@@ -55,6 +55,9 @@ else()
     find_package(nlohmann_json REQUIRED)
 endif()
 
+set(ZisaSFC_BUILD_TESTS Off CACHE BOOL "Should ZisaSFC tests be built?")
+add_subdirectory(3rdparty/zisa.sfc)
+
 #
 # Target lib
 #
@@ -69,6 +72,7 @@ target_link_libraries(SpatialIndex
     Boost::filesystem
     Threads::Threads
     nlohmann_json::nlohmann_json
+    Zisa::sfc
 )
 target_compile_definitions(SpatialIndex INTERFACE "-DBOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL")
 

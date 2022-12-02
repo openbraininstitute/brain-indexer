@@ -112,5 +112,8 @@ PYBIND11_MODULE(_spatial_index, m) {
     si_python::create_analysis_bindings(m);
     si_python::create_is_valid_comm_size_bindings(m);
 #endif
+
+    // Experimental space filling order
+    si_python::create_experimental_space_filling_order(m);
 }
 

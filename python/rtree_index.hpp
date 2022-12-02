@@ -4,6 +4,7 @@
 #include <pybind11/eval.h>
 
 #include <spatial_index/logging.hpp>
+#include <spatial_index/query_ordering.hpp>
 
 namespace bg = boost::geometry;
 
@@ -1305,6 +1306,28 @@ inline void create_is_valid_comm_size_bindings(py::module& m) {
     );
 }
 #endif
+
+inline void create_experimental_space_filling_order(py::module& m) {
+    py::module m_experimental = m.def_submodule("experimental");
+    m_experimental.def(
+        "space_filling_order",
+        [](const array_t& points) {
+            size_t n_points = points.shape(0);
+            auto points_ptr = static_cast<Point3Dx const*>(convert_input(points));
+
+            // FIXME, use safe types.
+            auto order = si::experimental::space_filling_order(points_ptr, n_points);
+            return pyutil::to_pyarray(order);
+        },
+        R"(
+        Order of the points according to a space filling curve.
+
+        This is useful for ordering queries. Since the space filling order is
+        locality preserving, points that are close in 3D are often also close in
+        space filling order. Hence, hopefully improving cache effieciency.
+        )"
+    );
+}
 
 }  // namespace py_bindings
 }  // namespace spatial_index

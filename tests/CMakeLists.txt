@@ -28,6 +28,7 @@ endfunction()
 si_unit_test("test_input_iters")
 si_unit_test("unit_tests")
 si_unit_test("test_geometry")
+si_unit_test("test_query_ordering")
 
 if(SI_MPI)
     si_mpi_unit_test("test_distributed_sorting")
