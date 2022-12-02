@@ -8,10 +8,12 @@
 #include <iostream>
 #include <unordered_map>
 
+// boost::serialize before boost::geometry
 #include <boost/serialization/nvp.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/split_free.hpp>
 #include <boost/serialization/variant.hpp>
+#include <boost/serialization/version.hpp>
 
 #include <boost/geometry/index/rtree.hpp>
 #include <boost/variant.hpp>

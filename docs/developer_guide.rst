@@ -169,6 +169,27 @@ it must set its version to ``SPATIAL_INDEX_STRUCT_VERSION``; and assert that the
 version is not ``0``. (This last part is only to check that you haven't
 forgotten to set the version.)
 
+Include and Inline Policy
+-------------------------
+
+Every header should include everything it needs to be used by itself. There should
+be no include ordering, transitive assumptions about what's already included are
+permitted.
+
+This also affect the `inline` policy, i.e. everything needs to either be a
+template or be inline ot avoid violations of the ODR.
+
+In order to check that all headers `<spatial_index/*.hpp>` adhere to these rules
+we've added one compilation unit per header in `tests/cpp/check_headers/*.cpp`.
+These simply include the header and then the compiler can check if the rules are
+adhered. In order to generate the required dummy code, we have a script:
+
+.. code-block: python
+
+    bin/update_header_checks.py
+
+(It must be run in the project root.)
+
 History
 -------
 

@@ -8,7 +8,6 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/iterator/function_output_iterator.hpp>
-#include <boost/serialization/version.hpp>
 
 #include "output_iterators.hpp"
 
@@ -47,17 +46,17 @@ std::string value_to_element_type() {
 }
 
 template<>
-std::string value_to_element_type<IndexedSphere>() {
+inline std::string value_to_element_type<IndexedSphere>() {
     return "sphere";
 }
 
 template<>
-std::string value_to_element_type<MorphoEntry>() {
+inline std::string value_to_element_type<MorphoEntry>() {
     return "morphology";
 }
 
 template<>
-std::string value_to_element_type<Synapse>() {
+inline std::string value_to_element_type<Synapse>() {
     return "synapse";
 }
 

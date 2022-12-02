@@ -31,13 +31,13 @@ namespace spatial_index {
      *   * join_path("/foo", "/bar") == "/bar"
      *   * join_path("", "bar") == "bar"; unlike `"" + "/" + "bar".
      */
-    std::string join_path(const std::filesystem::path& stem, const std::filesystem::path& tail) {
+    inline std::string join_path(const std::filesystem::path& stem, const std::filesystem::path& tail) {
         return (stem / tail).string();
     }
 
 
     /// \brief Create the common parts of the meta data file.
-    nlohmann::json create_basic_meta_data(const std::string& element_type) {
+    inline nlohmann::json create_basic_meta_data(const std::string& element_type) {
         return nlohmann::json{
             {"version", MetaDataConstants::version},
             {"element_type", element_type}
@@ -51,12 +51,12 @@ namespace spatial_index {
     }
 
     /// \brief The file name of the meta data file.
-    std::string default_meta_data_relpath() {
+    inline std::string default_meta_data_relpath() {
         return "meta_data.json";
     }
 
     /// \brief The default path of `meta_data.json`.
-    std::string default_meta_data_path(const std::string& index_path) {
+    inline std::string default_meta_data_path(const std::string& index_path) {
         return join_path(index_path, default_meta_data_relpath());
     }
 
@@ -71,7 +71,7 @@ namespace spatial_index {
      *     auto index_path = canonicalize_index_path(path);
      *     assert(index_path == canonicalize_index_path(index_path));
      */
-    std::string canonicalize_index_path(const std::string& path) {
+    inline std::string canonicalize_index_path(const std::string& path) {
         auto abs_path = std::filesystem::canonical(path);
 
         // If the canonical path is a regular file, it's the
@@ -85,7 +85,7 @@ namespace spatial_index {
     }
 
     /// \brief Deduces the path of the `meta_data.json`.
-    std::string deduce_meta_data_path(const std::string& path) {
+    inline std::string deduce_meta_data_path(const std::string& path) {
         // We need to canonicalize to avoid checking if a symlink
         // is a directory/file, which it isn't but we'd only care
         // about what the target is.

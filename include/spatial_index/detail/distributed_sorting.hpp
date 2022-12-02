@@ -3,7 +3,7 @@
 namespace spatial_index {
 
 /// \brief Compute the total number of elements across all MPI ranks.
-size_t sum_local_counts(size_t local_count, MPI_Comm comm) {
+inline size_t sum_local_counts(size_t local_count, MPI_Comm comm) {
     size_t global_count;
     MPI_Allreduce(&local_count, &global_count, 1, MPI_SIZE_T, MPI_SUM, comm);
 

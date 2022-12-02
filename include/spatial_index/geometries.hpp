@@ -111,7 +111,7 @@ struct Box3Dx : public Box3D {
     }
 };
 
-Box3D make_query_box(const Point3D& a, const Point3D& b) {
+inline Box3D make_query_box(const Point3D& a, const Point3D& b) {
     return Box3D{min(a, b), max(a, b)};
 }
 
@@ -125,7 +125,7 @@ struct Cylinder {
     CoordType radius;
 
     Cylinder() = default;
-    Cylinder(const Point3D& p1, const Point3D& p2, CoordType radius)
+    inline Cylinder(const Point3D& p1, const Point3D& p2, CoordType radius)
         : p1(p1), p2(p2), radius(radius) {}
 
     inline CoordType length() const {

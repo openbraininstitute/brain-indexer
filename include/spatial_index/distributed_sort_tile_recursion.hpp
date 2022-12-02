@@ -80,7 +80,7 @@ void distributed_sort_tile_recursion(std::vector<Value> &values,
                                      MPI_Comm mpi_comm);
 
 
-std::vector<IndexedSubtreeBox> gather_bounding_boxes(
+inline std::vector<IndexedSubtreeBox> gather_bounding_boxes(
     const std::vector<IndexedSubtreeBox> &local_bounding_boxes,
     MPI_Comm comm);
 
@@ -97,7 +97,7 @@ struct TwoLevelSTRParams {
 };
 
 
-LocalSTRParams infer_local_str_params(
+inline LocalSTRParams infer_local_str_params(
     const SerialSTRParams &overall_str_params,
     const DistributedSTRParams &distributed_str_params);
 
@@ -110,15 +110,15 @@ LocalSTRParams infer_local_str_params(
 ///
 /// \warning Current implementation only supports powers of two.
 ///
-std::array<int, 3> rank_distribution(int comm_size);
+inline std::array<int, 3> rank_distribution(int comm_size);
 
 
 /// \brief Is `comm_size` a valid MPI communicator size for the C++ backend?
-bool is_valid_comm_size(int comm_size);
+inline bool is_valid_comm_size(int comm_size);
 
 
 /// Uses `SerialSTRParams::from_heuristics` as a heuristic.
-TwoLevelSTRParams two_level_str_heuristic(size_t n_elements,
+inline TwoLevelSTRParams two_level_str_heuristic(size_t n_elements,
                                           size_t max_elements_per_part,
                                           int comm_size);
 

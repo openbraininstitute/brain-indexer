@@ -46,3 +46,5 @@ endif()
 
 
 si_cpp_example("test_clean")
+
+add_subdirectory(cpp/check_headers)

@@ -1,5 +1,10 @@
 #pragma once
 
+// boost::serialize before boost::geometry
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/version.hpp>
+
 #include <boost/format.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/box.hpp>

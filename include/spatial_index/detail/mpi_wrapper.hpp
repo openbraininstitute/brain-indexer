@@ -8,24 +8,24 @@
 namespace spatial_index {
 namespace mpi {
 
-int rank(MPI_Comm comm) {
+inline int rank(MPI_Comm comm) {
     int rank = -1;
     MPI_Comm_rank(comm, &rank);
     return rank;
 }
 
-int size(MPI_Comm comm) {
+inline int size(MPI_Comm comm) {
     int size = -1;
     MPI_Comm_size(comm, &size);
     return size;
 }
 
-void abort(const std::string& msg, MPI_Comm comm, int exit_code) {
+inline void abort(const std::string& msg, MPI_Comm comm, int exit_code) {
     log_error(msg);
     MPI_Abort(comm, exit_code);
 }
 
-std::vector<int> offsets_from_counts(const std::vector<int>& counts) {
+inline std::vector<int> offsets_from_counts(const std::vector<int>& counts) {
     std::vector<int> offsets(counts.size()+1);
     offsets[0] = 0;
     std::partial_sum(counts.begin(), counts.end(), offsets.begin() + 1);
@@ -33,30 +33,30 @@ std::vector<int> offsets_from_counts(const std::vector<int>& counts) {
     return offsets;
 }
 
-bool check_count_is_safe(size_t count) {
+inline bool check_count_is_safe(size_t count) {
     return count <= util::safe_integer_cast<size_t>(std::numeric_limits<int>::max());
 }
 
-void assert_count_is_safe(size_t count, const std::string &error_id) {
+inline void assert_count_is_safe(size_t count, const std::string &error_id) {
     if(!check_count_is_safe(count)) {
         throw std::runtime_error("Count is too large and will overflow `int`. [" + error_id + "]");
     }
 }
 
-bool check_counts_are_safe(const std::vector<int>& counts) {
+inline bool check_counts_are_safe(const std::vector<int>& counts) {
     auto total_elements = std::accumulate(counts.begin(), counts.end(), size_t(0));
     return check_count_is_safe(total_elements);
 }
 
 
-void assert_counts_are_safe(const std::vector<int>& counts, const std::string &error_id) {
+inline void assert_counts_are_safe(const std::vector<int>& counts, const std::string &error_id) {
     if(!check_counts_are_safe(counts)) {
         throw std::runtime_error("Counts are too large and will overflow `int`. [" + error_id + "]");
     }
 }
 
 
-std::vector<int> gather_counts(size_t exact_count, MPI_Comm comm) {
+inline std::vector<int> gather_counts(size_t exact_count, MPI_Comm comm) {
     auto int_count = util::safe_integer_cast<int>(exact_count);
 
     auto recv_counts = std::vector<int>(size(comm));
@@ -72,7 +72,7 @@ std::vector<int> gather_counts(size_t exact_count, MPI_Comm comm) {
 }
 
 
-std::vector<size_t> exchange_local_counts(size_t local_count, MPI_Comm comm) {
+inline std::vector<size_t> exchange_local_counts(size_t local_count, MPI_Comm comm) {
     auto comm_size = mpi::size(comm);
     std::vector<size_t> count_per_rank(util::safe_integer_cast<size_t>(comm_size));
 
@@ -82,7 +82,7 @@ std::vector<size_t> exchange_local_counts(size_t local_count, MPI_Comm comm) {
 }
 
 
-std::vector<int> exchange_counts(const std::vector<int>& send_counts, MPI_Comm comm) {
+inline std::vector<int> exchange_counts(const std::vector<int>& send_counts, MPI_Comm comm) {
     std::vector<int> recv_counts(send_counts.size());
     MPI_Alltoall(
         send_counts.data(), 1, MPI_INT,
@@ -98,7 +98,7 @@ std::vector<int> exchange_counts(const std::vector<int>& send_counts, MPI_Comm c
 }
 
 
-std::vector<int>
+inline std::vector<int>
 compute_balance_send_counts(const std::vector<size_t>& counts_per_rank, int mpi_rank) {
     auto comm_size = counts_per_rank.size();
     auto global_count = std::accumulate(
@@ -185,19 +185,19 @@ Handle Resource<Derived, Handle>::drop_ownership() {
     return tmp;
 }
 
-void comm_free(MPI_Comm& comm) {
+inline void comm_free(MPI_Comm& comm) {
     MPI_Comm_free(&comm);
 }
 
 
-Comm comm_split(MPI_Comm comm, int color, int order) {
+inline Comm comm_split(MPI_Comm comm, int color, int order) {
     MPI_Comm new_comm;
     MPI_Comm_split(comm, color, order, &new_comm);
 
     return Comm{new_comm};
 }
 
-Comm comm_shrink(MPI_Comm old_comm, int n_ranks) {
+inline Comm comm_shrink(MPI_Comm old_comm, int n_ranks) {
     assert(0 < n_ranks);
     assert(n_ranks <= size(old_comm));
 
@@ -211,22 +211,22 @@ Comm comm_shrink(MPI_Comm old_comm, int n_ranks) {
     return new_comm;
 }
 
-void Datatype::free(MPI_Datatype& datatype) {
+inline void Datatype::free(MPI_Datatype& datatype) {
     MPI_Type_free(&datatype);
 }
 
 
-MPI_Datatype Datatype::invalid_handle() noexcept {
+inline MPI_Datatype Datatype::invalid_handle() noexcept {
     return MPI_DATATYPE_NULL;
 }
 
 
-void Comm::free(MPI_Comm comm) {
+inline void Comm::free(MPI_Comm comm) {
     comm_free(comm);
 }
 
 
-MPI_Comm Comm::invalid_handle() noexcept {
+inline MPI_Comm Comm::invalid_handle() noexcept {
     return MPI_COMM_NULL;
 }
 

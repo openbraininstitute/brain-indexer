@@ -169,7 +169,7 @@ inline Range balanced_chunks(size_t n_total, size_t n_chunks, size_t k_chunk);
 
 
 /// Now formatted as 'YYYY-MM-DDTHH:MM:SS'.
-std::string iso_datetime_now() {
+inline std::string iso_datetime_now() {
     // Credit: https://stackoverflow.com/a/9528166
 
     time_t now;
@@ -181,7 +181,7 @@ std::string iso_datetime_now() {
 }
 
 /// @brief Read the environment variable and convert it to `bool`.
-bool read_boolean_environment_variable(const std::string& name) {
+inline bool read_boolean_environment_variable(const std::string& name) {
     char const * const var_c_str = std::getenv(name.c_str());
 
     if(var_c_str == nullptr) {
@@ -225,14 +225,14 @@ namespace py_bindings {
 
 #if SI_FOR_PYBIND == 1
 // Defined in `py_bindings.cpp`.
-void check_signals();
+inline void check_signals();
 #endif
 
 } // spatial_index::py_bindings
 
 namespace util {
 
-void check_signals() {
+inline void check_signals() {
 #if SI_FOR_PYBIND == 1
     spatial_index::py_bindings::check_signals();
 #endif

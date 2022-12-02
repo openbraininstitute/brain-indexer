@@ -45,11 +45,11 @@ struct SerialSTRParams {
     std::array<size_t, 3> n_parts_per_dim;
 
     /// Overall number of parts after STR.
-    size_t n_parts() const {
+    inline size_t n_parts() const {
         return n_parts_per_dim[0] * n_parts_per_dim[1] * n_parts_per_dim[2];
     }
 
-    SerialSTRParams(size_t n_points, const std::array<size_t, 3> &n_parts_per_dim);
+    inline SerialSTRParams(size_t n_points, const std::array<size_t, 3> &n_parts_per_dim);
 
     /** \brief Number of parts in a slice.
      *
@@ -64,7 +64,7 @@ struct SerialSTRParams {
      *     A[i, j, :]  # for any `i`, `j`
      *
      */
-    size_t n_parts_per_slice(size_t dim) const;
+    inline size_t n_parts_per_slice(size_t dim) const;
 
     /** \brief Boundaries of the parts after STR.
      *
@@ -78,14 +78,14 @@ struct SerialSTRParams {
      *
      * Note the length is one more than the number of partitions.
      */
-    std::vector<size_t> partition_boundaries() const;
+    inline std::vector<size_t> partition_boundaries() const;
 
     /** \brief Construct STR parameters from a heuristic.
      *
      * The aim of this heuristic is to provide suitable parameters when
      * computing a distributed R-Tree.
      */
-    static SerialSTRParams from_heuristic(size_t n_points, size_t max_elements_per_part);
+    inline static SerialSTRParams from_heuristic(size_t n_points, size_t max_elements_per_part);
 
 };
 
@@ -128,7 +128,7 @@ private:
     using STR = SerialSortTileRecursion<Value, GetCoordinate, D>;
 
 public:
-    static void apply(std::vector<Value> &values,
+    inline static void apply(std::vector<Value> &values,
                       size_t values_begin,
                       size_t values_end,
                       const SerialSTRParams &str_params);

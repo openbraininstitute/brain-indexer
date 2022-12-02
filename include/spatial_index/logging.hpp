@@ -75,11 +75,11 @@ class Logger {
  * Note: this only affects the set up of the default logger; and should be
  * used very sparingly.
  */
-void log_fallback(LogSeverity severity, const std::string& message) {
+inline void log_fallback(LogSeverity severity, const std::string& message) {
     std::cout << to_string(severity) << ": " << message << std::endl;
 }
 
-void default_logging_callback(LogSeverity severity, const std::string& message) {
+inline void default_logging_callback(LogSeverity severity, const std::string& message) {
     std::cout << to_string(severity) << ": " << message << std::endl;
 }
 

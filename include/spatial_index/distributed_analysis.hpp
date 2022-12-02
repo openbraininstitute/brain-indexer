@@ -4,6 +4,8 @@
 
 #include <spatial_index/mpi_wrapper.hpp>
 #include <spatial_index/logging.hpp>
+#include <spatial_index/point3d.hpp>
+#include <spatial_index/multi_index.hpp>
 
 namespace spatial_index {
 
@@ -40,7 +42,7 @@ inline std::vector<size_t> histogram(const std::vector<CoordType>& bins,
 }
 
 
-std::vector<CoordType> log10_bins(CoordType log10_low,
+inline std::vector<CoordType> log10_bins(CoordType log10_low,
                                   CoordType log10_high,
                                   size_t bins_per_decade) {
 
@@ -61,7 +63,7 @@ std::vector<CoordType> log10_bins(CoordType log10_low,
 }
 
 
-void segment_length_histogram(const std::string &output_dir, MPI_Comm comm = MPI_COMM_WORLD) {
+inline void segment_length_histogram(const std::string &output_dir, MPI_Comm comm = MPI_COMM_WORLD) {
     auto storage = NativeStorageT<MorphoEntry>(output_dir);
     auto top_tree = storage.load_top_tree();
     auto n_subtrees = top_tree.size();

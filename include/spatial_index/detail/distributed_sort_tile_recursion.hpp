@@ -6,7 +6,7 @@
 namespace spatial_index {
 
 
-std::vector<IndexedSubtreeBox>
+inline std::vector<IndexedSubtreeBox>
 gather_bounding_boxes(const std::vector<IndexedSubtreeBox>& local_bounding_boxes,
                       MPI_Comm comm) {
 
@@ -44,7 +44,7 @@ gather_bounding_boxes(const std::vector<IndexedSubtreeBox>& local_bounding_boxes
 }
 
 
-LocalSTRParams infer_local_str_params(const SerialSTRParams& overall_str_params,
+inline LocalSTRParams infer_local_str_params(const SerialSTRParams& overall_str_params,
                                       const DistributedSTRParams& distributed_str_params) {
 
     const auto &overall_parts = overall_str_params.n_parts_per_dim;
@@ -60,7 +60,7 @@ LocalSTRParams infer_local_str_params(const SerialSTRParams& overall_str_params,
 }
 
 /// \brief Can n be factored into the given prime factors?
-bool is_factorizable(int n, const std::vector<int>& p){
+inline bool is_factorizable(int n, const std::vector<int>& p){
     if(n == 0) {
         return false;
     }
@@ -81,7 +81,7 @@ bool is_factorizable(int n, const std::vector<int>& p){
 ///
 /// Compute `k` such that:
 ///   n == \prod_i p[i]**k[i].
-std::vector<int> factorize(int n, const std::vector<int>& p){
+inline std::vector<int> factorize(int n, const std::vector<int>& p){
     if(!is_factorizable(n, p)) {
         throw std::runtime_error("Invalid n.");
     }
@@ -97,11 +97,11 @@ std::vector<int> factorize(int n, const std::vector<int>& p){
     return k;
 }
 
-bool is_valid_comm_size(int comm_size) {
+inline bool is_valid_comm_size(int comm_size) {
     return is_factorizable(comm_size, {2, 3, 5});
 }
 
-std::array<int, 3> rank_distribution(int comm_size) {
+inline std::array<int, 3> rank_distribution(int comm_size) {
     assert(is_valid_comm_size(comm_size));
 
     auto primes = std::vector<int>{5, 3, 2};
@@ -126,7 +126,7 @@ std::array<int, 3> rank_distribution(int comm_size) {
 }
 
 
-TwoLevelSTRParams two_level_str_heuristic(size_t n_elements,
+inline TwoLevelSTRParams two_level_str_heuristic(size_t n_elements,
                                           size_t max_elements_per_part,
                                           int comm_size) {
 
@@ -226,8 +226,6 @@ void DistributedSortTileRecursion<Value, GetCoordinate, dim>::apply(
         STR<dim+1>::apply(values, str_params, *sub_comm);
     }
 }
-
-
 
 }
 #endif
