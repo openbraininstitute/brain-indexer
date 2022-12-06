@@ -127,18 +127,21 @@ While nobody admits using ``printf`` debugging, here's a trick:
 This is interesting because you can break up the output by MPI rank; and
 therefore get a clean stream of messages from each MPI rank.
 
-Environmental Variables
------------------------
+
+.. _`Environment Variables`:
+
+Environment Variables
+---------------------
 
 The following environmental variables are used by SpatialIndex:
 
-  * ``SI_LOG_SEVERITY``: can be used to control the minimum severity that log message need to have.
-    Valid values are ``INFO``, ``WARN``, ``ERROR``, ``DEBUG``.
-    Note that DEBUG requires that SI was built with ``SI_ENABLE_LOG_DEBUG``.
-    The default is ``INFO``.
-  * ``SI_REPORT_USAGE_STATS``: if activated by assigning it to ``On`` or ``1``,
-    the multi-index cache usage statistics report gets saved to disk.
-    By default it is deactivated.
+* ``SI_LOG_SEVERITY``: can be used to control the minimum severity that log message need to have.
+  Valid values are ``INFO``, ``WARN``, ``ERROR``, ``DEBUG``.
+  Note that DEBUG requires that SI was built with ``SI_ENABLE_LOG_DEBUG``.
+  The default is ``INFO``.
+* ``SI_REPORT_USAGE_STATS``: if activated by assigning it to ``On`` or ``1``,
+  the multi-index cache usage statistics report gets saved to disk.
+  By default it is deactivated.
 
 Boost Serialization & Struct Versioning
 ---------------------------------------
@@ -176,15 +179,15 @@ Every header should include everything it needs to be used by itself. There shou
 be no include ordering, transitive assumptions about what's already included are
 permitted.
 
-This also affect the `inline` policy, i.e. everything needs to either be a
+This also affect the ``inline`` policy, i.e. everything needs to either be a
 template or be inline ot avoid violations of the ODR.
 
-In order to check that all headers `<spatial_index/*.hpp>` adhere to these rules
-we've added one compilation unit per header in `tests/cpp/check_headers/*.cpp`.
+In order to check that all headers ``<spatial_index/*.hpp>`` adhere to these rules
+we've added one compilation unit per header in ``tests/cpp/check_headers/*.cpp``.
 These simply include the header and then the compiler can check if the rules are
 adhered. In order to generate the required dummy code, we have a script:
 
-.. code-block: python
+.. code-block:: bash
 
     bin/update_header_checks.py
 

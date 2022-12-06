@@ -19,6 +19,7 @@ The documentation of SpatialIndex contains the following sections:
    Multi Index <multi_index>
    Multiple Populations <multi_population>
    Morphology and Synapse Conventions <conventions>
+   Performance Tricks <performance_tricks>
    Comparison to FLAT <flat>
    Developer Guide <developer_guide>
    Change Log <CHANGES>
