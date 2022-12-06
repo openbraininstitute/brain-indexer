@@ -239,7 +239,7 @@ docs:
       unstable:gcc
   artifacts:
     paths:
-      - "${PYTHON_PROJECT_DIR-.}/docs/_build/"
+      - docs/_build/
 
 publish-docs:
   tags: []
