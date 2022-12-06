@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+Version 1.2.1
+-------------
+**December 2022**
+
+**Improvements**
+  * Fix publishing documentation.
+
 Version 1.2.0
 -------------
 **December 2022**
