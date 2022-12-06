@@ -21,7 +21,7 @@ Consider the following example
 
 
 This leads to the index being loaded from disk for every single query. The
-important observation is that one query is typically is many order of magnitude
+important observation is that one query is typically many orders of magnitude
 faster than loading an index, or part of an index from disk. Even for
 moderately large number of queries, the above is a serious performance bug. If
 ever possible restructure as follows:
@@ -48,7 +48,7 @@ once the cache is full, a part of the tree needs to be evicted. If that part is
 used again during a later query it'll need to be loaded from the filesystem
 (often GPFS) again.
 
-Notice that the order in which queries are performed effects how much eviction
+Notice that the order in which queries are performed affects how much eviction
 happens. If one were able to sort the queries such that successive queries
 are close to each other, then intuitively this should improve cache reuse.
 
