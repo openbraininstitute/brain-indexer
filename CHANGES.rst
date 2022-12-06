@@ -1,12 +1,27 @@
 Change Log
 ==========
 
+Version 1.2.0
+-------------
+**December 2022**
+
+**Features**
+  * Ability to optimize the order in which queries should be performed to
+    improve cache reuse of multi-indexes.
+
+**Improvements**
+  * Document SpatialIndex environment variables.
+  * Document important performance tricks.
+  * Fix morphology builder to return SONATA enabled indexes.
+  * Relax the minimum number of synapses in a multi-index.
+  * Improvements to the overall code quality.
+
 Version 1.1.0
 -------------
 **November 2022**
 
 **Features**
-  * Integrates ``section_type`` in index. This allows to retrieve information on the 
+  * Integrates ``section_type`` in index. This allows to retrieve information on the
     type of section (i.e. ``soma``, ``axon``, ``basal_dendrite``, ``apical_dendrite``)
     directly from the query.
   * Add ``box_empty`` and ``sphere_empty`` functions to check if a specific area is empty.
@@ -19,7 +34,7 @@ Version 1.1.0
   * Multiple improvements to CI.
   * Removed memory mapped files support entirely.
   * Multiple fixes and improvements to the implementation.
-  
+
 Version 1.0.0
 -------------
 **October 2022**
@@ -134,8 +149,8 @@ Version 0.6.0
 Version 0.5.x
 -------------
 **April 2022**
-  
-**Features**  
+
+**Features**
   * Out-of-core support for node indexing
   * Support for pre and post synaptic gids
 
