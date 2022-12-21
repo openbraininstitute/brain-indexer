@@ -18,7 +18,7 @@ try:
 except ImportError:
     pytest_skipif = lambda *x, **kw: lambda y: y  # noqa
 
-
+POPULATION = "All"
 _CURDIR = os.path.dirname(__file__)
 MORPHOLOGY_FILES = [
     os.path.join(_CURDIR, "data/soma_spherical.h5"),
@@ -77,7 +77,7 @@ class Test2Info:
                reason="Circuit file not available")
 def test_sonata_index():
     index = MorphIndexBuilder.from_sonata_file(
-        Test2Info.MORPHOLOGY_DIR, Test2Info.SONATA_NODES, "All", range(700, 800)
+        Test2Info.MORPHOLOGY_DIR, Test2Info.SONATA_NODES, POPULATION, range(700, 800)
     )
     assert len(index) == 588961
     points_in_region = index.box_query(
@@ -99,7 +99,7 @@ def test_sonata_index():
 def test_sonata_selection():
     selection = libsonata.Selection([4, 8, 15, 16, 23, 42])
     index = MorphIndexBuilder.from_sonata_selection(
-        Test2Info.MORPHOLOGY_DIR, Test2Info.SONATA_NODES, "All", selection,
+        Test2Info.MORPHOLOGY_DIR, Test2Info.SONATA_NODES, POPULATION, selection,
     )
 
     assert len(index) == 25618

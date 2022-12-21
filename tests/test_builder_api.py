@@ -11,13 +11,13 @@ from spatial_index import IndexResolver
 from spatial_index.io import MetaData, shared_temporary_directory
 
 
-CIRCUIT_10_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v4/circuit-10"
-CIRCUIT_1K_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v4/circuit-1k"
+CIRCUIT_10_DIR = "tests/data/tiny_circuits/circuit-10"
+CIRCUIT_1K_DIR = "tests/data/tiny_circuits/syn-2k"
 
 
 def small_synapse_sonata_conf():
     filename = os.path.join(CIRCUIT_1K_DIR, "edges.h5")
-    population = "All"
+    population = "neocortex_neurons__chemical_synapse"
 
     return filename, population
 

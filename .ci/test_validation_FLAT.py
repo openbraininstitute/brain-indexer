@@ -22,6 +22,10 @@ CIRCUIT_FILE = os.path.join(CIRCUIT_2K, "nodes.h5")
 MORPH_FILE = os.path.join(CIRCUIT_2K, "morphologies/ascii")
 POPULATION = "All"
 
+# File containing the results from FLAT Indexer
+REF_PATH = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v5/FLAT_validation"
+REF_FILE = os.path.join(REF_PATH, "query_2k_v6.csv")
+
 
 def do_multi_index_query_serial(corner, opposite_corner):
     from mpi4py import MPI
@@ -62,7 +66,7 @@ def check_vs_FLAT(si_ids):
     # Import data/query_2k_v6.csv in a numpy array
     # read as record array, otherwise sort works column-wise
     flat_ids = np.loadtxt(
-        "tests/data/query_2k_v6.csv",
+        REF_FILE,
         delimiter=",",
         usecols=range(8, 11),
         converters={8: float, 9: float, 10: float},

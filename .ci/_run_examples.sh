@@ -17,8 +17,6 @@ python3 examples/segment_index.py
 python3 examples/synapses_index.py
 srun -n5 python3 examples/segment_multi_index_sonata.py
 srun -n3 python3 examples/synapse_multi_index_sonata.py
-# This should be done somewhere more appropriate, but here it goes:
-srun -n5 python3 tests/test_validation_FLAT.py --run-multi-index
 bash .ci/test_circuit_config-circuit-1or2k.sh
 bash .ci/test_circuit_config-usecase1.sh
 bash .ci/test_circuit_config-usecase2.sh
@@ -31,4 +29,4 @@ bash examples/run_ipynb.sh examples/basic_tutorial.ipynb
 bash examples/run_ipynb.sh examples/advanced_tutorial.ipynb 3
 
 set +x
-echo "[`date`] Run Finished"
+echo "[`date`] Example Tests Finished"

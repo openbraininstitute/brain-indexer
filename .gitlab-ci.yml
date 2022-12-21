@@ -8,7 +8,9 @@ include:
       - /ci/jobs/docs.yml
       - /ci/jobs/publish-docs.yml
   - project: hpc/gitlab-pipelines
-    file: spack-build-components.gitlab-ci.yml
+    file: 
+      - spack-build-components.gitlab-ci.yml
+      - bbp-gitlab-access.yml
 
 workflow:
   rules:
@@ -24,16 +26,29 @@ workflow:
 
 variables:
   bb5_partition: prod_small
+  GIT_SUBMODULE_STRATEGY: none
 
+
+## .PRE STAGE
+## ----------
 
 spack_setup:
   stage: .pre
   extends: .spack_setup
 
 
+flake8:
+  stage: .pre
+  extends: .tox-template
+  variables:
+    TOXENV: flake8
+
+
+## TEST STAGE
+## ----------
+
 test-cpp-unit:
   stage: test
-  needs: []
   tags:
     - bb5_map
   variables:
@@ -41,16 +56,18 @@ test-cpp-unit:
     bb5_ntasks: 4
     bb5_cpus_per_task: 1
     SLURM_OVERLAP: 1
-
+  before_script:
+    - !reference [.bbp_gitlab_access, script]
   script:
+    - git submodule update --init --recursive
     - module load unstable cmake gcc boost hpe-mpi
     - cmake -S . -B build
     - cmake --build build -j2
     - cd build && ctest --output-on-failure
 
-test-examples:
+test-examples-integration:
   stage: test
-  needs: []
+  needs: ["flake8"]
   tags:
     - bb5_map
   variables:
@@ -59,8 +76,10 @@ test-examples:
     bb5_cpus_per_task: 1
     SLURM_OVERLAP: 1
     DATADIR: /gpfs/bbp.cscs.ch/project/proj12/spatial_index/v4
-
+  before_script:
+    - !reference [.bbp_gitlab_access, script]
   script:
+    - git submodule update --init --recursive
     - module load unstable cmake gcc boost hpe-mpi py-mpi4py
     - python -m venv venv
     - source venv/bin/activate
@@ -68,11 +87,12 @@ test-examples:
     - pip install -e .
     - bash .ci/run_mpi_pytest.sh
     - bash .ci/_run_examples.sh
+    - bash .ci/_run_integration.sh
 
 
 test-ubuntu:
   stage: test
-  needs: []
+  needs: ["flake8"]
   tags: [kubernetes]
   image: bbpgitlab.epfl.ch:5050/hpc/spacktainerizer/ubuntu_22.04/builder
   parallel:
@@ -81,7 +101,10 @@ test-ubuntu:
   variables:
     KUBERNETES_MEMORY_LIMIT: 5Gi    # memory overrides
     KUBERNETES_MEMORY_REQUEST: 4Gi  # memory overrides
+  before_script:
+    - !reference [.bbp_gitlab_access, script]
   script:
+    - git submodule update --init --recursive
     - apt install -y python3-dev
     - apt install -y python3-venv
     - apt install -y libopenmpi-dev
@@ -97,7 +120,7 @@ test-ubuntu:
 
 test-spack:
   stage: test
-  needs: ["spack_setup"]
+  needs: ["spack_setup", "flake8"]
   tags:
     - bb5_map
   variables:
@@ -105,7 +128,9 @@ test-spack:
   before_script:
     - !reference [.bb5, clean-env]
     - !reference [.define-functions]
+    - !reference [.bbp_gitlab_access, script]
   script:
+    - git submodule update --init --recursive
     - source $SPACK_ROOT/share/spack/setup-env.sh
     - module load unstable git py-bluepy
     - spack dev-build spatial-index@develop
@@ -118,28 +143,28 @@ test-spack:
 
 test-bb5-py39:
   extends: .tox-template
-  needs: []
+  needs: ["flake8"]
   variables:
-    TOXENV: flake8, py39  # boost depends on py38
-    PRE_BUILD_COMMAND: |
-      module load unstable boost hpe-mpi py-bluepy
-    EXTRA_MODULES:
-      unstable:gcc
-
-
-test-bb5-mpi-compat-hpe:
-  extends: .tox-template
-  variables:
-    TOXENV: mpi-compat
+    PIP_PACKAGES: 'tox<4'
+    TOXENV: py39  # match boost
+    TOX_OPTIONS: -vv
     EXTRA_MODULES:
       unstable:gcc
       unstable:boost
       unstable:hpe-mpi
       unstable:py-mpi4py
+      unstable:py-bluepy
+  script:
+    - git submodule update --init --recursive
+    - !reference [.tox-template, script]
 
+test-bb5-mpi-compat-hpe:
+  extends: test-bb5-py39
+  variables:
+    TOXENV: mpi-compat
 
 test-bb5-mpi-compat-mvapich2:
-  extends: .tox-template
+  extends: test-bb5-py39
   variables:
     TOXENV: mpi-compat
     EXTRA_MODULES:
@@ -149,13 +174,17 @@ test-bb5-mpi-compat-mvapich2:
       unstable:py-mpi4py
 
 
-# The following stages are overrides. Dont rename
-# Always add the manual option to create sdist/wheel or upload
+# Builds package sdist. Dont rename (defined in build-package.yml)
 build-package:
   needs: []
   tags: []
   rules:
     - when: always
+  before_script:
+    - !reference [.define-functions]
+    - !reference [.configure-git]
+    - git submodule update --init --recursive
+
 # The following lines are a workaround to for this issue:
 # https://gitlab.com/gitlab-org/gitlab-runner/-/issues/29370
 # Feel free to remove them once the issue is fixed.
@@ -163,6 +192,7 @@ build-package:
     paths:
       - "${PYTHON_PROJECT_DIR}/dist/*.tar.gz"
 
+# Builds package wheels. Dont rename (defined in build-wheels.yml)
 build-wheels:
   tags: [kubernetes]
   image: bbpgitlab.epfl.ch:5050/hpc/spatial-index/manylinux2014_boost_x86_64:boost-179
@@ -188,7 +218,7 @@ test-wheels:
   variables:
     KUBERNETES_MEMORY_LIMIT: 5Gi    # memory overrides
     KUBERNETES_MEMORY_REQUEST: 4Gi  # memory overrides
-    PIP_PACKAGES: pytest pytest-mpi
+    PIP_PACKAGES: pytest pytest-mpi pytest-xdist
   before_script:
     - !reference [.define-functions]
     - ln -s /usr/bin/python3 /usr/bin/python
@@ -197,7 +227,7 @@ test-wheels:
     - apt-get update
     - pip install wheelhouse/spatial_index-*-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
     - mv spatial_index _dont_interfere
-    - pytest
+    - pytest -n3
 
 test-sdist:
   stage: publish
@@ -207,19 +237,20 @@ test-sdist:
   variables:
     KUBERNETES_MEMORY_LIMIT: 5Gi    # memory overrides
     KUBERNETES_MEMORY_REQUEST: 4Gi  # memory overrides
+  before_script:
+    - !reference [.bbp_gitlab_access, script]
   script:
-    - apt install -y python3-dev
-    - apt install -y python3-venv
-    - apt install -y libopenmpi-dev
+    - git submodule update --init
+    - apt install -y python3-dev python3-venv libopenmpi-dev
     - source ${SPACK_ROOT}/share/spack/setup-env.sh
     - spack install boost@1.79.0+serialization+filesystem
     - spack load boost@1.79.0
     - python3 -m venv venv
     - source venv/bin/activate
-    - pip install cmake pytest pytest-mpi
+    - pip install cmake pytest pytest-mpi pytest-xdist
     - pip install dist/spatial-index-*.tar.gz
     - mv spatial_index _dont_interfere
-    - pytest
+    - pytest -n3
 
 publish-package:
   tags: []
@@ -230,8 +261,10 @@ publish-package:
       allow_failure: true
 
 docs:
+  stage: build
   needs: []
   variables:
+    PIP_PACKAGES: 'tox<4'
     TOXENV: docs
     PRE_BUILD_COMMAND: |
       module load unstable boost hpe-mpi
@@ -240,6 +273,9 @@ docs:
   artifacts:
     paths:
       - docs/_build/
+  script:
+    - git submodule update --init
+    - python -mtox
 
 publish-docs:
   tags: []

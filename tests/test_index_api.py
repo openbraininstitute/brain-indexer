@@ -12,10 +12,10 @@ from spatial_index.util import is_non_string_iterable
 from spatial_index import MultiPopulationIndex
 
 
-DATA_DIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v4"
-CIRCUIT_10_DIR = os.path.join(DATA_DIR, "circuit-10")
-CIRCUIT_1K_DIR = os.path.join(DATA_DIR, "circuit-1k")
-USECASE_3_DIR = os.path.join(DATA_DIR, "sonata_usecases/usecase3")
+LOCAL_DATA_DIR = "tests/data"
+CIRCUIT_10_DIR = os.path.join(LOCAL_DATA_DIR, "tiny_circuits/circuit-10")
+CIRCUIT_1K_DIR = os.path.join(LOCAL_DATA_DIR, "tiny_circuits/syn-2k")
+USECASE_3_DIR = os.path.join(LOCAL_DATA_DIR, "sonata_usecases/usecase3")
 
 
 def expected_builtin_fields(index):
@@ -268,6 +268,7 @@ def check_all_regular_query_api(index, window, sphere, accuracy, population_mode
     populations = index.populations
     expected_population_mode = deduce_expected_population_mode(index, population_mode)
 
+    print("\nChecking box query...")
     check_query(
         index.box_query, window, query_kwargs=query_kwargs,
         available_fields=index.available_fields,
@@ -276,6 +277,7 @@ def check_all_regular_query_api(index, window, sphere, accuracy, population_mode
         population_mode=expected_population_mode,
     )
 
+    print("Checking box query with reversed window...")
     reversed_window = (window[1], window[0])
     check_query(
         index.box_query, reversed_window, query_kwargs=query_kwargs,
@@ -285,6 +287,7 @@ def check_all_regular_query_api(index, window, sphere, accuracy, population_mode
         population_mode=expected_population_mode,
     )
 
+    print("Checking sphere query...")
     check_query(
         index.sphere_query, sphere, query_kwargs=query_kwargs,
         available_fields=index.available_fields,
@@ -355,22 +358,20 @@ def circuit_10_config(index_variant, element_type):
         index_path = os.path.join(
             CIRCUIT_1K_DIR, f"indexes/{element_type}/{index_variant}"
         )
+        window = ([200.0, 1000.0, 300.0], [300.0, 1100.0, 400.0])
+        sphere = ([250.0, 1050.0, 350.0], 50.0)
 
     elif "morphology" in element_type:
         index_path = os.path.join(
             CIRCUIT_10_DIR, f"indexes/{element_type}/{index_variant}"
         )
+        window = ([50.0, 1800.0, 10.0], [130.0, 2000.0, 50.0])
+        sphere = ([115.0, 1950.0, 25.0], 100.0)
 
     else:
         raise ValueError(f"Invalid {element_type = }.")
 
     index = open_index(index_path)
-
-    # We know there's a segment at:
-    #   [ 116.732, 1957.872, 24.925]
-    # and seems to also work for the synapse index.
-    window = ([50.0, 1800.0, 10.0], [130.0, 2000.0, 50.0])
-    sphere = ([115.0, 1950.0, 25.0], 100.0)
 
     return index, window, sphere
 
