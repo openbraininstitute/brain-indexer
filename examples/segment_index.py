@@ -24,12 +24,13 @@ INDEX_FILENAME = "example_segment_index"
 
 def build_segment_index():
     print("Creating circuit index...")
-    builder = MorphIndexBuilder(MORPH_FILE, NODE_FILE)
-    builder.process_range((700, 750))  # 50 cells
-    # builder.process_all()  # Warning: Might exhaust memory
-    print("Index contains {len(builder.index)} elements. Saving to disk")
-    builder.index.write(INDEX_FILENAME)
-    return builder.index
+    index = MorphIndexBuilder.from_sonata_file(
+        MORPH_FILE, NODE_FILE, "All", gids=range(700, 750)
+    )
+
+    print("Index contains {len(index)} elements. Saving to disk")
+    index.write(INDEX_FILENAME)
+    return index
 
 
 def build_query_segment_index(min_corner=[-50, 0, 0], max_corner=[0, 50, 50]):
