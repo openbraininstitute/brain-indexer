@@ -924,13 +924,10 @@ inline void add_MorphIndex_add_neuron_bindings(py::class_<Class>& c) {
             // Get raw pointers to data
             auto [points_ptr, radii_ptr] = extract_points_radii_ptrs(centroids_np, radii_np);
             auto offsets_ptr = extract_offsets_ptr(branches_offset_np);
-
+            auto section_types_ptr = extract_section_types_ptr(section_types_np);
 
             const auto n_points = util::safe_integer_cast<size_t>(centroids_np.shape(0));
             const auto n_branches = util::safe_integer_cast<size_t>(branches_offset_np.size());
-
-            // FIXME: mornernize this.
-            const auto types = section_types_np.template unchecked<1>().data(0);
 
             // Check if at least one point was provided when has_soma==True
             if (has_soma && centroids_np.shape(0) == 0) {
@@ -985,7 +982,6 @@ inline void add_MorphIndex_add_neuron_bindings(py::class_<Class>& c) {
                 }
 
                 // Check that the max offset is less than the number of points
-                // FIXME safe integer case if needed.
                 const auto max_offset = util::safe_integer_cast<size_t>(offsets_ptr[n_branches - 1]);
                 if (max_offset > n_points - 2) {  // 2 To ensure the segment has a closing point
                     throw py::value_error("At least one of the branches offset is too large");
@@ -1004,7 +1000,7 @@ inline void add_MorphIndex_add_neuron_bindings(py::class_<Class>& c) {
                 const unsigned section_id = branch_i + 1;
                 auto const * const points_begin = points_ptr + p_start;
                 auto const * const radii_begin = radii_ptr + p_start;
-                auto section_type = SectionType(types[branch_i]);
+                auto section_type = SectionType(section_types_ptr[branch_i]);
                 add_branch(obj, gid, section_id, n_segments, points_begin, radii_begin, section_type);
             }
             // Last
@@ -1014,7 +1010,7 @@ inline void add_MorphIndex_add_neuron_bindings(py::class_<Class>& c) {
                 const unsigned section_id = n_branches;
                 auto const * const points_begin = points_ptr + p_start;
                 auto const * const radii_begin = radii_ptr + p_start;
-                auto section_type = SectionType(types[n_branches - 1]);
+                auto section_type = SectionType(section_types_ptr[n_branches - 1]);
                 add_branch(obj, gid, section_id, n_segments, points_begin, radii_begin, section_type);
             }
         },
