@@ -91,7 +91,10 @@ package_info = dict(
     install_requires=[
         "numpy>=1.13.1",
         "numpy-quaternion",
-        "libsonata",
+        # The reason we can't use 0.1.15 is that it wont
+        # behave nicely for empty selections, see
+        #   https://github.com/BlueBrain/libsonata/pull/232
+        "libsonata!=0.1.15",
         "morphio",
         "docopt",
         "tqdm",
