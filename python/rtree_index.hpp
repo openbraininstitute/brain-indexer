@@ -124,10 +124,10 @@ inline void add_IndexTree_add_spheres_bindings(py::class_<Class>& c) {
         [](Class& obj, const array_t& centroids,
                        const array_t& radii,
                        const array_ids& py_ids) {
-            const auto& point_radius = convert_input(centroids, radii);
+            auto [centroids_ptr, radii_ptr] = extract_points_radii_ptrs(centroids, radii);
+
             const auto& ids = py_ids.template unchecked<1>();
-            auto soa = si::util::make_soa_reader<SomaT>(
-                ids, point_radius.first, point_radius.second);
+            auto soa = si::util::make_soa_reader<SomaT>(ids, centroids_ptr, radii_ptr);
             for (auto&& soma : soa) {
                 obj.insert(soma);
             }
@@ -147,11 +147,11 @@ template<typename T, typename SomaT, typename Class>
 inline void add_IndexTree_add_points_bindings(py::class_<Class>& c) {
     c
     .def("_add_points",
-        [](Class& obj, const array_t& centroids, const array_ids& py_ids) {
+        [](Class& obj, const array_t& points, const array_ids& py_ids) {
             si::util::constant<coord_t> zero_radius(0);
-            const auto points = convert_input(centroids);
+            auto const* const points_ptr = extract_points_ptr(points);
             const auto& ids = py_ids.template unchecked<1>();
-            auto soa = si::util::make_soa_reader<SomaT>(ids, points, zero_radius);
+            auto soa = si::util::make_soa_reader<SomaT>(ids, points_ptr, zero_radius);
             for (auto&& soma : soa) {
                 obj.insert(soma);
             }
@@ -444,16 +444,14 @@ inline py::class_<Class> create_IndexTree_bindings(py::module& m,
     .def(py::init([](const array_t& centroids, const array_t& radii) {
             if (!radii.ndim()) {
                 si::util::constant<coord_t> zero_radius(0);
-                const auto points = convert_input(centroids);
+                auto const* const centroids_ptr = extract_points_ptr(centroids);
                 const auto enum_ = si::util::identity<>{size_t(centroids.shape(0))};
-                auto soa = si::util::make_soa_reader<SomaT>(enum_, points, zero_radius);
+                auto soa = si::util::make_soa_reader<SomaT>(enum_, centroids_ptr, zero_radius);
                 return std::make_unique<Class>(soa.begin(), soa.end());
             } else {
-                const auto& point_radius = convert_input(centroids, radii);
+                auto [centroids_ptr, radii_ptr] = extract_points_radii_ptrs(centroids, radii);
                 const auto enum_ = si::util::identity<>{size_t(radii.shape(0))};
-                auto soa = si::util::make_soa_reader<SomaT>(enum_,
-                                                         point_radius.first,
-                                                         point_radius.second);
+                auto soa = si::util::make_soa_reader<SomaT>(enum_, centroids_ptr, radii_ptr);
                 return std::make_unique<Class>(soa.begin(), soa.end());
             }
         }),
@@ -474,16 +472,14 @@ inline py::class_<Class> create_IndexTree_bindings(py::module& m,
                      const array_ids& py_ids) {
             if (!radii.ndim()) {
                 si::util::constant<coord_t> zero_radius(0);
-                const auto points = convert_input(centroids);
+                auto const* const centroids_ptr = extract_points_ptr(centroids);
                 const auto ids = py_ids.template unchecked<1>();
-                auto soa = si::util::make_soa_reader<SomaT>(ids, points, zero_radius);
+                auto soa = si::util::make_soa_reader<SomaT>(ids, centroids_ptr, zero_radius);
                 return std::make_unique<Class>(soa.begin(), soa.end());
             } else {
-                const auto& point_radius = convert_input(centroids, radii);
+                auto [centroids_ptr, radii_ptr] = extract_points_radii_ptrs(centroids, radii);
                 const auto ids = py_ids.template unchecked<1>();
-                auto soa = si::util::make_soa_reader<SomaT>(ids,
-                                                            point_radius.first,
-                                                            point_radius.second);
+                auto soa = si::util::make_soa_reader<SomaT>(ids, centroids_ptr, radii_ptr);
                 return std::make_unique<Class>(soa.begin(), soa.end());
             }
         }),
@@ -675,8 +671,8 @@ inline void add_SynapseIndex_add_synapses_bindings(py::class_<Class>& c) {
             const auto syn_ids_ = syn_ids.template unchecked<1>();
             const auto post_gids_ = post_gids.template unchecked<1>();
             const auto pre_gids_ = pre_gids.template unchecked<1>();
-            const auto points_ = convert_input(points);
-            auto soa = si::util::make_soa_reader<Synapse>(syn_ids_, post_gids_, pre_gids_, points_);
+            auto const* const points_ptr_ = extract_points_ptr(points);
+            auto soa = si::util::make_soa_reader<Synapse>(syn_ids_, post_gids_, pre_gids_, points_ptr_);
             obj.insert(soa.begin(), soa.end());
         },
         R"(
@@ -879,10 +875,9 @@ inline void add_MorphIndex_add_branch_bindings(py::class_<Class>& c) {
     .def("_add_branch",
         [](Class& obj, const id_t gid, const unsigned section_id, const array_t& centroids_np,
                        const array_t& radii_np, unsigned int type) {
-            const auto& point_radii = convert_input(centroids_np, radii_np);
-            add_branch(obj, gid, section_id, unsigned(radii_np.size() - 1), point_radii.first,
-                      point_radii.second.data(0), SectionType(type));
-
+            auto [points_ptr, radii_ptr] = extract_points_radii_ptrs(centroids_np, radii_np);
+            auto segment_id = util::integer_cast<unsigned>(radii_np.size() - 1);
+            add_branch(obj, gid, section_id, segment_id, points_ptr, radii_ptr, SectionType(type));
         },
         R"(
         Adds a branch, i.e., a line of cylinders.
@@ -925,13 +920,16 @@ inline void add_MorphIndex_add_neuron_bindings(py::class_<Class>& c) {
         [](Class& obj, const id_t gid, const array_t& centroids_np, const array_t& radii_np,
                        const array_offsets& branches_offset_np, const array_types& section_types_np,
                        bool has_soma) {
-            const auto& point_radii = convert_input(centroids_np, radii_np);
+
             // Get raw pointers to data
-            const auto points = point_radii.first;
-            const auto npoints = centroids_np.shape(0);
-            const auto radii = point_radii.second.data(0);
-            const auto n_branches = branches_offset_np.size();
-            const auto offsets = branches_offset_np.template unchecked<1>().data(0);
+            auto [points_ptr, radii_ptr] = extract_points_radii_ptrs(centroids_np, radii_np);
+            auto offsets_ptr = extract_offsets_ptr(branches_offset_np);
+
+
+            const auto n_points = util::safe_integer_cast<size_t>(centroids_np.shape(0));
+            const auto n_branches = util::safe_integer_cast<size_t>(branches_offset_np.size());
+
+            // FIXME: mornernize this.
             const auto types = section_types_np.template unchecked<1>().data(0);
 
             // Check if at least one point was provided when has_soma==True
@@ -939,8 +937,7 @@ inline void add_MorphIndex_add_neuron_bindings(py::class_<Class>& c) {
                 throw py::value_error("has_soma is True but no points provided");
             }
 
-            const unsigned n_segment_points = npoints - has_soma;
-
+            const unsigned n_segment_points = n_points - has_soma;
             if (n_segment_points == 0) {
                 if (has_soma && radii_np.size() != 1) {
                     throw py::value_error("Please provide the soma radius");
@@ -954,14 +951,14 @@ inline void add_MorphIndex_add_neuron_bindings(py::class_<Class>& c) {
                     throw py::value_error("Please provide at least two points for segments");
                 }
 
-                if (radii_np.size() != npoints) {
+                if (util::safe_integer_cast<size_t>(radii_np.size()) != n_points) {
                     log_error(
                         boost::format("We require exactly one radius per point,"
                             " as if the section had a piecewise varying radius."
                             " Regardless, SI only has cylinders, i.e., constant radius"
                             " per segment. We ignore the second radius and only take"
                             " the first. Found: radii.size = %d, npoints = %d.")
-                        % radii_np.size() % npoints
+                        % radii_np.size() % n_points
                     );
 
                     throw py::value_error(
@@ -979,40 +976,46 @@ inline void add_MorphIndex_add_neuron_bindings(py::class_<Class>& c) {
                     throw py::value_error("Too many branches given the supplied points");
                 }
 
-                // Check that the max offset is less than the number of points
+                // Check that the offsets are plausible: non-decreasing and within range
+                // w.r.t to the number of points.
                 for(size_t i = 0; i < util::safe_integer_cast<size_t>(n_branches-1); ++i) {
-                    if(offsets[i] > offsets[i+1]) {
+                    if(offsets_ptr[i] >= offsets_ptr[i+1]) {
                         throw py::value_error("The 'branch_offsets' must be non-decreasing.");
                     }
                 }
 
-                if (offsets[n_branches - 1] > npoints - 2) {  // 2 To ensure the segment has a closing point
+                // Check that the max offset is less than the number of points
+                // FIXME safe integer case if needed.
+                const auto max_offset = util::safe_integer_cast<size_t>(offsets_ptr[n_branches - 1]);
+                if (max_offset > n_points - 2) {  // 2 To ensure the segment has a closing point
                     throw py::value_error("At least one of the branches offset is too large");
                 }
             }
 
             if (has_soma) {
                 // Add soma
-                obj.insert(si::Soma{gid, points[0], radii[0]});
+                obj.insert(si::Soma{gid, points_ptr[0], radii_ptr[0]});
             }
 
             // Add segments
             for (unsigned branch_i = 0; branch_i < n_branches - 1; branch_i++) {
-                const unsigned p_start = offsets[branch_i];
-                const unsigned n_segments = offsets[branch_i + 1] - p_start - 1;
-                add_branch(obj, gid, branch_i + 1, n_segments, points + p_start,
-                           radii + p_start, SectionType(types[branch_i]));
+                const unsigned p_start = offsets_ptr[branch_i];
+                const unsigned n_segments = offsets_ptr[branch_i + 1] - p_start - 1;
+                const unsigned section_id = branch_i + 1;
+                auto const * const points_begin = points_ptr + p_start;
+                auto const * const radii_begin = radii_ptr + p_start;
+                auto section_type = SectionType(types[branch_i]);
+                add_branch(obj, gid, section_id, n_segments, points_begin, radii_begin, section_type);
             }
             // Last
             if (n_branches) {
-                const unsigned p_start = offsets[n_branches - 1];
-                const unsigned n_segments = npoints - p_start - 1;
-                add_branch(
-                    obj, gid, n_branches, n_segments,
-                    points + p_start,
-                    radii + p_start,
-                    SectionType(types[n_branches - 1])
-                );
+                const unsigned p_start = offsets_ptr[n_branches - 1];
+                const unsigned n_segments = n_points - p_start - 1;
+                const unsigned section_id = n_branches;
+                auto const * const points_begin = points_ptr + p_start;
+                auto const * const radii_begin = radii_ptr + p_start;
+                auto section_type = SectionType(types[n_branches - 1]);
+                add_branch(obj, gid, section_id, n_segments, points_begin, radii_begin, section_type);
             }
         },
         py::arg("gid"), py::arg("points"), py::arg("radii"), py::arg("branch_offsets"),
@@ -1311,9 +1314,9 @@ inline void create_experimental_space_filling_order(py::module& m) {
     py::module m_experimental = m.def_submodule("experimental");
     m_experimental.def(
         "space_filling_order",
-        [](const array_t& points) {
-            size_t n_points = points.shape(0);
-            auto points_ptr = static_cast<Point3Dx const*>(convert_input(points));
+        [](const array_t& points_np) {
+            auto points_ptr = static_cast<Point3Dx const*>(extract_points_ptr(points_np));
+            size_t n_points = points_np.shape(0);
 
             // FIXME, use safe types.
             auto order = si::experimental::space_filling_order(points_ptr, n_points);

@@ -2,7 +2,7 @@
 # Copyright Blue Brain Project 2020-2021. All rights reserved
 
 import libsonata
-import numpy
+import numpy as np
 
 import spatial_index
 from . import _spatial_index as core
@@ -35,11 +35,12 @@ class SynapseIndexBuilderBase:
         syn_ids = selection.flatten()
         post_gids = self._sonata_edges.target_nodes(selection)
         pre_gids = self._sonata_edges.source_nodes(selection)
-        synapse_centers = numpy.dstack((
-            self._sonata_edges.get_attribute("afferent_center_x", selection),
-            self._sonata_edges.get_attribute("afferent_center_y", selection),
-            self._sonata_edges.get_attribute("afferent_center_z", selection)
-        ))
+
+        synapse_centers = np.empty((syn_ids.shape[0], 3))
+        for k, direction in enumerate(["x", "y", "z"]):
+            key = f"afferent_center_{direction}"
+            synapse_centers[:, k] = self._sonata_edges.get_attribute(key, selection)
+
         self._core_builder._add_synapses(syn_ids, post_gids, pre_gids, synapse_centers)
 
     @classmethod
