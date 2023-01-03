@@ -1,7 +1,11 @@
 #pragma once
 
+#include <fstream>
+#include <string>
+#include <filesystem>
 #include <boost/filesystem.hpp>
 #include <boost/numeric/conversion/converter.hpp>
+#include <boost/format.hpp>
 
 #include "logging.hpp"
 
@@ -97,6 +101,55 @@ inline void ensure_valid_output_directory(const std::string &output_dir) {
     else {
         boost::filesystem::create_directories(output_dir);
     }
+}
+
+/** \brief Open an `std::ifstream` and check it can be read.
+ */
+template<class OpenMode>
+inline std::ifstream open_ifstream(const std::string& filename, OpenMode mode) {
+    if(!std::filesystem::exists(filename)) {
+        auto msg = boost::format("No such file: %s") % filename.c_str();
+        throw std::runtime_error(msg.str());
+    }
+
+    auto ifs = std::ifstream(filename.c_str(), mode);
+    if(!ifs) {
+        auto msg = boost::format("File can't be read: %s") % filename.c_str();
+        throw std::runtime_error(msg.str());
+    }
+
+    return ifs;
+}
+
+/** \brief Open an `std::ifstream` and check it can be read.
+ *
+ *  Overload for default `open_mode`.
+ */
+inline std::ifstream open_ifstream(const std::string& filename) {
+    return open_ifstream(filename, std::ios_base::in);
+}
+
+
+/** \brief Open an `std::ofstream` and check it can be written to.
+ */
+template<class OpenMode>
+inline std::ofstream open_ofstream(const std::string& filename, OpenMode mode) {
+    auto ofs = std::ofstream(filename.c_str(), mode);
+    if(!ofs) {
+        auto msg = boost::format("Failed to open file: %s") % filename.c_str();
+        throw std::runtime_error(msg.str());
+    }
+
+    return ofs;
+}
+
+
+/** \brief Open an `std::ofstream` and check it can be written to.
+ *
+ *  Overload for default `open_mode`.
+ */
+inline std::ofstream open_ofstream(const std::string& filename) {
+    return open_ofstream(filename, std::ios_base::out);
 }
 
 

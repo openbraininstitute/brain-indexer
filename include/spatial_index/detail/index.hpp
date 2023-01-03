@@ -140,7 +140,7 @@ template <typename T, typename A>
 inline IndexTree<T, A>::IndexTree(const std::string& path) {
     auto filename = resolve_heavy_data_path(path, MetaDataConstants::in_memory_key);
 
-    std::ifstream ifs(filename, std::ios::binary);
+    auto ifs = util::open_ifstream(filename, std::ios::binary);
     boost::archive::binary_iarchive ia(ifs);
     ia >> *this;
 }
@@ -152,7 +152,7 @@ inline void IndexTree<T, A>::dump(const std::string& index_path) const {
 
     auto heavy_data_relpath = "index.spi";
     auto filename = join_path(index_path, heavy_data_relpath);
-    std::ofstream ofs(filename, std::ios::binary | std::ios::trunc);
+    auto ofs = util::open_ofstream(filename, std::ios::binary | std::ios::trunc);
     boost::archive::binary_oarchive oa(ofs);
     oa << *this;
 

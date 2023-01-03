@@ -108,7 +108,7 @@ template <class... Args>
 inline void
 NativeStorage<TopTree, SubTree>::load_tree_impl(bgi::rtree<Args...>& tree,
                                                 const std::string& filename) {
-    std::ifstream ifs(filename, std::ios::binary);
+    auto ifs = util::open_ifstream(filename, std::ios::binary);
     boost::archive::binary_iarchive ia(ifs);
     ia >> tree;
 }
@@ -118,7 +118,7 @@ template <class... Args>
 inline void
 NativeStorage<TopTree, SubTree>::save_tree_impl(const bgi::rtree<Args...>& tree,
                                                 const std::string& filename) {
-    std::ofstream ofs(filename, std::ios::binary | std::ios::trunc);
+    auto ofs = util::open_ofstream(filename, std::ios::binary | std::ios::trunc);
     boost::archive::binary_oarchive oa(ofs);
     oa << tree;
 }
@@ -197,7 +197,7 @@ UsageRateCache<Storage>::~UsageRateCache() {
         }
 
         auto filename = "si_cache_stats_" + util::iso_datetime_now() + ".json";
-        auto o = std::ofstream(filename);
+        auto o = util::open_ofstream(filename);
         o << std::setw(4) << j << std::endl;
     }
 }

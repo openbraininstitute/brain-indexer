@@ -183,7 +183,7 @@ int main() {
 
     {
         boost::timer t;
-        std::ofstream ofs("serialized_vector", std::ios::binary | std::ios::trunc);
+        auto ofs = util::open_ofstream("serialized_vector", std::ios::binary | std::ios::trunc);
         boost::archive::binary_oarchive oa(ofs);
         oa << rtree;
         std::cout << "tree saved to bin in: " << t.elapsed() << std::endl;
@@ -193,7 +193,7 @@ int main() {
         // Replay on reconstructed tree
         bgi::rtree<Entry, bgi::linear<16, 1>> rtree2;
         boost::timer t;
-        std::ifstream ifs("serialized_vector", std::ios::binary);
+        auto ifs = util::open_ifstream("serialized_vector", std::ios::binary);
         boost::archive::binary_iarchive ia(ifs);
         ia >> rtree2;
         std::cout << "tree Loaded from bin in: " << t.elapsed() << std::endl;

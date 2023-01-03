@@ -49,6 +49,16 @@ cylindrical or mixed geometries is required, e.g. full neuron geometries, the
 user shall use  :class:`spatial_index.MorphIndex`. Furthermore, the latter
 features higher level methods to help in the load of entire Neuron morphologies.
 
+I/O Policy
+----------
+The rules are
+  * SpatialIndex will create intermediate directories if required.
+  * SpatialIndex will throw a meaningful error message when trying to open a
+    missing file. Please use ``spatial_index::util::open_ifstream`` to open an
+    ``std::ifstream`` with the appropriate checks.
+
+There's also ``spatial_index::util::open_ofstream`` to open output file streams.
+
 Logging Policy
 --------------
 There are three levels of logging
@@ -89,7 +99,6 @@ logger can be registered by
 .. code-block:: python
 
     spatial_index.register_logger(some_other_logger)
-
 
 
 This enables, with reasonable effort, to send logs to a specific file (one per

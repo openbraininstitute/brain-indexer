@@ -1,8 +1,9 @@
 #pragma once
 
 #include <nlohmann/json.hpp>
-#include <fstream>
 #include <filesystem>
+
+#include <spatial_index/util.hpp>
 
 
 namespace spatial_index {
@@ -46,7 +47,7 @@ namespace spatial_index {
 
     /// \brief Writes the meta data file to disk.
     inline void write_meta_data(const std::string& filename, const nlohmann::json& json) {
-        std::ofstream os(filename);
+        auto os = util::open_ofstream(filename);
         os << std::setw(2) << json << std::endl;
     }
 
@@ -110,7 +111,7 @@ namespace spatial_index {
     /// \brief Loads the `meta_data.json` from disk.
     inline nlohmann::json read_meta_data(const std::string& meta_data_path) {
         auto filename = deduce_meta_data_path(meta_data_path);
-        auto is = std::ifstream(filename);
+        auto is = spatial_index::util::open_ifstream(filename, std::ios_base::in);
         auto meta_data = nlohmann::json{};
         is >> meta_data;
 
