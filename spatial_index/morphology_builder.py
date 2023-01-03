@@ -71,8 +71,9 @@ class MorphIndexBuilderBase:
         Args:
             morphology_dir (str): The file/directory where morphologies reside
             nodes_file (str): The SONATA nodes file
-            population (str, optional): The nodes population. Defaults to "" (default).
-            gids ([type], optional): A selection of gids to index. Defaults to None (All)
+            population (str, optional): The nodes population. Defaults to the only
+               population.
+            gids ([type], optional): A selection of gids to index. Defaults to all GIDs.
         """
         population = validated_sonata_nodes_population_name(nodes_file, population)
         self._sonata_nodes = open_sonata_nodes(nodes_file, population)
@@ -80,12 +81,13 @@ class MorphIndexBuilderBase:
         if gids is None:
             gids = range(0, self._sonata_nodes.size)
         else:
+            # TODO maybe enforce 64bit unsigned ints.
             gids = np.sort(np.array(gids, dtype=int))
 
         self._gids = gids
 
         self.morph_lib = MorphologyLib(morphology_dir)
-        spatial_index.logger.info("Index count: %d cells", len(gids))
+        spatial_index.logger.info("Number of neurons to index: %d", len(gids))
 
     def n_elements_to_import(self):
         return len(self._gids)
