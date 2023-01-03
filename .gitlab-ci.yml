@@ -197,6 +197,7 @@ build-wheels:
   tags: [kubernetes]
   image: bbpgitlab.epfl.ch:5050/hpc/spatial-index/manylinux2014_boost_x86_64:boost-179
   variables:
+    GIT_SUBMODULE_STRATEGY: none    # Required to avoid cloning test data
     KUBERNETES_MEMORY_LIMIT: 5Gi    # memory overrides
     KUBERNETES_MEMORY_REQUEST: 4Gi  # memory overrides
     TEST_RUN_TOX: "false"  # MVDtool doesnt have wheels
@@ -204,6 +205,12 @@ build-wheels:
   parallel:
     matrix:
       - PY_VERSION: [py38, py39, py310]
+  before_script:
+    # Since we don't need the test-data, we don't
+    # need to configure addtional permissions, and can
+    # instead just clone the required submodules conveniently
+    # located in '3rdparty'.
+    - git submodule update --init --recursive 3rdparty
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"'
     - if: $CI_COMMIT_TAG
@@ -221,9 +228,11 @@ test-wheels:
     PIP_PACKAGES: pytest pytest-mpi pytest-xdist
   before_script:
     - !reference [.define-functions]
+    - !reference [.configure-git]
     - ln -s /usr/bin/python3 /usr/bin/python
     - !reference [.setup-venv]
   script:
+    - git submodule update --init --recursive
     - apt-get update
     - pip install wheelhouse/spatial_index-*-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
     - mv spatial_index _dont_interfere
