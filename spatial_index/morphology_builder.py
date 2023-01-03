@@ -207,6 +207,15 @@ class MorphIndexBuilder(MorphIndexBuilderBase,
     def __init__(self, morphology_dir, nodes_file, population=None, gids=None):
         super().__init__(morphology_dir, nodes_file, population, gids)
         self._core_builder = core.MorphIndex()
+        self._warn_when_too_large()
+
+    def _warn_when_too_large(self):
+        n_gids = len(self._gids)
+        if n_gids > 100_000:
+            logger.warning(
+                f"Attempting to create an in-memory index with {n_gids} GIDs. Likely,"
+                " it would be better to use a multi-index."
+            )
 
     @property
     def _index_if_loaded(self):

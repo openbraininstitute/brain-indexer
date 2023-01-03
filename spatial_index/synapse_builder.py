@@ -116,6 +116,15 @@ class SynapseIndexBuilder(SynapseIndexBuilderBase,
     def __init__(self, sonata_edges, selection):
         super().__init__(sonata_edges, selection)
         self._core_builder = core.SynapseIndex()
+        self._warn_when_too_large()
+
+    def _warn_when_too_large(self):
+        n_synapses = self._selection.flat_size
+        if n_synapses >= 1e9:
+            spatial_index.logger.warning(
+                f"Attempting to create an in-memory index with {n_synapses} synapses."
+                " Likely, it would be better to use a multi-index."
+            )
 
     @property
     def index(self):
