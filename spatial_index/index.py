@@ -237,6 +237,7 @@ class IndexInterface(abc.ABC):
 
 
 def _wrap_single_as_multi_population(func):
+    @functools.wraps(func)
     def wrapped_func(self, *query_shape, populations=None, population_mode=None,
                      **kwargs):
 
