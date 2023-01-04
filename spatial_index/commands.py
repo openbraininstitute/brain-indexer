@@ -10,6 +10,7 @@ from .util import docopt_get_args, is_likely_same_index
 from .util import is_strictly_sensible_filename, is_non_string_iterable
 from .io import write_multi_population_meta_data
 from .resolver import open_index, MorphIndexResolver, SynapseIndexResolver
+from .logging_settings import setup_logging_for_cli
 
 
 def spatial_index_nodes(args=None):
@@ -26,6 +27,8 @@ def spatial_index_nodes(args=None):
         --population <population>  The population to index.
     """
     options = docopt_get_args(spatial_index_nodes, args)
+    setup_logging_for_cli(options["verbose"])
+
     _run_spatial_index_nodes(
         options["morphology_dir"],
         options["nodes_file"],
@@ -48,6 +51,8 @@ def spatial_index_synapses(args=None):
         --population <population>  The population to index.
     """
     options = docopt_get_args(spatial_index_synapses, args)
+    setup_logging_for_cli(options["verbose"])
+
     _run_spatial_index_synapses(options["edges_file"], options.get("population"), options)
 
 
@@ -79,10 +84,13 @@ def spatial_index_circuit(args=None):
         spatial-index-circuit --help
 
     Options:
+        -v, --verbose              Increase verbosity level
         -o, --out=<out_file>     The index output folder [default: out]
         --multi-index            Whether to create a multi-index
     """
     options = docopt_get_args(spatial_index_circuit, args)
+    setup_logging_for_cli(options["verbose"])
+
     circuit_config, json_config = _sonata_circuit_config(options["circuit_file"])
     populations = _validated_populations(options, circuit_config)
 
