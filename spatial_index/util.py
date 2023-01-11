@@ -287,3 +287,24 @@ def bcast_sonata_ranges(ranges, *, root=None, mpi_comm=None):
         mpi_comm = MPI.COMM_WORLD
 
     return mpi_comm.bcast(np.atleast_2d(ranges), root=root)
+
+
+def factor(n, *, dims=None):
+    if dims == 2:
+        return _factor_2d(n)
+    else:
+        raise ValueError(f"Invalid `dim == {dims}`.")
+
+
+def _factor_2d(n):
+
+    # find the square root of the number
+    sqrt_n = int(n**0.5)
+
+    # find the next lower divisor
+    for i in range(sqrt_n, 0, -1):
+        if n % i == 0:
+            return (i, n // i)
+
+    # if all else fails
+    return (n, 1)

@@ -4,6 +4,8 @@ import sys
 from spatial_index import MorphIndexBuilder
 from timeit import default_timer as timer
 
+import spatial_index
+
 print("SEGMENT INDEX BENCHMARKING IN PROGRESS... PLEASE WAIT!")
 
 N_QUERIES = int(sys.argv[1]) if len(sys.argv) > 1 else 10000
@@ -16,6 +18,11 @@ start_global = timer()
 start = timer()
 builder = MorphIndexBuilder(MORPH_FILE, CIRCUIT_FILE)
 builder.process_all(progress=False)
+
+# Alternatively you can use the uniform index created
+# using the create_uniform_index.py script
+# index = spatial_index.open_index("uniform_index")
+
 end = timer()
 index_time = end - start
 
@@ -40,5 +47,4 @@ global_time = timer() - start_global
 # Print results
 print("{},{},{}".format(global_time, index_time, query_time), file=sys.stderr)
 print("Last number of results: ")
-print(len(idx))
-
+print(len(idx['gid']))

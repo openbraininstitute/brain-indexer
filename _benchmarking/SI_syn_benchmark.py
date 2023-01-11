@@ -14,7 +14,7 @@ N_QUERIES = 10000
 max_points = np.random.uniform(low=175, high=180, size=(N_QUERIES, 3)).astype(np.float32)
 min_points = np.random.uniform(low=145, high=150, size=(N_QUERIES, 3)).astype(np.float32)
 
-print ("SYNAPSE INDEX BENCHMARKING IN PROGRESS... PLEASE WAIT!")
+print("SYNAPSE INDEX BENCHMARKING IN PROGRESS... PLEASE WAIT!")
 
 start_global = timer()
 start = timer()
