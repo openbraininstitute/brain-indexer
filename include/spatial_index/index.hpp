@@ -356,7 +356,6 @@ private:
 };
 
 
-
 class SubtreeId {
   public:
     size_t id;

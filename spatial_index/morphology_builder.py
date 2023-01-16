@@ -93,7 +93,7 @@ class MorphIndexBuilderBase:
         return len(self._gids)
 
     def rototranslate(self, morph, position, rotation):
-        # npq requries quaternion in the order: (w, x, y, z)
+        # npq requires quaternion in the order: (w, x, y, z)
 
         morph = self.morph_lib.get(morph)
         if rotation is not None:
@@ -206,7 +206,7 @@ class MorphIndexBuilder(MorphIndexBuilderBase,
     """
     def __init__(self, morphology_dir, nodes_file, population=None, gids=None):
         super().__init__(morphology_dir, nodes_file, population, gids)
-        self._core_builder = core.MorphIndex()
+        self._core_builder = core.MorphIndexBulkBuilder()
         self._warn_when_too_large()
 
     def _warn_when_too_large(self):
@@ -223,12 +223,16 @@ class MorphIndexBuilder(MorphIndexBuilderBase,
 
     @property
     def index(self):
-        return MorphIndex(self._core_builder, self._sonata_nodes)
+        return MorphIndex(self._core_index, self._sonata_nodes)
+
+    @property
+    def _core_index(self):
+        return self._core_builder._index()
 
     def _write_index_if_needed(self, output_dir):
         if output_dir is not None:
             spatial_index.logger.info("Writing index to file: %s", output_dir)
-            self._core_builder._dump(output_dir)
+            self._core_index._dump(output_dir)
 
 
 # Only provide MPI MultiIndex builders if enabled at the core

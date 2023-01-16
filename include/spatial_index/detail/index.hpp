@@ -305,7 +305,6 @@ inline std::ostream& operator<<(std::ostream& os, const IndexTree<T, A>& index) 
     return os << "])";
 }
 
-
 }  // namespace spatial_index
 
 

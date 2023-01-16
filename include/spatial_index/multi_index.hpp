@@ -10,6 +10,7 @@
 
 #include <spatial_index/geometries.hpp>
 #include <spatial_index/index.hpp>
+#include <spatial_index/index_bulk_builder.hpp>
 #include <spatial_index/sort_tile_recursion.hpp>
 #include <spatial_index/util.hpp>
 
@@ -364,7 +365,6 @@ public:
     }
 };
 
-
 #if SI_MPI == 1
 
 /** \brief Build the multi index in bulk.
@@ -375,14 +375,9 @@ public:
  * @tparam Value  The type of the elements in the index, e.g. `MorphoEntry`.
  */
 template<class Value>
-class MultiIndexBulkBuilder {
+class MultiIndexBulkBuilder : public IndexBulkBuilderBase<Value> {
 public:
     explicit MultiIndexBulkBuilder(std::string output_dir);
-
-    template<class BeginIt, class EndIt>
-    inline void insert(BeginIt begin, EndIt end);
-
-    inline void insert(const Value &value);
 
     /** \brief Finalize the builder and build the index.
      *
@@ -393,31 +388,17 @@ public:
      */
     inline void finalize(MPI_Comm comm = MPI_COMM_WORLD);
 
-    /// \brief Resize the internal buffer.
-    inline void reserve(size_t n_local_elements);
-
-    /** \brief The total number of elements in the created index.
-     *
-     * This method can only be called after `finalize()`, since only then is the
-     * total number of elements in the tree known.
-     */
-    inline size_t size() const;
-
     /** \brief The current number of elements on this MPI rank.
      */
     inline size_t local_size() const;
-
 
 protected:
     inline void write_meta_data() const;
 
 private:
-    std::vector<Value> values_;
     std::string output_dir_;
     std::string index_reldir_;
     std::string index_dir_;
-
-    boost::optional<size_t> n_total_values_ = boost::none;
 };
 
 #endif

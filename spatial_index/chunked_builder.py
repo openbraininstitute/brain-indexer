@@ -32,6 +32,7 @@ class ChunkedProcessingMixin(metaclass=ABCMeta):
         """Interactively create, with some progress"""
         index_builder = cls(*args, **kw)
         index_builder.process_all(progress)
+        index_builder._core_builder._finalize()
 
         index_builder._write_index_if_needed(output_dir)
         return index_builder._index_if_loaded

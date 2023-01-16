@@ -144,3 +144,11 @@ def test_morphology_multi_index_from_sonata():
 
     mpi_comm = MPI.COMM_WORLD
     check_morphology_from_sonata("multi_index", mpi_comm=mpi_comm)
+
+
+def test_sphere_index_builder_add_sphere():
+    Builder = IndexResolver.builder_class("sphere", "in_memory")
+    builder = Builder()
+
+    with pytest.raises(RuntimeError):
+        builder.add_sphere()

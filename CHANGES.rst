@@ -1,6 +1,31 @@
 Change Log
 ==========
 
+Version 1.x.y
+-------------
+
+**Improvements**
+  * Create in-memory indexes "in bulk". The internal structure of an R-tree is
+    much better if all elements are known upfront; as opposed to being inserted
+    one-by-one. This commit ensures that in-memory indexes are created via bulk
+    creation.
+
+    It optionally, old in-memory indexes should be recreated to benefit from
+    this optimization. However, old indexes can still be read. Multi-indexes
+    aren't affected at all by this change.
+
+**Deprecation**
+  * We've deprecated the certain constructors of `core.MorphIndex` and
+    `core.SynapseIndex`. Users of SpatialIndex aren't expected to be using
+    these classes directly.
+
+**Removal**
+  * We've removed a method `add_sphere` from the `SphereBuilder`. Instead
+    please create all spheres upfront and then create the index. If upfront
+    creation of all spheres doesn't work, please contact us so we can work
+    on the proper interface for iterative insertion of elements into indexes.
+
+
 Version 1.2.1
 -------------
 **December 2022**

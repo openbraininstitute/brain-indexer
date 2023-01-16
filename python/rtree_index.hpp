@@ -441,7 +441,24 @@ inline py::class_<Class> create_IndexTree_bindings(py::module& m,
         )"
     )
 
+    .def("_dump",
+        [](const Class& obj, const std::string& filename) { obj.dump(filename); },
+        R"(
+        Save the spatial index tree to a file on disk.
+
+        Args:
+            filename(str): The file path to write the spatial index to.
+        )"
+    );
+}
+
+template <typename SomaT, typename Class>
+inline void add_IndexTree_deprecated_ctors(py::class_<Class>& c) {
+    c
+
     .def(py::init([](const array_t& centroids, const array_t& radii) {
+            mark_deprecated("Please use the builder interfaces.");
+
             if (!radii.ndim()) {
                 si::util::constant<coord_t> zero_radius(0);
                 auto const* const centroids_ptr = extract_points_ptr(centroids);
@@ -470,6 +487,8 @@ inline py::class_<Class> create_IndexTree_bindings(py::module& m,
     .def(py::init([](const array_t& centroids,
                      const array_t& radii,
                      const array_ids& py_ids) {
+            mark_deprecated("Please use the builder interfaces.");
+
             if (!radii.ndim()) {
                 si::util::constant<coord_t> zero_radius(0);
                 auto const* const centroids_ptr = extract_points_ptr(centroids);
@@ -494,16 +513,6 @@ inline py::class_<Class> create_IndexTree_bindings(py::module& m,
             centroids(np.array): A Nx3 array[float32] of the segments' end points
             radii(np.array): An array[float32] with the segments' radii, or None
             py_ids(np.array): An array[int64] with the ids of the spheres
-        )"
-    )
-
-    .def("_dump",
-        [](const Class& obj, const std::string& filename) { obj.dump(filename); },
-        R"(
-        Save the spatial index tree to a file on disk.
-
-        Args:
-            filename(str): The file path to write the spatial index to.
         )"
     );
 }
@@ -590,8 +599,49 @@ inline void create_SphereIndex_bindings(py::module& m, const char* class_name) {
     using value_type = typename Class::value_type;
     auto c = create_IndexTree_bindings<value_type, value_type, Class>(m, class_name);
 
+    c
+    .def(py::init([](const array_t& centroids,
+                     const array_t& radii,
+                     const array_ids& ids) {
+
+            if(centroids.shape(0) == 0) {
+               throw std::invalid_argument("Please provide at least one centroid.");
+            }
+
+            if(centroids.shape(0) != radii.shape(0)) {
+               throw std::invalid_argument("Please provide exactly one radius per centroid.");
+            }
+
+            if(centroids.shape(0) != ids.shape(0)) {
+               throw std::invalid_argument("Please provide exactly one id per centroid.");
+            }
+
+            auto [points_ptr, radii_ptr] = extract_points_radii_ptrs(centroids, radii);
+            auto ids_unchecked = ids.template unchecked<1>();
+
+            auto soa = si::util::make_soa_reader<si::IndexedSphere>(
+               ids_unchecked, points_ptr, radii_ptr
+            );
+            return std::make_unique<Class>(soa.begin(), soa.end());
+        }),
+        py::arg("centroids"),
+        py::arg("radii"),
+        py::arg("ids"),
+        R"(
+        Creates a SpatialIndex prefilled with spheres with explicit ids
+        or points with explicit ids and radii = None.
+
+        Args:
+            centroids(np.array): A Nx3 array[float32] of the segments' end points
+            radii(np.array): An array[float32] with the segments' radii, or None
+            ids(np.array): An array[int64] with the ids of the spheres
+        )"
+    );
+
     add_SphereIndex_find_intersecting_box_np(c);
     add_SphereIndex_fields_bindings(c);
+
+    add_IndexTree_add_spheres_bindings<value_type, value_type, Class>(c);
 }
 
 
@@ -723,10 +773,13 @@ inline void create_SynapseIndex_bindings(py::module& m, const char* class_name) 
     using value_type = typename Class::value_type;
     auto c = create_IndexTree_bindings<value_type, value_type, Class>(m, class_name);
 
-    add_SynapseIndex_add_synapses_bindings(c);
+    add_IndexTree_deprecated_ctors<value_type>(c);
+
     add_SynapseIndex_count_intersecting_agg_gid_bindings(c);
     add_SynapseIndex_find_intersecting_box_np(c);
     add_SynapseIndex_fields_bindings(c);
+
+    add_SynapseIndex_add_synapses_bindings(c);
 }
 
 
@@ -1080,45 +1133,34 @@ inline void add_MorphIndex_fields_bindings(py::class_<Class>& c) {
     );
 }
 
+template <typename Class>
+inline void add_MorphIndex_common_insert_bindings(py::class_<Class>& c) {
+    add_IndexTree_insert_bindings<MorphoEntry, si::Soma, Class>(c);
+    add_MorphIndex_insert_bindings<Class>(c);
+
+    add_MorphIndex_add_branch_bindings<Class>(c);
+    add_MorphIndex_add_neuron_bindings<Class>(c);
+    add_MorphIndex_add_soma_bindings<Class>(c);
+}
+
 
 /// Bindings to index si::IndexTree<MorphoEntry>
 template <typename Class = si::IndexTree<MorphoEntry>>
 inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
     auto c = create_IndexTree_bindings<MorphoEntry, si::Soma, Class>(m, class_name);
 
-    add_MorphIndex_insert_bindings<Class>(c);
-    add_MorphIndex_place_bindings<Class>(c);
-
-    add_MorphIndex_add_branch_bindings<Class>(c);
-    add_MorphIndex_add_neuron_bindings<Class>(c);
-    add_MorphIndex_add_soma_bindings<Class>(c);
+    add_IndexTree_deprecated_ctors<si::Soma>(c);
 
     add_MorphIndex_find_intersecting_box_np<Class>(c);
-
     add_MorphIndex_fields_bindings<Class>(c);
+
+    add_MorphIndex_common_insert_bindings<Class>(c);
 }
 
-#if SI_MPI == 1
 
 template<typename Class>
-inline void add_MultiIndexBulkBuilder_creation_bindings(py::class_<Class>& c) {
+inline void add_IndexBulkBuilder_reserve_bindings(py::class_<Class>& c) {
     c
-    .def(py::init<std::string>(),
-         py::arg("output_dir"),
-         R"(
-        Create a `MultiIndexBulkBuilder` that writes output to `output_dir`.
-
-        A `MultiIndexBulkBuilder` is an interface to build a multi index. Currently,
-        a multi index can only be built in bulk. Meaning first all elements to be
-        indexed are loaded, then the index is created. As a consequence, the multi
-        index in only created once `finalize` is called.
-
-        Args:
-            output_dir(string):  The directory where the all files that make up
-                the multi index are stored.
-        )"
-    )
-
     .def("reserve",
          [](Class &obj, std::size_t n_local_elements) {
              obj.reserve(n_local_elements);
@@ -1133,6 +1175,90 @@ inline void add_MultiIndexBulkBuilder_creation_bindings(py::class_<Class>& c) {
         Args:
             n_local_elements(int): Number of elements this MPI ranks will insert
                 into the index.
+        )"
+    );
+}
+
+
+template <typename Class>
+inline py::class_<Class>
+create_IndexBulkBuilder_bindings(py::module& m, const char* class_name) {
+    py::class_<Class> c = py::class_<Class>(m, class_name);
+    c
+    .def(py::init<>(),
+         R"(
+        Create a `IndexBulkBuilder`.
+
+        A `IndexBulkBuilder` is an interface to build an index in bulk. Currently,
+        indexes can only be built in bulk. Meaning first all elements to be
+        indexed are loaded, then the index is created. As a consequence, the multi
+        index in only created once `_finalize` is called.
+        )"
+    )
+
+    .def("_finalize",
+         [](Class &obj) { obj.finalize(); },
+         R"(
+         This will trigger building the index in bulk.
+         )"
+    );
+
+    c
+    .def("_index",
+         [](Class &obj) { return obj.index(); },
+         R"(
+         After the index has been built, return the in-memory index.
+         )"
+    );
+
+    add_IndexBulkBuilder_reserve_bindings(c);
+    add_len_for_size_bindings(c);
+
+    return c;
+}
+
+template <typename Class = si::IndexBulkBuilder<si::IndexTree<MorphoEntry>>>
+inline void create_MorphIndexBulkBuilder_bindings(py::module& m, const char* class_name) {
+    auto c = create_IndexBulkBuilder_bindings<Class>(m, class_name);
+
+    add_MorphIndex_common_insert_bindings<Class>(c);
+}
+
+template <typename Class = si::IndexBulkBuilder<si::IndexTree<Synapse>>>
+inline void create_SynapseIndexBulkBuilder_bindings(py::module& m, const char* class_name) {
+    py::class_<Class> c = create_IndexBulkBuilder_bindings<Class>(m, class_name);
+
+    add_IndexTree_insert_bindings<Synapse, Synapse, Class>(c);
+    add_SynapseIndex_add_synapses_bindings<Class>(c);
+}
+
+template <typename Class = si::IndexBulkBuilder<si::IndexTree<si::IndexedSphere>>>
+inline void create_SphereIndexBulkBuilder_bindings(py::module& m, const char* class_name) {
+    py::class_<Class> c = create_IndexBulkBuilder_bindings<Class>(m, class_name);
+
+    add_IndexTree_insert_bindings<si::IndexedSphere, si::IndexedSphere, Class>(c);
+}
+
+#if SI_MPI == 1
+
+template<typename Class>
+inline void add_MultiIndexBulkBuilder_creation_bindings(py::class_<Class>& c) {
+    add_IndexBulkBuilder_reserve_bindings(c);
+
+    c
+    .def(py::init<std::string>(),
+         py::arg("output_dir"),
+         R"(
+        Create a `MultiIndexBulkBuilder` that writes output to `output_dir`.
+
+        A `MultiIndexBulkBuilder` is an interface to build a multi index. Currently,
+        a multi index can only be built in bulk. Meaning first all elements to be
+        indexed are loaded, then the index is created. As a consequence, the multi
+        index in only created once `_finalize` is called.
+
+        Args:
+            output_dir(string):  The directory where the all files that make up
+                the multi index are stored.
         )"
     )
 
@@ -1159,8 +1285,8 @@ inline void add_MultiIndexBulkBuilder_local_size_bindings(py::class_<Class>& c) 
              return obj.local_size();
          },
          R"(
-    The current number of elements to be added to the index by this MPI rank.
-    )"
+         The current number of elements to be added to the index by this MPI rank.
+         )"
     );
 }
 
@@ -1178,17 +1304,11 @@ create_MultiIndexBulkBuilder_bindings(py::module& m, const char* class_name) {
     return c;
 }
 
-
 template <typename Class = si::MultiIndexBulkBuilder<MorphoEntry>>
 inline void create_MorphMultiIndexBulkBuilder_bindings(py::module& m, const char* class_name) {
     py::class_<Class> c = create_MultiIndexBulkBuilder_bindings<MorphoEntry>(m, class_name);
 
-    add_IndexTree_insert_bindings<MorphoEntry, si::Soma, Class>(c);
-    add_MorphIndex_insert_bindings<Class>(c);
-
-    add_MorphIndex_add_branch_bindings<Class>(c);
-    add_MorphIndex_add_neuron_bindings<Class>(c);
-    add_MorphIndex_add_soma_bindings<Class>(c);
+    add_MorphIndex_common_insert_bindings<Class>(c);
 }
 
 

@@ -14,8 +14,6 @@ from spatial_index import MorphIndex, SectionType
 # Add this dir to path so we can import the other tests
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 import test_rtree_sphere  # NOQA
-test_rtree_sphere.IndexClass = core.MorphIndex
-from test_rtree_sphere import *  # NOQA  # Tests collected for pytest
 
 
 def test_morphos_insert():

@@ -3,7 +3,7 @@ import tempfile
 import numpy as np
 
 import spatial_index
-from spatial_index import core
+from spatial_index import core, SphereIndexBuilder
 
 IndexClass = core.SphereIndex
 
@@ -94,64 +94,62 @@ def test_non_overlap_place():
     assert sorted(idx) == list(range(N))
 
 
-def test_is_intersecting():
-    centroids = arange_centroids(3)
-    radii = np.full(3, 0.2, dtype=np.float32)
-    t = IndexClass(centroids, radii)
-    kwargs = {"geometry": "best_effort"}
+def arange_sphere_index(n_spheres, radius):
+    centroids = arange_centroids(n_spheres)
+    radii = np.full(n_spheres, radius, dtype=np.float32)
+    ids = np.arange(n_spheres)
+
+    return SphereIndexBuilder.from_numpy(centroids, radii, ids)
+
+
+def check_intersection(make_query_shape, empty_name, query_name):
+    index = arange_sphere_index(n_spheres=3, radius=0.2)
+    empty = getattr(index, empty_name)
+    query = getattr(index, query_name)
+
     for xpos in [-1, 0.5, 1.5, 2.5]:
-        assert t._is_intersecting_sphere([xpos, 0, 0], 0.1, **kwargs) is False
-    for xpos in [-0.2, -0.1, .0, 0.1, 1.2, 2.2]:
-        assert t._is_intersecting_sphere([xpos, 0, 0], 0.1, **kwargs)
+        query_shape = make_query_shape(xpos)
+
+        assert empty(*query_shape) is True
+
+        objs = query(*query_shape, fields="raw_elements", accuracy="best_effort")
+        assert len(objs) == 0, f"Should be empty. Found: {objs}"
+
+        results = query(*query_shape, accuracy="best_effort")
+        for k, x in results.items():
+            if k == "endpoints":
+                p1, p2 = x
+                assert p1.size == 0, f"Should be empty. Found: {p1}"
+                assert p2.size == 0, f"Should be empty. Found: {p2}"
+            else:
+                assert len(x) == 0, f"Should be empty. Found: {x}"
+
+    expected_ids = [0, 0, 0, 0, 1, 2]
+    for xpos, expected_id in zip([-0.2, -0.1, .0, 0.1, 1.2, 2.2], expected_ids):
+        query_shape = make_query_shape(xpos)
+
+        assert empty(*query_shape) is False
+
+        objs = query(*query_shape, fields="raw_elements", accuracy="best_effort")
+        assert len(objs) == 1, f"Expected one element. Found: {objs}"
+
+        actual_ids = query(*query_shape, fields="id", accuracy="best_effort")
+        assert actual_ids.size == 1, f"Expected one id found: {actual_ids}"
+        assert actual_ids[0] == expected_id
 
 
-def test_intersection_none():
-    centroids = np.array([[.0, 1., 0.],
-                          [-0.5 * np.sqrt(2), - 0.5 * np.sqrt(2), 0.],
-                          [0.5 * np.sqrt(2), - 0.5 * np.sqrt(2), 0.]], dtype=np.float32)
-    radii = np.random.uniform(low=0.0, high=0.5, size=len(centroids)).astype(np.float32)
+def test_intersection_sphere():
+    def make_query_shape(x):
+        return [x, 0.0, 0.0], 0.1
 
-    t = IndexClass(centroids, radii)
-
-    centroid = np.array([0., 0., 0.], dtype=np.float32)
-    radius = np.random.uniform(low=0.0, high=0.49)
-
-    idx = t._find_intersecting_objs(centroid, radius, geometry="best_effort")
-    assert len(idx) == 0, "Should be empty, but {} were found instead.".format(idx)
-
-    d = t._find_intersecting_np(centroid, radius, geometry="best_effort")
-    for k, x in d.items():
-        if k == "endpoints":
-            p1, p2 = x
-            assert p1.size == 0, "Should be empty, but {} were found instead.".format(x)
-            assert p2.size == 0, "Should be empty, but {} were found instead.".format(x)
-        else:
-            assert len(x) == 0, "Should be empty, but {} were found instead.".format(x)
+    check_intersection(make_query_shape, "sphere_empty", "sphere_query")
 
 
-def test_intersection_all():
+def test_intersection_box():
+    def make_query_shape(x):
+        return [x - 0.1, -0.1, -0.1], [x + 0.1, 0.1, 0.1]
 
-    centroids = np.array([[.0, 1., 0.],
-                          [-0.5 * np.sqrt(2), -0.5 * np.sqrt(2), 0.],
-                          [0.5 * np.sqrt(2), -0.5 * np.sqrt(2), 0.]], dtype=np.float32)
-    radii = np.random.uniform(low=0.5, high=1.0, size=len(centroids)).astype(np.float32)
-
-    # When IndexClass is a MorphIndex then init with centroids will create somas
-    t = IndexClass(centroids, radii)
-
-    centroid = np.array([0., 0., 0.], dtype=np.float32)
-    radius = np.random.uniform(low=0.5, high=1.0)
-
-    ids = t._find_intersecting_np(centroid, radius, geometry="best_effort")
-    objs = t._find_intersecting_objs(centroid, radius, geometry="best_effort")
-    expected_result = list(range(3))
-
-    # New API: retrieve object references
-    use_gid_field = IndexClass is core.MorphIndex  # MorphIndex raw ids are meaningless
-    assert sorted(obj.gid if use_gid_field else obj.id for obj in objs) == expected_result
-
-    field = "gid" if use_gid_field else "id"
-    assert sorted(ids[field]) == expected_result
+    check_intersection(make_query_shape, "box_empty", "box_query")
 
 
 def test_intersection_random():
@@ -162,23 +160,28 @@ def test_intersection_random():
 
     centroids = np.random.uniform(low=p1, high=p2, size=(N_spheres, 3)).astype(np.float32)
     radii = np.random.uniform(low=0.01, high=10., size=N_spheres).astype(np.float32)
+    ids = np.arange(centroids.shape[0])
 
-    q_centroid = np.random.uniform(low=p1, high=p2, size=3).astype(np.float32)
-    q_radius = np.float32(np.random.uniform(low=0.01, high=10.))
+    index = SphereIndexBuilder.from_numpy(centroids, radii, ids)
 
-    distances = np.linalg.norm(centroids - q_centroid, axis=1)
-    expected_result = np.where(distances <= radii + q_radius)[0]
+    n_rep = 10
+    for _ in range(n_rep):
+        q_centroid = np.random.uniform(low=p1, high=p2, size=3).astype(np.float32)
+        q_radius = np.float32(np.random.uniform(low=0.01, high=10.))
 
-    t = IndexClass(centroids, radii)
+        distances = np.linalg.norm(centroids - q_centroid, axis=1)
+        expected_result = np.where(distances <= radii + q_radius)[0]
 
-    idx = _sphere_query_id(t, q_centroid, q_radius)
-    objs = t._find_intersecting_objs(q_centroid, q_radius, geometry="best_effort")
+        idx = index.sphere_query(q_centroid, q_radius, fields="id")
+        objs = index.sphere_query(q_centroid, q_radius, fields="raw_elements")
 
-    assert len(idx) == len(objs)
-    assert sorted(idx) == sorted(expected_result)
+        assert len(idx) == len(objs)
+        assert sorted(idx) == sorted(expected_result)
+        assert sorted([o.id for o in objs]) == sorted(expected_result)
 
 
 def test_intersection_window():
+    n_spheres, n_points = 7, 5
     centroids = np.array(
         [
             # Some inside / partially inside
@@ -190,71 +193,48 @@ def test_intersection_window():
             [0.0,  2.1, 0],
             [0.0,  0.0, 2.1],
             # Another partially inside (double check)
-            [1.2,  1.2, 1.2]
-        ], dtype=np.float32)
-    radii = np.random.uniform(low=0.5, high=1.0, size=len(centroids)).astype(np.float32)
-    t = IndexClass(centroids, radii)
+            [1.2,  1.2, 1.2],
 
-    min_corner = np.array([-1, -1, -1], dtype=np.float32)
-    max_corner = np.array([1, 1, 1], dtype=np.float32)
-    idx = _box_query_id(t, min_corner, max_corner)
-
-    expected_result = [0, 1, 2, 6]
-    assert sorted(idx) == sorted(expected_result), (idx, expected_result)
-
-
-def test_bulk_spheres_points_add():
-    rtree = IndexClass()
-    # add Spheres
-    centroids = np.array(
-        [
-            # Some inside / partially inside
-            [0.0,  1.0, 0],
-            [-0.5, -0.5, 0],
-            [0.5, -0.5, 0],
-            # Some outside
-            [-2.1,  0.0, 0],
-            [0.0,  2.1, 0],
-            [0.0,  0.0, 2.1],
-            # Another partially inside (double check)
-            [1.2,  1.2, 1.2]
-        ], dtype=np.float32)
-    radii = np.random.uniform(low=0.5, high=1.0, size=len(centroids)).astype(np.float32)
-    ids = np.arange(len(centroids), dtype=np.intp)
-    rtree._add_spheres(centroids, radii, ids)
-
-    # add Points
-    points = np.array(
-        [
+            # Degenerate spheres, aka points
             [0.5, -0.5,  1],
             [-1.0, 2.0, -1.1],
             [1.0,  1.0,  1.0],
             [0.0,  0.0,  0.0],
             [-1.0, -0.1, 1.1]
-        ], dtype=np.float32)
-    ids = np.arange(10, 10 + len(points), dtype=np.intp)
-    rtree._add_points(points, ids)
+        ],
+        dtype=np.float32
+    )
 
-    # Query
-    min_corner = [-1, -1, -1]
-    max_corner = [1, 1, 1]
+    radii = np.random.uniform(low=0.5, high=1.0, size=n_spheres).astype(np.float32)
+    radii = np.hstack((radii, np.array(n_points * [0.0])))
 
-    idx = _box_query_id(rtree, min_corner, max_corner)
-    expected_result = np.array([0, 1, 2, 6, 10, 12, 13], dtype=np.uintp)
+    ids = np.hstack((np.arange(n_spheres), 10 + np.arange(n_points)))
 
-    assert sorted(idx) == sorted(expected_result)
+    min_corner = np.array([-1, -1, -1], dtype=np.float32)
+    max_corner = np.array([1, 1, 1], dtype=np.float32)
+
+    expected_result = [0, 1, 2, 6, 10, 12, 13]
+
+    assert centroids.shape[0] == n_spheres + n_points
+    assert radii.shape[0] == n_spheres + n_points
+    assert ids.shape[0] == n_spheres + n_points
+
+    index = SphereIndexBuilder.from_numpy(centroids, radii, ids)
+    idx = index.box_query(min_corner, max_corner, fields="id")
+
+    assert sorted(idx) == sorted(expected_result), (idx, expected_result)
 
 
 def test_nearest_all():
     centroids = arange_centroids()
     radii = np.ones(len(centroids), dtype=np.float32) * 0.01
+    ids = np.arange(centroids.shape[0])
 
-    t = IndexClass(centroids, radii)
+    index = SphereIndexBuilder.from_numpy(centroids, radii, ids)
+    core_index = index._core_index
 
     center = np.array([0., 0., 0.], dtype=np.float32)
-    idx = t._find_nearest(center, 10)
-    if len(idx.dtype) > 1:
-        idx = idx['gid']  # Records
+    idx = core_index._find_nearest(center, 10)
     assert np.all(np.sort(idx) == np.sort(np.arange(10, dtype=np.uintp))), idx
 
 
@@ -271,6 +251,7 @@ def _nearest_random():
 
     centroids = np.random.uniform(low=p1, high=p2, size=(N_spheres, 3)).astype(np.float32)
     radii = np.random.uniform(low=0.01, high=0.5, size=N_spheres).astype(np.float32)
+    ids = np.arange(centroids.shape[0])
 
     center = np.array([0., 0., 0.], dtype=np.float32)
 
@@ -281,11 +262,10 @@ def _nearest_random():
     distances = np.linalg.norm(closest_point - center, axis=1)
     expected_result = np.argsort(distances)[:K]
 
-    t = IndexClass(centroids, radii)
+    index = SphereIndexBuilder.from_numpy(centroids, radii, ids)
+    core_index = index._core_index
 
-    idx = t._find_nearest(center, K)
-    if len(idx.dtype) > 1:
-        idx = idx['gid']  # Records
+    idx = core_index._find_nearest(center, K)
     assert np.all(np.sort(idx) == np.sort(expected_result)), (idx, expected_result)
 
 

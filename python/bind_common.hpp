@@ -101,6 +101,20 @@ inline const auto& mk_point(array_t const& point) {
     return *reinterpret_cast<const point_t*>(point.data());
 }
 
+inline void mark_deprecated(const std::string& deprecation_message) {
+    // Credit: https://stackoverflow.com/a/62559865
+    // See: https://docs.python.org/3/c-api/exceptions.html#c.PyErr_WarnEx
+    auto error_code = PyErr_WarnEx(
+        PyExc_DeprecationWarning, 
+        deprecation_message.c_str(),
+        /* stack_level = */ 1
+    );
+
+    if(error_code != 0) {
+        throw std::runtime_error("Failed to create a decrecation warning.");
+    }
+}
+
 
 
 }  // namespace py_bindings

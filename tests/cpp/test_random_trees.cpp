@@ -424,7 +424,6 @@ BOOST_AUTO_TEST_CASE(ASANRtreeInsert) {
     auto elements = random_elements<Segment>(n_elements, domain, 0, gen);
 
     auto index = IndexTree<EveryEntry>(elements);
-    index.insert(elements.begin(), elements.end());
 }
 
 int main(int argc, char *argv[]) {

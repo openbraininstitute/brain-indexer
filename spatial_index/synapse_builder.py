@@ -25,6 +25,7 @@ class SynapseIndexBuilderBase:
 
     @property
     def core_builder(self):
+        # TODO remove this stub.
         raise NotImplementedError("Needs to be overloaded.")
 
     def n_elements_to_import(self):
@@ -115,7 +116,7 @@ class SynapseIndexBuilder(SynapseIndexBuilderBase,
 
     def __init__(self, sonata_edges, selection):
         super().__init__(sonata_edges, selection)
-        self._core_builder = core.SynapseIndex()
+        self._core_builder = core.SynapseIndexBulkBuilder()
         self._warn_when_too_large()
 
     def _warn_when_too_large(self):
@@ -128,7 +129,11 @@ class SynapseIndexBuilder(SynapseIndexBuilderBase,
 
     @property
     def index(self):
-        return SynapseIndex(self._core_builder, self._sonata_edges)
+        return SynapseIndex(self._core_index, self._sonata_edges)
+
+    @property
+    def _core_index(self):
+        return self._core_builder._index()
 
     @property
     def _index_if_loaded(self):
@@ -137,7 +142,7 @@ class SynapseIndexBuilder(SynapseIndexBuilderBase,
     def _write_index_if_needed(self, output_dir):
         if output_dir is not None:
             spatial_index.logger.info("Writing index to file: %s", output_dir)
-            self._core_builder._dump(output_dir)
+            self._core_index._dump(output_dir)
 
 
 # Only provide MPI MultiIndex builders if enabled at the core

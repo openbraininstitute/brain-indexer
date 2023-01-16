@@ -424,26 +424,13 @@ MultiIndexBulkBuilder<Value>::MultiIndexBulkBuilder(std::string output_dir)
 
 
 template <class Value>
-template <class BeginIt, class EndIt>
-inline void MultiIndexBulkBuilder<Value>::insert(BeginIt begin, EndIt end) {
-    values_.insert(values_.end(), begin, end);
-}
-
-
-template <class Value>
-inline void MultiIndexBulkBuilder<Value>::insert(const Value& value) {
-    values_.push_back(value);
-}
-
-
-template <class Value>
 inline void MultiIndexBulkBuilder<Value>::finalize(MPI_Comm comm) {
     auto comm_size = mpi::size(comm);
 
-    size_t n_values = values_.size();
+    size_t n_values = this->values_.size();
     size_t n_total_values = 0;
     MPI_Allreduce(&n_values, &n_total_values, 1, MPI_SIZE_T, MPI_SUM, comm);
-    n_total_values_ = n_total_values;
+    this->n_total_values_ = n_total_values;
 
     auto max_elements_per_part = size_t(4e6);
 
@@ -454,7 +441,7 @@ inline void MultiIndexBulkBuilder<Value>::finalize(MPI_Comm comm) {
     );
     auto storage = NativeStorageT<Value>(index_dir_);
     using GetCoordinate = GetCenterCoordinate<Value>;
-    distributed_partition<GetCoordinate>(storage, values_, str_params, comm);
+    distributed_partition<GetCoordinate>(storage, this->values_, str_params, comm);
 
     write_meta_data();
 }
@@ -472,24 +459,8 @@ inline void MultiIndexBulkBuilder<Value>::write_meta_data() const {
 }
 
 template <class Value>
-inline void MultiIndexBulkBuilder<Value>::reserve(size_t n_local_elements) {
-    values_.reserve(n_local_elements);
-}
-
-
-template <class Value>
-inline size_t MultiIndexBulkBuilder<Value>::size() const {
-    if(!n_total_values_) {
-        throw std::runtime_error("Total number of elements not yet known.");
-    }
-
-    return *n_total_values_;
-}
-
-
-template <class Value>
 inline size_t MultiIndexBulkBuilder<Value>::local_size() const {
-    return values_.size();
+    return this->values_.size();
 }
 #endif
 
