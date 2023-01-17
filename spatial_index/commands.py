@@ -21,10 +21,11 @@ def spatial_index_nodes(args=None):
         spatial-index-nodes --help
 
     Options:
-        -v, --verbose              Increase verbosity level
-        -o, --out=<folder>         The index output folder [default: out]
-        --multi-index              Whether to create a multi-index
+        -v, --verbose              Increase verbosity level.
+        -o, --out=<folder>         The index output folder. [default: out]
+        --multi-index              Whether to create a multi-index.
         --population <population>  The population to index.
+        --progress-bar             Shows the progress bar.
     """
     options = docopt_get_args(spatial_index_nodes, args)
     setup_logging_for_cli(options["verbose"])
@@ -45,10 +46,11 @@ def spatial_index_synapses(args=None):
         spatial-index-synapses --help
 
     Options:
-        -v, --verbose              Increase verbosity level
-        -o, --out=<folder>         The index output folder [default: out]
-        --multi-index              Whether to create a multi-index
+        -v, --verbose              Increase verbosity level.
+        -o, --out=<folder>         The index output folder. [default: out]
+        --multi-index              Whether to create a multi-index.
         --population <population>  The population to index.
+        --progress-bar             Shows the progress bar.
     """
     options = docopt_get_args(spatial_index_synapses, args)
     setup_logging_for_cli(options["verbose"])
@@ -84,9 +86,10 @@ def spatial_index_circuit(args=None):
         spatial-index-circuit --help
 
     Options:
-        -v, --verbose              Increase verbosity level
-        -o, --out=<out_file>     The index output folder [default: out]
-        --multi-index            Whether to create a multi-index
+        -v, --verbose              Increase verbosity level.
+        -o, --out=<out_file>     The index output folder. [default: out]
+        --multi-index            Whether to create a multi-index.
+        --progress-bar           Shows the progress bar.
     """
     options = docopt_get_args(spatial_index_circuit, args)
     setup_logging_for_cli(options["verbose"])
@@ -271,15 +274,15 @@ def _sonata_morphology_dir(config, population):
 def _parse_options_for_builder_args(options, output_dir):
     if options["multi_index"]:
         index_variant = "multi_index"
-        index_kwargs = {}
     else:
         index_variant = "in_memory"
-        index_kwargs = {"progress": True}
 
     if output_dir is None:
         output_dir = options["out"]
 
+    index_kwargs = {}
     index_kwargs["output_dir"] = output_dir
+    index_kwargs["progress"] = options["progress_bar"]
 
     return index_variant, index_kwargs
 
