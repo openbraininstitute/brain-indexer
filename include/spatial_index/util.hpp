@@ -93,13 +93,13 @@ inline auto make_soa_reader(Fields&... fields) {
  *  Either the directory already exists and is empty, or it's created now.
  */
 inline void ensure_valid_output_directory(const std::string &output_dir) {
-    if(boost::filesystem::is_directory(output_dir)) {
-        if(!boost::filesystem::is_empty(output_dir)) {
+    if(std::filesystem::is_directory(output_dir)) {
+        if(!std::filesystem::is_empty(output_dir)) {
             throw std::runtime_error("Not an empty directory: " + output_dir);
         }
     }
     else {
-        boost::filesystem::create_directories(output_dir);
+        std::filesystem::create_directories(output_dir);
     }
 }
 

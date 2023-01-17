@@ -68,8 +68,7 @@ target_include_directories(SpatialIndex INTERFACE ${SI_INCLUDE_DIR})
 target_link_libraries(SpatialIndex
   INTERFACE
     Boost::boost
-    Boost::serialization
-    Boost::filesystem
+    Boost::serialization  
     Threads::Threads
     nlohmann_json::nlohmann_json
     Zisa::sfc

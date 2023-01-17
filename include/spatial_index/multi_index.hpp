@@ -23,13 +23,13 @@ namespace spatial_index {
 /// \brief These filenames are used together with `NativeStorage`.
 struct NativeFilenames {
     static inline std::string top_tree(const std::string& output_dir) {
-        auto p = boost::filesystem::path(output_dir) / "index.rtree";
+        auto p = std::filesystem::path(output_dir) / "index.rtree";
         return p.string();
     }
 
     static inline
     std::string subtree(const std::string& output_dir, size_t subtree_id) {
-        auto dirname = boost::filesystem::path(output_dir);
+        auto dirname = std::filesystem::path(output_dir);
         auto basename = std::string("index-l") + std::to_string(subtree_id) + ".rtree";
         auto p = dirname / basename;
         return p.string();
