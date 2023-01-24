@@ -194,6 +194,7 @@ build-package:
 
 # Builds package wheels. Dont rename (defined in build-wheels.yml)
 build-wheels:
+  needs: []
   tags: [kubernetes]
   image: bbpgitlab.epfl.ch:5050/hpc/spatial-index/manylinux2014_boost_x86_64:boost-179
   variables:
@@ -218,7 +219,7 @@ build-wheels:
       allow_failure: true
 
 test-wheels:
-  stage: publish
+  stage: build
   needs: ["build-wheels"]
   tags: [kubernetes]
   image: bbpgitlab.epfl.ch:5050/hpc/spatial-index/ubuntu_20.04_devel
@@ -239,7 +240,7 @@ test-wheels:
     - pytest -n3
 
 test-sdist:
-  stage: publish
+  stage: build
   needs: ["build-package"]
   tags: [kubernetes]
   image: bbpgitlab.epfl.ch:5050/hpc/spacktainerizer/ubuntu_22.04/builder
@@ -263,7 +264,6 @@ test-sdist:
 
 publish-package:
   tags: []
-  needs: ["build-package", "build-wheels"]
   rules:
     - if: $CI_COMMIT_TAG
     - when: manual
@@ -288,7 +288,6 @@ docs:
 
 publish-docs:
   tags: []
-  needs: ["docs"]
   variables:
     SYS_PACKAGES: openssh-clients
     PIP_PACKAGES: docs_internal_upload
