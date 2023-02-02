@@ -8,9 +8,6 @@
 import os
 import numpy as np
 import spatial_index
-import pytest
-pytest_skipif = pytest.mark.skipif
-pytest_long = pytest.mark.long
 
 DATADIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v5"
 BLUECONFIG_2K = os.path.join(DATADIR, "bluepy_validation/BlueConfig")
@@ -67,9 +64,6 @@ def bluepy_check(bluepy_cache, result):
         assert t_b == t_s
 
 
-@pytest_skipif(not os.path.exists(CIRCUIT_2K_SI),
-               reason="Circuit file not available")
-@pytest_long
 def test_bluepy_validation():
 
     from bluepy import Circuit
@@ -90,3 +84,9 @@ def test_bluepy_validation():
                 i += 1
                 bluepy_check(bluepy_cache, result)
                 break
+
+    print("Success! No differences in bluepy and SpatialIndex morphologies detected.")
+
+
+if __name__ == "__main__":
+    test_bluepy_validation()

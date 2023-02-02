@@ -12,10 +12,6 @@ import sys
 import spatial_index
 from spatial_index import MorphIndexBuilder
 
-import pytest
-pytest_skipif = pytest.mark.skipif
-pytest_long = pytest.mark.long
-
 # Loading some small circuits and morphology files on BB5
 CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-2k"
 CIRCUIT_FILE = os.path.join(CIRCUIT_2K, "nodes.h5")
@@ -84,16 +80,11 @@ def check_vs_FLAT(si_ids):
     assert np.array_equal(si_ids, flat_ids)
 
 
-@pytest_skipif(not os.path.exists(CIRCUIT_FILE),
-               reason="Circuit file not available")
-@pytest_long
 def test_validation_FLAT():
     check_vs_FLAT(do_query_serial(*query_window()))
+    print("Success! In-memory index and FLAT don't differ.")
 
 
-@pytest_skipif(True,
-               reason="Awaits better MPI integration with tests.")
-@pytest_long
 def test_multi_index_validation_FLAT():
     from mpi4py import MPI
 
@@ -102,9 +93,16 @@ def test_multi_index_validation_FLAT():
     if MPI.COMM_WORLD.Get_rank() == 0:
         check_vs_FLAT(idx)
 
+    MPI.COMM_WORLD.Barrier()
+    if MPI.COMM_WORLD.Get_rank() == 0:
+        print("Success! Multi-index and FLAT don't differ.")
+
 
 if __name__ == "__main__":
     run_multi_index = len(sys.argv) > 1 and sys.argv[1] == '--run-multi-index'
 
-    if run_multi_index:
+    if not run_multi_index:
+        test_validation_FLAT()
+
+    else:
         test_multi_index_validation_FLAT()

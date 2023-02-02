@@ -65,7 +65,7 @@ test-cpp-unit:
     - cmake --build build -j2
     - cd build && ctest --output-on-failure
 
-test-examples-integration:
+test-examples:
   stage: test
   needs: ["flake8"]
   tags:
@@ -80,6 +80,7 @@ test-examples-integration:
     - !reference [.bbp_gitlab_access, script]
   script:
     - git submodule update --init --recursive
+    # The `py-libsonata` ensures that we get `libsonata>=0.1.16`.
     - module load unstable cmake gcc boost hpe-mpi py-mpi4py
     - python -m venv venv
     - source venv/bin/activate
@@ -87,8 +88,29 @@ test-examples-integration:
     - pip install -e .
     - bash .ci/run_mpi_pytest.sh
     - bash .ci/_run_examples.sh
-    - bash .ci/_run_integration.sh
 
+test-integration:
+  stage: test
+  needs: ["flake8"]
+  tags:
+    - bb5_map
+  variables:
+    bb5_constraint: cpu
+    bb5_ntasks: 5
+    bb5_cpus_per_task: 1
+    SLURM_OVERLAP: 1
+    DATADIR: /gpfs/bbp.cscs.ch/project/proj12/spatial_index/v4
+  before_script:
+    - !reference [.bbp_gitlab_access, script]
+  script:
+    - git submodule update --init --recursive
+    # The `py-libsonata` ensures that we get `libsonata>=0.1.16`.
+    - module load unstable cmake gcc boost hpe-mpi py-mpi4py py-bluepy py-libsonata
+    - python -m venv venv
+    - source venv/bin/activate
+    - pip install pytest pytest-mpi
+    - pip install -e .
+    - bash .ci/_run_integration.sh
 
 test-ubuntu:
   stage: test
