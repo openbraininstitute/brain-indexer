@@ -119,7 +119,7 @@ test-ubuntu:
   image: bbpgitlab.epfl.ch:5050/hpc/spacktainerizer/ubuntu_22.04/builder
   parallel:
     matrix:
-      - SI_BOOST_VERSION: ["1.79.0", "1.80.0"]
+      - SI_BOOST_VERSION: ["1.79.0", "1.80.0", "1.81.0"]
   variables:
     KUBERNETES_MEMORY_LIMIT: 5Gi    # memory overrides
     KUBERNETES_MEMORY_REQUEST: 4Gi  # memory overrides
@@ -131,7 +131,7 @@ test-ubuntu:
     - apt install -y python3-venv
     - apt install -y libopenmpi-dev
     - source ${SPACK_ROOT}/share/spack/setup-env.sh
-    - spack install boost@${SI_BOOST_VERSION}+serialization+filesystem
+    - spack install --no-checksum boost@${SI_BOOST_VERSION}+serialization+filesystem
     - spack load boost@${SI_BOOST_VERSION}
     - python3 -m venv venv
     - source venv/bin/activate
