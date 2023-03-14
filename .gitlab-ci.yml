@@ -156,19 +156,19 @@ test-spack:
     - source $SPACK_ROOT/share/spack/setup-env.sh
     - module load unstable git py-bluepy
     - spack dev-build spatial-index@develop
-    - !reference [.bb5, load-python-39]
+    - !reference [.bb5, load-python-310]
     - !reference [.setup-venv]
     - spack load --first spatial-index@develop  # quick fix since spack installation doesn't clean up properly between pipeline runs
     - mv spatial_index _dont_interfere
     - pytest
 
 
-test-bb5-py39:
+test-bb5-py310:
   extends: .tox-template
   needs: ["flake8"]
   variables:
     PIP_PACKAGES: 'tox<4'
-    TOXENV: py39  # match boost
+    TOXENV: py310  # match boost
     TOX_OPTIONS: -vv
     EXTRA_MODULES:
       unstable:gcc
@@ -181,12 +181,12 @@ test-bb5-py39:
     - !reference [.tox-template, script]
 
 test-bb5-mpi-compat-hpe:
-  extends: test-bb5-py39
+  extends: test-bb5-py310
   variables:
     TOXENV: mpi-compat
 
 test-bb5-mpi-compat-mvapich2:
-  extends: test-bb5-py39
+  extends: test-bb5-py310
   variables:
     TOXENV: mpi-compat
     EXTRA_MODULES:
@@ -206,6 +206,7 @@ build-package:
     - !reference [.define-functions]
     - !reference [.configure-git]
     - git submodule update --init --recursive
+
 
 # The following lines are a workaround to for this issue:
 # https://gitlab.com/gitlab-org/gitlab-runner/-/issues/29370
