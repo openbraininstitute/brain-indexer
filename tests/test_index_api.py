@@ -500,6 +500,31 @@ def test_index_write_sonata_api(element_type, index_variant):
         assert fake_population in extended_conf.value("population")
 
 
+def test_index_insert():
+    radius_cases = [1.0, [0.2, 0.4]]
+    centroid_cases = [[1.0, 2.0, 3.0], [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]]
+    id_cases = [2, [2, 3]]
+
+    for j, r, x in zip(id_cases, radius_cases, centroid_cases):
+        index = spatial_index.SphereIndexBuilder.create_empty()
+        index.insert(id=j, radius=r, centroid=x)
+
+        found = index.sphere_query(np.zeros((3,)), 10.0)
+
+        i = np.argsort(found["id"])
+        for k, ii in enumerate(i):
+            ids = np.atleast_1d(j)
+            radii = np.atleast_1d(r)
+            centroids = np.atleast_2d(x)
+
+            assert np.allclose(found["id"][ii], ids[min(k, ids.shape[0] - 1)])
+            assert np.allclose(found["radius"][ii], radii[min(k, radii.shape[0] - 1)])
+            assert np.allclose(
+                found["centroid"][ii],
+                centroids[min(k, centroids.shape[0] - 1)]
+            )
+
+
 def test_is_non_string_iterable():
     assert not is_non_string_iterable("")
     assert not is_non_string_iterable("foo")

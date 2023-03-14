@@ -33,6 +33,11 @@ class SphereIndexBuilder:
         builder._write_index_if_needed(output_dir)
         return builder._index_if_loaded
 
+    @classmethod
+    def create_empty(cls):
+        core_index = core.SphereIndex()
+        return SphereIndex(core_index)
+
     def _write_index_if_needed(self, output_dir):
         self.index.write(output_dir)
 

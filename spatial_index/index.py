@@ -1,10 +1,11 @@
 import abc
 import functools
 
+import numpy as np
+
 import libsonata
 
 import spatial_index
-
 from . import logger
 from .io import write_sonata_meta_data_section
 from .util import is_non_string_iterable, strip_singleton_non_string_iterable
@@ -645,10 +646,19 @@ class SphereIndexBase(Index, _FromMetaDataWithOutSonata):
 
 
 class SphereIndex(SphereIndexBase, _WriteInMemoryIndex):
-    pass
+    def insert(self, centroid, radius, id):
+        assert all(x is not None for x in [id, radius, centroid])
+
+        ids = np.atleast_1d(id)
+        radii = np.atleast_1d(radius)
+        centroids = np.atleast_2d(centroid)
+
+        assert ids.shape[0] == radii.shape[0] == centroids.shape[0]
+
+        self._core_index._add_spheres(centroids, radii, ids)
 
 
-# TODO integrate other types of indexes like `PointIndex` and `SphereIndex`
+# TODO integrate other types of indexes like `PointIndex`.
 
 
 def _wrap_as_multi_population(func):

@@ -15,6 +15,7 @@ The documentation of SpatialIndex contains the following sections:
    Introduction <intro>
    Installation <installation>
    Queries <queries>
+   Insert Elements <insertion>
    Overlap Detection Details <accuracy>
    Multi Index <multi_index>
    Multiple Populations <multi_population>
