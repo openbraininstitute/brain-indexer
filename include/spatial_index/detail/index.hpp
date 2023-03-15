@@ -50,6 +50,11 @@ inline std::string value_to_element_type<IndexedSphere>() {
     return "sphere";
 }
 
+template <>
+inline std::string value_to_element_type<IndexedPoint>() {
+    return "point";
+}
+
 template<>
 inline std::string value_to_element_type<MorphoEntry>() {
     return "morphology";
@@ -339,6 +344,18 @@ template<> struct indexable<Synapse> : public indexable_with_bounding_box<Synaps
 template<> struct indexable<Soma> : public indexable_with_bounding_box<Soma> {};
 template<> struct indexable<Segment> : public indexable_with_bounding_box<Segment> {};
 template<> struct indexable<IndexedSubtreeBox> : public indexable_with_bounding_box<IndexedSubtreeBox> {};
+
+template <>
+struct indexable<IndexedPoint> {
+    typedef IndexedPoint V;
+    typedef Box3D const result_type;
+
+    inline result_type operator()(V const& s) const noexcept {
+        auto p = static_cast<const Point3D&>(s);
+        return result_type{p, p};
+    }
+};
+
 
 template <typename... VariantArgs>
 struct indexable<boost::variant<VariantArgs...>> {

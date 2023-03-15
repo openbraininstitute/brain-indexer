@@ -17,6 +17,25 @@ namespace py_bindings {
 ///
 
 // We provide bindings to spatial indexes of spheres since they'r space efficient
+inline void create_IndexedPoint_bindings(py::module& m) {
+    using Class = IndexedPoint;
+    py::class_<Class>(m, "IndexedPoint")
+        .def_property_readonly(
+            "position",
+            [](Class& obj) { return py::array(3, reinterpret_cast<const si::CoordType*>(&obj)); },
+            "Returns the coordinates of the point.")
+        .def_property_readonly(
+            "ids",
+            [](Class& obj) { return std::make_tuple(long(obj.id)); },
+            "Return the id as a tuple (same API as other indexed objects)")
+        .def_property_readonly(
+            "id",
+            [](Class& obj) { return long(obj.id); },
+            "Returns the id of the indexed geometry");
+}
+
+
+// We provide bindings to spatial indexes of spheres since they'r space efficient
 inline void create_Sphere_bindings(py::module& m) {
     using Class = IndexedSphere;
     py::class_<Class>(m, "IndexedSphere")
@@ -402,11 +421,6 @@ template <
 inline py::class_<Class> generic_IndexTree_bindings(py::module& m,
                                                     const char* class_name) {
     py::class_<Class> c = py::class_<Class, HolderT>(m, class_name);
-    add_IndexTree_place_bindings<T, SomaT, Class>(c);
-    add_IndexTree_insert_bindings<T, SomaT, Class>(c);
-    add_IndexTree_add_spheres_bindings<T, SomaT, Class>(c);
-    add_IndexTree_add_points_bindings<T, SomaT, Class>(c);
-
     add_IndexTree_query_bindings(c);
 
     add_IndexTree_bounds_bindings(c);
@@ -414,6 +428,14 @@ inline py::class_<Class> generic_IndexTree_bindings(py::module& m,
     add_len_for_size_bindings<Class>(c);
 
     return c;
+}
+
+template <typename T, typename SomaT = T, typename Class = si::IndexTree<T>>
+inline void add_IndexTree_insert_themed_bindings(py::class_<Class>& c) {
+    add_IndexTree_place_bindings<T, SomaT, Class>(c);
+    add_IndexTree_insert_bindings<T, SomaT, Class>(c);
+    add_IndexTree_add_spheres_bindings<T, SomaT, Class>(c);
+    add_IndexTree_add_points_bindings<T, SomaT, Class>(c);
 }
 
 
@@ -598,45 +620,42 @@ template <typename Class = si::IndexTree<si::IndexedSphere>>
 inline void create_SphereIndex_bindings(py::module& m, const char* class_name) {
     using value_type = typename Class::value_type;
     auto c = create_IndexTree_bindings<value_type, value_type, Class>(m, class_name);
+    add_IndexTree_insert_themed_bindings<value_type, value_type, Class>(c);
 
-    c
-    .def(py::init([](const array_t& centroids,
-                     const array_t& radii,
-                     const array_ids& ids) {
 
-            if(centroids.shape(0) == 0) {
-               throw std::invalid_argument("Please provide at least one centroid.");
-            }
+    c.def(py::init([](const array_t& centroids, const array_t& radii, const array_ids& ids) {
+              if (centroids.shape(0) == 0) {
+                  throw std::invalid_argument("Please provide at least one centroid.");
+              }
 
-            if(centroids.shape(0) != radii.shape(0)) {
-               throw std::invalid_argument("Please provide exactly one radius per centroid.");
-            }
+              if (centroids.shape(0) != radii.shape(0)) {
+                  throw std::invalid_argument("Please provide exactly one radius per centroid.");
+              }
 
-            if(centroids.shape(0) != ids.shape(0)) {
-               throw std::invalid_argument("Please provide exactly one id per centroid.");
-            }
+              if (centroids.shape(0) != ids.shape(0)) {
+                  throw std::invalid_argument("Please provide exactly one id per centroid.");
+              }
 
-            auto [points_ptr, radii_ptr] = extract_points_radii_ptrs(centroids, radii);
-            auto ids_unchecked = ids.template unchecked<1>();
+              auto [points_ptr, radii_ptr] = extract_points_radii_ptrs(centroids, radii);
+              auto ids_unchecked = ids.template unchecked<1>();
 
-            auto soa = si::util::make_soa_reader<si::IndexedSphere>(
-               ids_unchecked, points_ptr, radii_ptr
-            );
-            return std::make_unique<Class>(soa.begin(), soa.end());
-        }),
-        py::arg("centroids"),
-        py::arg("radii"),
-        py::arg("ids"),
-        R"(
+              auto soa = si::util::make_soa_reader<si::IndexedSphere>(ids_unchecked,
+                                                                      points_ptr,
+                                                                      radii_ptr);
+              return std::make_unique<Class>(soa.begin(), soa.end());
+          }),
+          py::arg("centroids"),
+          py::arg("radii"),
+          py::arg("ids"),
+          R"(
         Creates a SpatialIndex prefilled with spheres with explicit ids
         or points with explicit ids and radii = None.
 
         Args:
-            centroids(np.array): A Nx3 array[float32] of the segments' end points
-            radii(np.array): An array[float32] with the segments' radii, or None
+            centroids(np.array): A Nx3 array[float32] of the spheres centroids
+            radii(np.array): An array[float32] with the radii
             ids(np.array): An array[int64] with the ids of the spheres
-        )"
-    );
+        )");
 
     add_SphereIndex_find_intersecting_box_np(c);
     add_SphereIndex_fields_bindings(c);
@@ -644,6 +663,68 @@ inline void create_SphereIndex_bindings(py::module& m, const char* class_name) {
     add_IndexTree_add_spheres_bindings<value_type, value_type, Class>(c);
 }
 
+
+///
+/// 1.0b - Point index
+///
+
+template <typename Class>
+inline void add_PointIndex_fields_bindings(py::class_<Class>& c) {
+    c.def_property_readonly_static(
+        "builtin_fields",
+        [](py::object& /* self */) {
+            return std::vector<std::string>{"id", "position"};
+        },
+        "List of fields that are builtin.");
+}
+
+
+template <typename Class>
+inline void add_PointIndex_find_intersecting_box_np(py::class_<Class>& c) {
+    auto wrap_as_dict = [](const auto& results) {
+        return py::dict("id"_a = pyutil::to_pyarray(results.id),
+                        "position"_a =
+                            py::array_t<CoordType>({results.position.size(), 3ul},
+                                                   (CoordType*) results.position.data()));
+    };
+
+    add_IndexTree_find_intersecting_box_np(c, wrap_as_dict);
+}
+
+
+template <typename Class = si::IndexTree<si::IndexedPoint>>
+inline void create_PointIndex_bindings(py::module& m, const char* class_name) {
+    using value_type = typename Class::value_type;
+    auto c = create_IndexTree_bindings<value_type, value_type, Class>(m, class_name);
+
+    c.def(py::init([](const array_t& positions, const array_ids& ids) {
+              if (positions.shape(0) == 0) {
+                  throw std::invalid_argument("Please provide at least one centroid.");
+              }
+
+              if (positions.shape(0) != ids.shape(0)) {
+                  throw std::invalid_argument("Please provide exactly one id per centroid.");
+              }
+
+              auto points_ptr = extract_points_ptr(positions);
+              auto ids_unchecked = ids.template unchecked<1>();
+
+              auto soa = si::util::make_soa_reader<si::IndexedPoint>(ids_unchecked, points_ptr);
+              return std::make_unique<Class>(soa.begin(), soa.end());
+          }),
+          py::arg("positions"),
+          py::arg("ids"),
+          R"(
+        Creates a spatial index prefilled with points with explicit ids.
+
+        Args:
+            positions(np.array): A Nx3 array[float32] of the points
+            ids(np.array): An array[int64] with the ids of the points
+        )");
+
+    add_PointIndex_find_intersecting_box_np(c);
+    add_PointIndex_fields_bindings(c);
+}
 
 
 ///
@@ -772,7 +853,7 @@ template <typename Class = si::IndexTree<si::Synapse>>
 inline void create_SynapseIndex_bindings(py::module& m, const char* class_name) {
     using value_type = typename Class::value_type;
     auto c = create_IndexTree_bindings<value_type, value_type, Class>(m, class_name);
-
+    add_IndexTree_insert_themed_bindings<value_type, value_type, Class>(c);
     add_IndexTree_deprecated_ctors<value_type>(c);
 
     add_SynapseIndex_count_intersecting_agg_gid_bindings(c);
@@ -1148,6 +1229,7 @@ inline void add_MorphIndex_common_insert_bindings(py::class_<Class>& c) {
 template <typename Class = si::IndexTree<MorphoEntry>>
 inline void create_MorphIndex_bindings(py::module& m, const char* class_name) {
     auto c = create_IndexTree_bindings<MorphoEntry, si::Soma, Class>(m, class_name);
+    add_IndexTree_insert_themed_bindings<MorphoEntry, si::Soma, Class>(c);
 
     add_IndexTree_deprecated_ctors<si::Soma>(c);
 
@@ -1238,6 +1320,7 @@ inline void create_SphereIndexBulkBuilder_bindings(py::module& m, const char* cl
 
     add_IndexTree_insert_bindings<si::IndexedSphere, si::IndexedSphere, Class>(c);
 }
+
 
 #if SI_MPI == 1
 

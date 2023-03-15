@@ -1,5 +1,5 @@
 from . import _spatial_index as core
-from .index import SphereIndex
+from .index import SphereIndex, PointIndex
 from .io import write_sonata_meta_data_section
 
 import numpy as np
@@ -20,15 +20,17 @@ class _WriteSONATAMetadataMultiMixin:
         MPI.COMM_WORLD.Barrier()
 
 
-class SphereIndexBuilder:
+class SimpleShapeIndexBuilder:
     @classmethod
-    def create(cls, centroids, radii, ids=None, output_dir=None):
+    def create(cls, *args, ids=None, output_dir=None):
+        assert len(args) > 0
+
         builder = cls()
 
         if ids is None:
-            ids = np.arange(centroids.shape[0])
+            ids = np.arange(args[0].shape[0])
 
-        builder._core_index = core.SphereIndex(centroids, radii, ids)
+        builder._core_index = cls.core_index_type(*args, ids)
 
         builder._write_index_if_needed(output_dir)
         return builder._index_if_loaded
@@ -47,7 +49,12 @@ class SphereIndexBuilder:
 
     @property
     def index(self):
-        return SphereIndex(self._core_index)
+        return self.index_type(self._core_index)
+
+
+class SphereIndexBuilder(SimpleShapeIndexBuilder):
+    core_index_type = core.SphereIndex
+    index_type = SphereIndex
 
     @classmethod
     def from_numpy(cls, centroids, radii, ids=None, output_dir=None):
@@ -58,3 +65,12 @@ class SphereIndexBuilder:
 
         warnings.warn("Deprecated in favour of 'from_numpy'.", DeprecationWarning)
         raise RuntimeError("Invalid method, see deprecation warning.")
+
+
+class PointIndexBuilder(SimpleShapeIndexBuilder):
+    core_index_type = core.PointIndex
+    index_type = PointIndex
+
+    @classmethod
+    def from_numpy(cls, positions, ids=None, output_dir=None):
+        return cls.create(positions, ids=ids, output_dir=output_dir)

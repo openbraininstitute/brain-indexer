@@ -658,7 +658,14 @@ class SphereIndex(SphereIndexBase, _WriteInMemoryIndex):
         self._core_index._add_spheres(centroids, radii, ids)
 
 
-# TODO integrate other types of indexes like `PointIndex`.
+class PointIndexBase(Index, _FromMetaDataWithOutSonata):
+    @property
+    def element_type(self):
+        return "point"
+
+
+class PointIndex(PointIndexBase, _WriteInMemoryIndex):
+    pass
 
 
 def _wrap_as_multi_population(func):

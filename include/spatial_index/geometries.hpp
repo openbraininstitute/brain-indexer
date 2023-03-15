@@ -38,6 +38,7 @@ struct Sphere {
 
     inline bool intersects(Cylinder const& c) const;
     inline bool intersects(Box3D const& b) const;
+    inline bool intersects(Point3D const& p) const;
 
     inline bool contains(Point3D const& p) const;
 
@@ -186,6 +187,7 @@ struct Cylinder {
         return s.intersects(*this);  // delegate to sphere
     }
 
+    inline bool intersects(Point3D const& p) const;
     inline bool intersects(Box3D const& b) const;
     inline bool contains(Point3D const& p) const;
 
@@ -253,43 +255,43 @@ class BoundingBoxGeometry{};
 /// Flag to tell queries to consider the 'best_effort' shape of the indexed elements.
 class BestEffortGeometry{};
 
-template<class Shape>
-constexpr bool is_sphere_or_cylinder() {
-    return std::is_convertible<Shape*, Sphere*>::value ||
-           std::is_convertible<Shape*, Cylinder*>::value;
-}
 
-template<class Shape>
-constexpr bool is_box_sphere_or_cylinder() {
-    return std::is_convertible<Shape*, Box3D *>::value ||
-           is_sphere_or_cylinder<Shape>();
+template <class Shape, class... Args>
+constexpr bool shape_matches_any_of() {
+    return std::disjunction<std::is_convertible<Shape*, Args*>...>::value;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Bounding Box Geometry
 ///////////////////////////////////////////////////////////////////////////////
-inline bool geometry_intersects(const Box3D& query_shape,
-                                const Box3D& element_shape,
-                                BoundingBoxGeometry) {
+template <class Geometry>
+inline bool geometry_intersects(const Box3D& query_shape, const Box3D& element_shape, Geometry) {
     return bg::intersects(element_shape, query_shape);
 }
 
-template<class QueryShape,
-    std::enable_if_t<is_sphere_or_cylinder<QueryShape>(), int> SFINAE = 0
->
+
+template <class Geometry>
+inline bool geometry_intersects(const Box3D& query_shape, const Point3D& element_shape, Geometry) {
+    return bg::within(element_shape, query_shape);
+}
+
+
+template <class QueryShape,
+          class ElementShape,
+          std::enable_if_t<shape_matches_any_of<QueryShape, Sphere, Cylinder>() &&
+                               shape_matches_any_of<ElementShape, Point3D, Box3D>(),
+                           int> SFINAE = 0>
 inline bool geometry_intersects(const QueryShape& query_shape,
-                                const Box3D& element_shape,
+                                const ElementShape& element_shape,
                                 BoundingBoxGeometry) {
     return query_shape.intersects(element_shape);
 }
 
-template<class QueryShape,
-         class ElementShape,
-         std::enable_if_t<
-             is_box_sphere_or_cylinder<QueryShape>() &&
-             is_sphere_or_cylinder<ElementShape>(),
-             int> SFINAE = 0
->
+template <class QueryShape,
+          class ElementShape,
+          std::enable_if_t<shape_matches_any_of<QueryShape, Box3D, Sphere, Cylinder>() &&
+                               shape_matches_any_of<ElementShape, Sphere, Cylinder>(),
+                           int> SFINAE = 0>
 inline bool geometry_intersects(const QueryShape& query_shape,
                                 const ElementShape& element_shape,
                                 BoundingBoxGeometry geo) {
@@ -299,28 +301,20 @@ inline bool geometry_intersects(const QueryShape& query_shape,
 ///////////////////////////////////////////////////////////////////////////////
 // Best-effort Geometry
 ///////////////////////////////////////////////////////////////////////////////
-inline bool geometry_intersects(const Box3D& query_shape,
-                                const Box3D& element_shape,
-                                BestEffortGeometry) {
-    return bg::intersects(query_shape, element_shape);
-}
-
-template<class ElementShape,
-    std::enable_if_t<is_sphere_or_cylinder<ElementShape>(), int> SFINAE = 0
->
+template <class ElementShape,
+          std::enable_if_t<shape_matches_any_of<ElementShape, Sphere, Cylinder>(), int> SFINAE = 0>
 inline bool geometry_intersects(const Box3D& query_shape,
                                 const ElementShape& element_shape,
                                 BestEffortGeometry) {
     return element_shape.intersects(query_shape);
 }
 
-template<class QueryShape,
+template <
+    class QueryShape,
     class ElementShape,
-    std::enable_if_t<
-        is_sphere_or_cylinder<QueryShape>() &&
-        is_box_sphere_or_cylinder<ElementShape>(),
-        int> SFINAE = 0
->
+    std::enable_if_t<shape_matches_any_of<QueryShape, Sphere, Cylinder>() &&
+                         shape_matches_any_of<ElementShape, Point3D, Box3D, Sphere, Cylinder>(),
+                     int> SFINAE = 0>
 inline bool geometry_intersects(const QueryShape& query_shape,
                                 const ElementShape& element_shape,
                                 BestEffortGeometry) {

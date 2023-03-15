@@ -92,10 +92,12 @@ PYBIND11_MODULE(_spatial_index, m) {
 
     PYBIND11_NUMPY_DTYPE(si::gid_segm_t, gid, section_id, segment_id);  // struct as numpy dtype
 
+    si_python::create_IndexedPoint_bindings(m);
     si_python::create_Sphere_bindings(m);
     si_python::create_Synapse_bindings(m);
     si_python::create_MorphoEntry_bindings(m);
 
+    si_python::create_PointIndex_bindings(m, "PointIndex");
     si_python::create_SphereIndex_bindings(m, "SphereIndex");
     si_python::create_SynapseIndex_bindings(m, "SynapseIndex");
     si_python::create_MorphIndex_bindings(m, "MorphIndex");

@@ -31,6 +31,9 @@ def expected_builtin_fields(index):
     elif index.element_type == "sphere":
         return ["id", "centroid", "radius"]
 
+    elif index.element_type == "point":
+        return ["id", "position"]
+
     else:
         raise RuntimeError(f"Broken test logic. [{type(index)}]")
 
@@ -376,15 +379,35 @@ def circuit_10_config(index_variant, element_type):
     return index, window, sphere
 
 
-def spheres_config(index_variant):
+def spheres_config():
     centroids = np.random.uniform(size=(10, 3)).astype(np.float32)
     radii = np.random.uniform(size=10).astype(np.float32)
     index = spatial_index.SphereIndexBuilder.from_numpy(centroids, radii)
 
     window = [0.0, 0.0, 0.0], [1.0, 1.0, 1.0]
-    sphere = [0.5, 0.5, 0.5], 0.5
+    sphere = [0.5, 0.5, 0.5], 1.0
 
     return index, window, sphere
+
+
+def points_config():
+    points = np.random.uniform(size=(10, 3)).astype(np.float32)
+    index = spatial_index.PointIndexBuilder.from_numpy(points)
+
+    window = [0.0, 0.0, 0.0], [1.0, 1.0, 1.0]
+    sphere = [0.5, 0.5, 0.5], 1.0
+
+    return index, window, sphere
+
+
+def load_single_test_index(index_variant, element_type):
+    if element_type == "sphere":
+        return spheres_config()
+    elif element_type == "point":
+        return points_config()
+
+    else:
+        return circuit_10_config(index_variant, element_type)
 
 
 def usecase_3_config(index_variant, element_type):
@@ -418,14 +441,15 @@ def test_index_api(element_type, index_variant, accuracy, population_mode):
 @pytest.mark.parametrize(
     "element_type,index_variant,accuracy,population_mode",
     itertools.product(
-        ["sphere"],
+        ["sphere", "point"],
         ["in_memory"],
         [None, "bounding_box", "best_effort"],
         [None, "single", "multi"]
     )
 )
-def test_sphere_index_query_api(element_type, index_variant, accuracy, population_mode):
-    index, window, sphere = spheres_config(index_variant)
+def test_index_api__no_multi_index(element_type, index_variant, accuracy,
+                                   population_mode):
+    index, window, sphere = load_single_test_index(index_variant, element_type)
     check_all_index_api(index, window, sphere, accuracy, population_mode)
 
 

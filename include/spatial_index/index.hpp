@@ -220,7 +220,9 @@ struct IndexedShape : public IndexT, public ShapeT {
 
     /** \brief Generic constructor
      * Note: it relies on second argument to be a point so that it doesnt clash with
-     * Specific constructors
+     * specific constructors.
+     *
+     * Note: this is needed for `IndexedSphere`.
      */
     template <typename IdTup, typename... T>
     inline IndexedShape(IdTup ids, const Point3D& p1, T&&... shape_data)
@@ -250,14 +252,19 @@ class Synapse : public IndexedShape<Sphere, SynapseId> {
     using super = IndexedShape<Sphere, SynapseId>;
 
   public:
-    // bring contructors
-    using super::IndexedShape;
+    Synapse() = default;
 
-    inline Synapse(identifier_t id, identifier_t post_gid, identifier_t pre_gid, Point3D const& point) noexcept
-        : super(std::tie(id, post_gid, pre_gid), point, .0f)
-    {}
+    // Deprecate and rework: don't allow creating synapses without pre- or post-GID.
+    inline Synapse(identifier_t id, Point3D const& point, CoordType radius) noexcept
+        : super(super::id_type{id}, super::geometry_type{point, radius}) { }
 
-private:
+    inline Synapse(identifier_t id,
+                   identifier_t post_gid,
+                   identifier_t pre_gid,
+                   Point3D const& point) noexcept
+        : super(super::id_type{id, post_gid, pre_gid}, super::geometry_type{point, .0f}) { }
+
+  private:
     friend class boost::serialization::access;
 
     template <class Archive>
@@ -269,15 +276,19 @@ private:
 };
 
 
-
 class Soma: public IndexedShape<Sphere, MorphPartId> {
     using super = IndexedShape<Sphere, MorphPartId>;
 
   public:
-    // bring contructors
-    using super::IndexedShape;
+    Soma() = default;
 
-private:
+    inline Soma(const super::id_type& id, const super::geometry_type& shape) noexcept
+        : super(id, shape) { }
+
+    inline Soma(identifier_t id, Point3D const& centroid, CoordType radius) noexcept
+        : super(super::id_type{id}, super::geometry_type{centroid, radius}) { }
+
+  private:
     friend class boost::serialization::access;
 
     template <class Archive>
@@ -316,8 +327,9 @@ class Segment: public IndexedShape<Cylinder, MorphPartId> {
                    Point3D const& center2,
                    CoordType const& r,
                    SectionType const& section_type = SectionType::undefined) noexcept
-        : super(std::tie(gid, section_id, segment_id), center1, center2, r), section_type_(section_type)
-    {}
+        : super(super::id_type{gid, section_id, segment_id},
+                super::geometry_type{center1, center2, r})
+        , section_type_(section_type) { }
 
     inline SectionType section_type() const noexcept {
         return section_type_;
@@ -408,6 +420,33 @@ private:
     }
 };
 
+
+class IndexedPoint: public IndexedShape<Point3D> {
+    using super = IndexedShape<Point3D>;
+
+  public:
+    IndexedPoint() = default;
+
+    // Deprecate and rework: historically everything needs to be able to pretend
+    // to be a sphere.
+    inline IndexedPoint(identifier_t id, Point3D const& point, CoordType) noexcept
+        : super(super::id_type{id}, super::geometry_type{point}) { }
+
+    inline IndexedPoint(identifier_t id, Point3D const& point) noexcept
+        : super(super::id_type{id}, super::geometry_type{point}) { }
+
+  private:
+    friend class boost::serialization::access;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        if (version == 0) {
+            throw std::runtime_error("Invalid version 0 for Synapse.");
+        }
+
+        ar& boost::serialization::base_object<super>(*this);
+    }
+};
 
 //////////////////////////////////////////////
 // High Level API

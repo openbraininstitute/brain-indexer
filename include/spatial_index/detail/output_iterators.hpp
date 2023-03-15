@@ -129,6 +129,12 @@ struct query_result<IndexedSphere> {
     std::vector<CoordType> radius;
 };
 
+template <>
+struct query_result<IndexedPoint> {
+    std::vector<identifier_t> id;
+    std::vector<Point3D> position;
+};
+
 }  // namespace detail
 
 
@@ -263,6 +269,25 @@ struct iter_entry_getter<IndexedSphere> : public detail::iter_append_only<iter_e
         output_.id.push_back(element.id);
         output_.centroid.push_back(element.centroid);
         output_.radius.push_back(element.radius);
+        return *this;
+    }
+
+  private:
+    result_t& output_;
+};
+
+template <>
+struct iter_entry_getter<IndexedPoint>
+    : public detail::iter_append_only<iter_entry_getter<IndexedPoint>> {
+    using element_t = IndexedPoint;
+    using result_t = detail::query_result<element_t>;
+
+    iter_entry_getter(result_t& output)
+        : output_(output) { }
+
+    inline iter_entry_getter& operator=(const element_t& element) {
+        output_.id.push_back(element.id);
+        output_.position.push_back(element);
         return *this;
     }
 

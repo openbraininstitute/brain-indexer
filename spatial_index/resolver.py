@@ -3,11 +3,11 @@ from spatial_index import core
 from .morphology_builder import MorphIndexBuilder
 from .synapse_builder import SynapseIndexBuilder
 
-from .builder import SphereIndexBuilder
+from .builder import SphereIndexBuilder, PointIndexBuilder
 
 from .index import MorphIndex, MorphMultiIndex
 from .index import SynapseIndex, SynapseMultiIndex
-from .index import SphereIndex
+from .index import SphereIndex, PointIndex
 from .index import MultiPopulationIndex
 
 from .io import MetaData
@@ -40,10 +40,28 @@ class _SingleKindIndexResolverBase:
         return cls._resolve(index_variant, classes=cls._builder_classes)
 
 
+class PointIndexResolver(_SingleKindIndexResolverBase):
+    """Provides string to class mapping.
+
+    This class is for all classes related to indexes of points.
+    """
+    _core_classes = {
+        core._MetaDataConstants.in_memory_key: core.PointIndex,
+    }
+
+    _index_classes = {
+        core._MetaDataConstants.in_memory_key: PointIndex,
+    }
+
+    _builder_classes = {
+        core._MetaDataConstants.in_memory_key: PointIndexBuilder,
+    }
+
+
 class SphereIndexResolver(_SingleKindIndexResolverBase):
     """Provides string to class mapping.
 
-    This class is for all classes related to indexes of synapses.
+    This class is for all classes related to indexes of spheres.
     """
     _core_classes = {
         core._MetaDataConstants.in_memory_key: core.SphereIndex,
@@ -126,6 +144,7 @@ class IndexResolver:
     its used to cover both synapse and morphology indexes.
     """
     _resolver_classes = {
+        "point": PointIndexResolver,
         "sphere": SphereIndexResolver,
         "morphology": MorphIndexResolver,
         "synapse": SynapseIndexResolver
