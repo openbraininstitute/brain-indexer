@@ -1,3 +1,12 @@
+# This file covers the API of indexes. The tests in this files
+# are supposed to exercise the entirty of the SpatialIndex API.
+#
+# The purpose of these tests is to find breakage that would normally
+# be caught by a compiler.
+#
+# Tests that check the correctness of indexes go elsewhere, e.g.
+# `test_index.py`.
+
 import itertools
 import os
 import pytest
