@@ -26,8 +26,7 @@ def spatial_index_nodes(args=None):
         -o, --out=<folder>         The index output folder. [default: out]
         --multi-index              Whether to create a multi-index.
         --population <population>  The population to index.
-        --progress-bar=<tty, never, always>
-                                   Progress bar visualization option. [default: tty]
+        --progress-bar             Enable the progress bar.
     """
     options = docopt_get_args(spatial_index_nodes, args)
     setup_logging_for_cli(options["verbose"])
@@ -52,8 +51,7 @@ def spatial_index_synapses(args=None):
         -o, --out=<folder>         The index output folder. [default: out]
         --multi-index              Whether to create a multi-index.
         --population <population>  The population to index.
-        --progress-bar=<tty, never, always>
-                                   Progress bar visualization option. [default: tty]
+        --progress-bar             Enable the progress bar.
     """
     options = docopt_get_args(spatial_index_synapses, args)
     setup_logging_for_cli(options["verbose"])
@@ -92,8 +90,7 @@ def spatial_index_circuit(args=None):
         -v, --verbose            Increase verbosity level.
         -o, --out=<out_file>     The index output folder. [default: out]
         --multi-index            Whether to create a multi-index.
-        --progress-bar=<tty, never, always>
-                                Progress bar visualization option. [default: tty]
+        --progress-bar           Enable the progress bar.
     """
     options = docopt_get_args(spatial_index_circuit, args)
     setup_logging_for_cli(options["verbose"])
@@ -286,24 +283,8 @@ def _parse_options_for_builder_args(options, output_dir):
 
     index_kwargs = {}
 
-    # Only show progress bar if output is a terminal
-    # or if explicitly requested.
-    if options["progress_bar"] == "tty":
-        index_kwargs["progress"] = os.isatty(sys.stdout.fileno())
-    elif options["progress_bar"] == "always":
-        index_kwargs["progress"] = True
-    elif options["progress_bar"] == "never":
-        index_kwargs["progress"] = False
-    else:
-        # docopt doesn't allow internal validation of options.
-        # Raise ValueError and log to logger.error if
-        # `options["progress_bar"]` is not one of the allowed values.
-        logger.error(
-            f"Invalid value for --progress-bar: {options['progress_bar']}"
-            f" (allowed: tty, always, never)"
-        )
-        raise ValueError("Invalid value for --progress-bar.")
-
+    # Only show progress bar if requested and the output is a terminal.
+    index_kwargs["progress"] = os.isatty(sys.stdout.fileno()) and options["progress_bar"]
     index_kwargs["output_dir"] = output_dir
 
     return index_variant, index_kwargs

@@ -16,8 +16,8 @@ output_dir="$(mktemp -d ~/tmp-spatial_index-XXXXX)"
 direct_spi="${output_dir}/direct"
 circuit_spi="${output_dir}/circuit"
 
-spatial-index-synapses "${edges_file}" -o "${direct_spi}"
-spatial-index-circuit synapses "${circuit_config_file}" -o "${circuit_spi}"
+spatial-index-synapses --progress-bar "${edges_file}" -o "${direct_spi}"
+spatial-index-circuit synapses --progress-bar "${circuit_config_file}" -o "${circuit_spi}"
 
 assert_indexes_are_equal "${direct_spi}" "${circuit_spi}"
 

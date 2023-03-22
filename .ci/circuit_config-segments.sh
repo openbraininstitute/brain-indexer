@@ -17,8 +17,8 @@ output_dir="$(mktemp -d ~/tmp-spatial_index-XXXXX)"
 direct_spi="${output_dir}/direct"
 circuit_spi="${output_dir}/circuit"
 
-spatial-index-nodes "${nodes_file}" "${morphology_dir}" -o "${direct_spi}"
-spatial-index-circuit segments "${circuit_config_file}" -o "${circuit_spi}"
+spatial-index-nodes --progress-bar "${nodes_file}" "${morphology_dir}" -o "${direct_spi}"
+spatial-index-circuit segments --progress-bar "${circuit_config_file}" -o "${circuit_spi}"
 
 assert_indexes_are_equal "${direct_spi}" "${circuit_spi}"
 
