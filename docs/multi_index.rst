@@ -43,7 +43,11 @@ On BB5 you'll can run MPI parallel jobs as follows:
 
 .. code-block:: bash
 
-   sbatch -n N --mem-per-cpu MEM --account=ACCOUNT --partition=prod SCRIPT
+    # Using SBATCH scripts:
+    sbatch -n N --mem-per-cpu MEM --account=ACCOUNT --partition=prod SCRIPT
+
+    # Interactive equivalent:
+    srun -n N --mem-per-cpu MEM --account=ACCOUNT --partition=prod SPATIAL_INDEX_COMMAND
 
 the value of ``N`` and ``MEM`` depend on the size of the circuit. The important
 resource is the total amount of RAM. There are two ways of increasing the total
@@ -66,6 +70,8 @@ circuits, along with a rough measurment of the runtime. Note that the
 performance, especially for large circuits is quite sensitive to how busy GPFS
 is.
 
+For morphology indexes the following values are known to work on BB5:
+
 ============== ======== ====== ====== ==========
 Circuit Name    #cells      N    MEM    runtime
 ============== ======== ====== ====== ==========
@@ -77,20 +83,14 @@ circuit-1M          1M    513     4G       6min
 SSCx              4.2M   2049     4G       8min
 ============== ======== ====== ====== ==========
 
-Note: the runtime of SI scales beyond the numbers shown in the table above.
-Therefore, applications which need substantially faster time to solution can
-consider using more MPI ranks. However, as the circuits get larger, i.e.,
-roughly 1M cells rapidly large fractions of the cluster are needed to obtain
-the higher time to solution; and the time waiting for resources will exceed the
-time SI runs.
+For synapse indexes the following values are known to work on BB5:
 
 ============== ======== ====== ====== ==========
-Circuit Name    #cells      N    MEM    runtime
+Circuit Name    #edges      N    MEM    runtime
 ============== ======== ====== ====== ==========
-circuit-1k          1k      5     1G      30s
-circuit-10k        10k     33     1G      50s
-circuit-100k      100k    513     1G      50s
+RAT SSCx          9.1G    513     4G       5min
 ============== ======== ====== ====== ==========
+
 
 Querying a Multi Index
 ----------------------
