@@ -1,8 +1,17 @@
 Change Log
 ==========
 
-Version 1.x.y
+Version 2.0.0
 -------------
+
+We've removed one method. It seems unlikely that users would be affected by
+this. Migration instructions are provided in the corresponding bullet point.
+
+**Features**
+  * CLI supports `--verbose` which prints log messages of any severity.
+  * Infrastructure for creating indexes with randomly placed elements.
+  * Support adding spheres to in-memory `SphereIndex`.
+  * Support indexes of points `PointIndex`.
 
 **Improvements**
   * Create in-memory indexes "in bulk". The internal structure of an R-tree is
@@ -14,6 +23,13 @@ Version 1.x.y
     this optimization. However, old indexes can still be read. Multi-indexes
     aren't affected at all by this change.
 
+  * Use `std::filesystem` instead of `boost::filesystem`.
+
+  * General restructuring of code and CI.
+
+  * Added test to ensure consistency of morphology IDs between SpatialIndex and
+    `libsonata`.
+
 **Deprecation**
   * We've deprecated the certain constructors of `core.MorphIndex` and
     `core.SynapseIndex`. Users of SpatialIndex aren't expected to be using
@@ -22,9 +38,14 @@ Version 1.x.y
 **Removal**
   * We've removed a method `add_sphere` from the `SphereBuilder`. Instead
     please create all spheres upfront and then create the index. If upfront
-    creation of all spheres doesn't work, please contact us so we can work
-    on the proper interface for iterative insertion of elements into indexes.
+    creation of all spheres doesn't work, the in-memory `SphereIndex` supports
+    adding spheres interatively.
 
+**Fixes**
+  * Improved error message for missing files.
+  * Warn if in-memory indexes are large.
+  * Improved documentation.
+  * Progress bar is only shown when in a TTY.
 
 Version 1.2.1
 -------------
