@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+Version 2.1.0
+-------------
+
+**Features**
+  * Support `morphio.Collection` to be able to also read from morphology
+    containers.
+
 Version 2.0.0
 -------------
 
