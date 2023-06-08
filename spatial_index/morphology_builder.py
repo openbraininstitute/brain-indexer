@@ -4,7 +4,6 @@
 import warnings; warnings.simplefilter("ignore")  # NOQA
 
 from collections import namedtuple
-from os import path as ospath
 
 import morphio
 import numpy as np
@@ -25,17 +24,12 @@ MorphInfo = namedtuple("MorphInfo", "soma, points, radius, branch_offsets, secti
 
 
 class MorphologyLib:
-    def __init__(self, pth):
-        self._pth = pth
+    def __init__(self, collection_path):
+        self._collection = morphio.Collection(collection_path)
         self._morphologies = {}
 
     def _load(self, morph_name):
-        if ospath.isfile(self._pth):
-            morph = morphio.Morphology(self._pth)
-        elif ospath.isdir(self._pth):
-            morph = morphio.Morphology(self._guess_morph_filename(morph_name))
-        else:
-            raise Exception("Morphology path not found: " + self._pth)
+        morph = self._collection.load(morph_name)
 
         soma = morph.soma
         morph_infos = MorphInfo(
@@ -47,18 +41,6 @@ class MorphologyLib:
         )
         self._morphologies[morph_name] = morph_infos
         return morph_infos
-
-    def _guess_morph_filename(self, morph_name):
-        extensions = [".asc", ".swc", ".h5"]
-
-        for ext in extensions:
-            filename = ospath.join(self._pth, morph_name) + ext
-            if ospath.isfile(filename):
-                return filename
-
-        raise RuntimeError(
-            f"Unable to guess morphology filename. {self._pth} {morph_name}"
-        )
 
     def get(self, morph_name):
         return self._morphologies.get(morph_name) or self._load(morph_name)
