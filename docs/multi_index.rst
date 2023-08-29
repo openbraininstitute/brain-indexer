@@ -44,14 +44,14 @@ On BB5 you'll can run MPI parallel jobs as follows:
 .. code-block:: bash
 
     # Using SBATCH scripts:
-    sbatch -n N --mem-per-cpu MEM --account=ACCOUNT --partition=prod SCRIPT
+    sbatch --ntasks N --mem-per-cpu MEM --account=ACCOUNT --partition=prod SCRIPT
 
     # Interactive equivalent:
-    srun -n N --mem-per-cpu MEM --account=ACCOUNT --partition=prod SPATIAL_INDEX_COMMAND
+    srun --ntasks N --mem-per-cpu MEM --account=ACCOUNT --partition=prod SPATIAL_INDEX_COMMAND
 
-the value of ``N`` and ``MEM`` depend on the size of the circuit. The important
-resource is the total amount of RAM. There are two ways of increasing the total
-amount of RAM:
+the value of ``N`` (number of MPI ranks) and ``MEM`` (memory per MPI rank)
+depend on the size of the circuit. The important resource is the total amount
+of RAM. There are two ways of increasing the total amount of RAM:
 
 * either by changing ``N``;
 * or by changing ``MEM``.
