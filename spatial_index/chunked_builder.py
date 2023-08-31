@@ -61,12 +61,14 @@ class MultiIndexBuilderMixin:
             return core.is_valid_comm_size(comm_size - 1)
 
         if not is_valid_comm_size(comm_size):
+            if comm_size == 1:
+                spatial_index.logger.warning(
+                    "Please check that you're using `mpirun` or `srun`."
+                )
+
             spatial_index.logger.error(
-                "SpatialIndex requires that the number of MPI "
-                "ranks is equal to `N = 2**n * 3**m * 5**l + 1`, "
-                "e.g., 2 + 1, 4*3 + 1, 72 + 1 ... Please ensure you're using "
-                "`mpirun -np N` or `srun -n N` with a valid number "
-                "of MPI ranks N."
+                f"SpatialIndex is running on N={comm_size} MPI ranks; but requires that "
+                "the number of MPI ranks is equal to `N = 2**n * 3**m * 5**l + 1`."
             )
             raise ValueError(f"Invalid communicator size, comm_size={comm_size}.")
 
