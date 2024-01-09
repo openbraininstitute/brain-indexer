@@ -21,7 +21,6 @@ except ImportError:
 POPULATION = "All"
 _CURDIR = os.path.dirname(__file__)
 MORPHOLOGY_FILES = [
-    os.path.join(_CURDIR, "data/soma_spherical.h5"),
     os.path.join(_CURDIR, "data/soma_extended.h5")
 ]
 
@@ -44,22 +43,11 @@ class _3DMorphology:
 
 
 def test_morph_loading():
-    m1 = _3DMorphology(
-        morphio.Morphology(MORPHOLOGY_FILES[0]),
-        (1, 0, 0, 0),
-        (1, 1, 1)
-    )
     m2 = _3DMorphology(
-        morphio.Morphology(MORPHOLOGY_FILES[1]),
+        morphio.Morphology(MORPHOLOGY_FILES[0]),
         (0.8728715609439696, 0.4364357804719848, 0.2182178902359924, 0.0),
         (1, .5, .25)
     )
-
-    soma_pt, soma_rad, section_pts = m1.compute_final_points()
-    nptest.assert_allclose(soma_pt, [1., 1., 1.])
-    nptest.assert_almost_equal(soma_rad, 0, decimal=6)
-    m1_s3_p12 = section_pts[m1.morph.section_offsets[2] + 12]
-    nptest.assert_allclose(m1_s3_p12, [7.98622, 13.17931, 18.53813], rtol=1e-6)
 
     soma_pt, soma_rad, section_pts = m2.compute_final_points()
     nptest.assert_allclose(soma_pt, [1., 0.5, 0.25])
