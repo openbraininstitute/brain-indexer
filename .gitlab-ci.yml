@@ -61,9 +61,9 @@ test-cpp-unit:
   script:
     - git submodule update --init --recursive
     - module load unstable cmake gcc boost hpe-mpi
-    - cmake -S . -B build
+    - cmake -B build .
     - cmake --build build -j2
-    - cd build && ctest --output-on-failure
+    - ctest --test-dir build --output-on-failure
 
 test-examples:
   stage: test
@@ -88,6 +88,36 @@ test-examples:
     - pip install -e .
     - bash .ci/run_mpi_pytest.sh
     - bash .ci/_run_examples.sh
+
+test-macos-py:
+  stage: test
+  needs: ["flake8"]
+  tags: [macos-arm64]
+  before_script:
+    - !reference [.bbp_gitlab_access, script]
+
+  script:
+    - git submodule update --init --recursive
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - pip install pytest pytest-mpi
+    - pip install -e .
+    - pytest
+    - rm -rf venv
+
+test-macos-cpp:
+  stage: test
+  needs: ["flake8"]
+  tags: [macos-arm64]
+  before_script:
+    - !reference [.bbp_gitlab_access, script]
+
+  script:
+    - git submodule update --init --recursive
+    - cmake -B build .
+    - cmake --build build -j2 --verbose
+    - ctest --test-dir build --output-on-failure
+    - rm -rf build
 
 test-integration:
   stage: test

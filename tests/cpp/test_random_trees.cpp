@@ -370,7 +370,9 @@ BOOST_AUTO_TEST_CASE(MultiIndexQueries) {
 
     auto mpi_rank = mpi::rank(*comm);
 
-    auto gen = std::default_random_engine{util::integer_cast<long unsigned int>(mpi_rank)};
+    auto gen = std::default_random_engine{
+      util::integer_cast<std::default_random_engine::result_type>(mpi_rank)
+    };
     auto elements = random_elements<EveryEntry>(n_elements, domain, mpi_rank * n_elements, gen);
     auto all_elements = gather_elements(elements, *comm);
 

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <functional>
+#include <array>
 #include <boost/format.hpp>
 
 namespace spatial_index {

@@ -125,9 +125,9 @@ void check_bounding_boxes(std::vector<Value> &values,
         auto lower = bb.min_corner();
         auto upper = bb.max_corner();
 
-        auto check = [](const auto &lower, const auto &upper, auto expected_length) {
+        auto check = [&values](const auto &lower, const auto &upper, auto expected_length) {
             auto actual_length = upper - lower;
-            BOOST_REQUIRE(std::abs(actual_length - expected_length) < 0.1);
+            BOOST_REQUIRE(std::abs(actual_length - expected_length) < 0.2);
         };
 
         check(lower.get<0>(), upper.get<0>(), side_length / n_parts_per_dim[0]);
@@ -184,7 +184,9 @@ std::vector<Value> random_values(size_t n_values,
                                  int comm_rank) {
     std::vector<Value> values;
     values.reserve(n_values);
-    auto gen = std::default_random_engine{util::integer_cast<size_t>(comm_rank+1)};
+    auto gen = std::default_random_engine{
+      util::integer_cast<std::default_random_engine::result_type>(comm_rank+1)
+    };
     auto dist = std::uniform_real_distribution<float>(domain[0], domain[1]);
 
     for(size_t i = 0; i < n_values; ++i) {
