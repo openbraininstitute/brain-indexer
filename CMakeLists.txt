@@ -56,7 +56,7 @@ else()
 endif()
 
 set(ZisaSFC_BUILD_TESTS Off CACHE BOOL "Should ZisaSFC tests be built?")
-add_subdirectory(3rdparty/zisa.sfc)
+add_subdirectory(3rdparty/zisa.sfc EXCLUDE_FROM_ALL)
 
 #
 # Target lib

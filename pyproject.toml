@@ -1,0 +1,83 @@
+[project]
+name = "Spatial-Index"
+description = "A Spatial Index implementation for spheres, morphologies and synapses"
+authors = [{ name="Blue Brain Project", email = "bbp-ou-hpc@epfl.ch" } ]
+license = {text = "Blue Brain Project Licence"}
+# maintainer is the field chosen for docs `contributors`
+maintainers = [{name="Fernando Pereira"}, {name="Antonio Bellotta"}, {name="Luc Dominic Grosheintz-Laval"}]
+dynamic = ["version"]
+
+classifiers = [
+   "Development Status :: 3 - Alpha",
+   "Programming Language :: C++14",
+   "Programming Language :: Python",
+   "Programming Language :: Python :: 3.6",
+   "Framework :: Boost",
+   "Framework :: PyBind11",
+   "Topic :: Scientific/Engineering",
+   "License :: Other/Proprietary License",
+]
+requires-python = ">=3.8"
+dependencies = ["numpy>=1.13.1",
+        "numpy-quaternion",
+        # The reason we can"t use 0.1.15 is that it wont
+        # behave nicely for empty selections, see
+        #   https://github.com/BlueBrain/libsonata/pull/232
+        "libsonata!=0.1.15",
+        "morphio",
+        # original docopt is deprecated
+        "docopt-ng",
+        "tqdm",
+]
+
+optional-dependencies.mpi = ["mpi4py"]
+
+[project.scripts]
+spatial-index-nodes = "spatial_index.commands:spatial_index_nodes"
+spatial-index-synapses = "spatial_index.commands:spatial_index_synapses"
+spatial-index-circuit = "spatial_index.commands:spatial_index_circuit"
+spatial-index-compare="spatial_index.commands:spatial_index_compare"
+
+[project.urls]
+Repository = "ssh://git@bbpgitlab.epfl.ch:hpc/SpatialIndex.git"
+Tracker = "https://bbpteam.epfl.ch/project/issues/projects/SPIND"
+Homepage = "https://bbpgitlab.epfl.ch/hpc/SpatialIndex"
+
+[build-system]
+requires = [
+    # this is because Spack does not yet have version 0.8, which
+    # replaced `scikit-build.cmake.minimum-version` with
+    # `scikit-build.cmake.version`
+    "scikit-build-core<0.8",
+    "setuptools-scm>=8.0",
+]
+build-backend = "scikit_build_core.build"
+
+[tool.scikit-build]
+metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
+wheel.packages = ["src/spatial_index"]
+logging.level = "DEBUG"
+
+[tool.scikit-build.cmake]
+verbose = true
+minimum-version = "3.5.0"
+
+[tool.scikit-build.cmake.define]
+SI_UNIT_TESTS="OFF"
+
+[tool.setuptools_scm]
+
+[tool.cibuildwheel]
+skip = ["pp*", "*-win32", "*-manylinux_i686", "*-musllinux_i686", "*-musllinux_x86_64", "*-musllinux_aarch64"]
+test-requires = ["pytest", "pytest-mpi"]
+test-command = ["python -m pytest {project}/tests"]
+
+[tool.cibuildwheel.config-settings]
+# for redistributable wheels, MPI support should not be enabled (until MPI settles on a standard ABI: https://github.com/mpi-forum/mpi-issues/issues/751)
+"cmake.define.SI_MPI"="OFF"
+
+[tool.cibuildwheel.macos]
+environment = { MACOSX_DEPLOYMENT_TARGET = "10.15" }
+
+[tool.pytest.ini_options]
+testpaths = "tests/"

@@ -381,7 +381,7 @@ def circuit_10_config(index_variant, element_type):
         sphere = ([115.0, 1950.0, 25.0], 100.0)
 
     else:
-        raise ValueError(f"Invalid {element_type = }.")
+        raise ValueError(f"Invalid element_type = {element_type}.")
 
     index = open_index(index_path)
 

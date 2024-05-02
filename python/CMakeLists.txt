@@ -11,3 +11,5 @@ if(NOT EXTENSION_OUTPUT_DIRECTORY)
 endif()
 set_target_properties(_spatial_index PROPERTIES
                       LIBRARY_OUTPUT_DIRECTORY ${EXTENSION_OUTPUT_DIRECTORY})
+
+install(TARGETS _spatial_index LIBRARY DESTINATION ${SKBUILD_PLATLIB_DIR}/spatial_index)

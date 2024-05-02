@@ -1,15 +1,15 @@
 """ spatial_index classes """
 import logging
-import pkg_resources
+from importlib.metadata import version
+
+from . import _spatial_index as core  # noqa
 
 __copyright__ = "2019 Blue Brain Project, EPFL"
 
 try:
-    __version__ = pkg_resources.get_distribution(__name__).version
+    __version__ = version("spatial-index")
 except Exception:
     __version__ = 'devel'
-
-from . import _spatial_index as core  # noqa
 
 
 # Set up logging
