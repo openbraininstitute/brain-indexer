@@ -1,5 +1,5 @@
 # This file covers the API of indexes. The tests in this files
-# are supposed to exercise the entirty of the SpatialIndex API.
+# are supposed to exercise the entirty of the BrainIndexer API.
 #
 # The purpose of these tests is to find breakage that would normally
 # be caught by a compiler.
@@ -13,12 +13,12 @@ import pytest
 import numpy as np
 import tempfile
 
-import spatial_index
+import brain_indexer
 
-from spatial_index import open_index
-from spatial_index.util import is_non_string_iterable
+from brain_indexer import open_index
+from brain_indexer.util import is_non_string_iterable
 
-from spatial_index import MultiPopulationIndex
+from brain_indexer import MultiPopulationIndex
 
 
 LOCAL_DATA_DIR = "tests/data"
@@ -391,7 +391,7 @@ def circuit_10_config(index_variant, element_type):
 def spheres_config():
     centroids = np.random.uniform(size=(10, 3)).astype(np.float32)
     radii = np.random.uniform(size=10).astype(np.float32)
-    index = spatial_index.SphereIndexBuilder.from_numpy(centroids, radii)
+    index = brain_indexer.SphereIndexBuilder.from_numpy(centroids, radii)
 
     window = [0.0, 0.0, 0.0], [1.0, 1.0, 1.0]
     sphere = [0.5, 0.5, 0.5], 1.0
@@ -401,7 +401,7 @@ def spheres_config():
 
 def points_config():
     points = np.random.uniform(size=(10, 3)).astype(np.float32)
-    index = spatial_index.PointIndexBuilder.from_numpy(points)
+    index = brain_indexer.PointIndexBuilder.from_numpy(points)
 
     window = [0.0, 0.0, 0.0], [1.0, 1.0, 1.0]
     sphere = [0.5, 0.5, 0.5], 1.0
@@ -497,7 +497,7 @@ def test_index_write_api(element_type, index_variant):
         index_path = os.path.join(d, "foo")
 
         index.write(index_path)
-        loaded_index = spatial_index.open_index(index_path)
+        loaded_index = brain_indexer.open_index(index_path)
 
         assert isinstance(loaded_index, type(index))
 
@@ -524,7 +524,7 @@ def test_index_write_sonata_api(element_type, index_variant):
             index_path, sonata_filename=fake_sonata_filename, population=fake_population
         )
 
-        meta_data = spatial_index.io.MetaData(index_path)
+        meta_data = brain_indexer.io.MetaData(index_path)
 
         extended_conf = meta_data.extended
 
@@ -539,7 +539,7 @@ def test_index_insert():
     id_cases = [2, [2, 3]]
 
     for j, r, x in zip(id_cases, radius_cases, centroid_cases):
-        index = spatial_index.SphereIndexBuilder.create_empty()
+        index = brain_indexer.SphereIndexBuilder.create_empty()
         index.insert(id=j, radius=r, centroid=x)
 
         found = index.sphere_query(np.zeros((3,)), 10.0)

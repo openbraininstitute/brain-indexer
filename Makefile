@@ -1,6 +1,6 @@
 # To avoid accidentally deleting files, default is to print smtg :)
 noop:
-	@echo "SpatialIndex: Use 'make install' or 'make clean'"
+	@echo "BrainIndexer: Use 'make install' or 'make clean'"
 
 install:
 	pip install -e .

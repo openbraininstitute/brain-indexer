@@ -6,13 +6,13 @@ elements that intersect with a given query shape. The word *index* is used
 in the database sense; not as an integer identifier.
 
 Here quick means, that we do not need to look through all element to figure out
-which elements intersect with the query shape. In SpatialIndex we use an
+which elements intersect with the query shape. In brain-indexer we use an
 implementation of an R-tree, see `boost::rtree`_. The idea behind an R-tree is that the
 leaves of the tree contain the bounding boxes of the elements; and internal
 nodes store the bounding box of their descendants. This structure is depicted
 in :numref:`index`.
 
-.. _boost::rtree: https://www.boost.org/doc/libs/1_80_0/libs/geometry/doc/html/geometry/spatial_indexes.html
+.. _boost::rtree: https://www.boost.org/doc/libs/1_80_0/libs/geometry/doc/html/geometry/brain_indexeres.html
 
 .. _index:
 .. figure:: img/index.png
@@ -65,7 +65,7 @@ In order to open an index one may simply call
 
 .. code-block:: python
 
-    index = spatial_index.open_index(path_to_index)
+    index = brain_indexer.open_index(path_to_index)
 
 where ``path_to_index`` is the path to the folder containing the index. This can be used for all
 variants of indexes.
@@ -107,7 +107,7 @@ The constructor accepts all the components (gids, points, and radii) as individu
 
 .. code-block:: python
 
-    from spatial_index import SphereIndexBuilder
+    from brain_indexer import SphereIndexBuilder
     import numpy as np
     ids = np.arange(3, dtype=np.intp)
     centroids = np.array([[0, 0, 0], [1, 0, 0], [2, 0, 0]], dtype=np.float32)
@@ -116,7 +116,8 @@ The constructor accepts all the components (gids, points, and radii) as individu
 
 Indexing Morphologies
 ~~~~~~~~~~~~~~~~~~~~~
-In SI the term *morphologies* refers to discrete neurons consisting of somas and segments.
+In brain-indexer the term *morphologies* refers to discrete neurons consisting of somas
+and segments.
 
 Morphology indexes can be build directly from SONATA input files. For example by using
 `MorphIndexBuilder` as follows:
@@ -140,7 +141,7 @@ In this case ``SynapseIndexBuilder`` is the appropriate class to use:
 
 .. code-block:: python
 
-    from spatial_index import SynapseIndexBuilder
+    from brain_indexer import SynapseIndexBuilder
     from libsonata import Selection
     index = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, "All")
 
@@ -166,27 +167,27 @@ Command Line Interface
 
 There are three executables
 
-* ``spatial-index-circuit`` is convenient for indexing both segments and synpses
+* ``brain-indexer-circuit`` is convenient for indexing both segments and synpses
   when the circuit is defined in a SONATA circuit configuration file. Therefore,
   if you already have a circuit config files, this is the right command to use.
 
-    .. command-output:: spatial-index-circuit --help
+    .. command-output:: brain-indexer-circuit --help
 
 
-* ``spatial-index-nodes`` is convenient for indexing segments if one wants to
+* ``brain-indexer-nodes`` is convenient for indexing segments if one wants to
   specify the paths of the input files directly.
 
-    .. command-output:: spatial-index-nodes --help
+    .. command-output:: brain-indexer-nodes --help
 
 
-* ``spatial-index-synapses`` like ``spatial-index-nodes`` but for synapses.
+* ``brain-indexer-synapses`` like ``brain-indexer-nodes`` but for synapses.
 
-    .. command-output:: spatial-index-synapses --help
+    .. command-output:: brain-indexer-synapses --help
 
 
 Large Indexes
 ~~~~~~~~~~~~~
-SpatialIndex implements Multi-Indexing for indexing large circuits.
+brain-indexer implements Multi-Indexing for indexing large circuits.
 
 Multi indexes subdivide the volume to be indexed into small subvolumes and uses
 MPI to create subindexes for each of these subvolumes. More information can be

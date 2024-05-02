@@ -2,8 +2,8 @@ import pytest
 
 import numpy as np
 
-from spatial_index import core
-from spatial_index import SphereIndexBuilder
+from brain_indexer import core
+from brain_indexer import SphereIndexBuilder
 
 
 @pytest.fixture

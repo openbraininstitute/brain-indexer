@@ -13,7 +13,7 @@ def list_headers(directory):
 
 
 def include_line(name):
-    return f"#include <spatial_index/{name}.hpp>"
+    return f"#include <brain_indexer/{name}.hpp>"
 
 
 def cmake_line(name):
@@ -21,7 +21,7 @@ def cmake_line(name):
 
 
 if __name__ == "__main__":
-    headers = list_headers("include/spatial_index")
+    headers = list_headers("include/brain_indexer")
     output_dir = "tests/cpp/check_headers/"
 
     for header in headers:

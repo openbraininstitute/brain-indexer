@@ -2,16 +2,16 @@ Developer Guide
 ===============
 
 This short guide contains information about the development process
-of SpatialIndex.
+of brain-indexer.
 
 Design
 ------
 
-SpatialIndex allows to create indexes and perform volumetric queries with
+brain-indexer allows to create indexes and perform volumetric queries with
 efficiency in mind. It was developed on top of the Boost Geometry.Index
 libraries, renown for their excellent performance.
 
-SpatialIndex specializes to several core geometries, namely spheres and
+brain-indexer specializes to several core geometries, namely spheres and
 cylinders, and derivates: indexed spheres/segments and "unions" of them
 (variant). These objects are directly stored in the tree structure and have
 respective bounding boxes created on the fly. As such some CPU cycles were
@@ -24,7 +24,7 @@ Public API: C++
 The core library is implemented as a C++17 Header-Only library and offers a wide
 range of possibilities.
 
-By including ``spatial_index/index.hpp`` and ``spatial_index/util.hpp`` the user has
+By including ``brain_indexer/index.hpp`` and ``brain_indexer/util.hpp`` the user has
 access to the whole API which is highly flexible due to templates. For instance
 the IndexTree class can be templated to any of the defined structures or new
 user defined geometries, providing the user with a boost index rtree object
@@ -38,26 +38,26 @@ Public API: Python
 ------------------
 
 The Python API gives access to the most common instances of 'IndexTree's, while
-adding higher level API and IO helpers.  The user may instantiate a Spatial
-Index of Morphology Pieces (both Somas and Segments) or, for maximum efficiency,
+adding higher level API and IO helpers.  The user may instantiate a spatial
+index of Morphology Pieces (both Somas and Segments) or, for maximum efficiency,
 Spheres alone.
 
-As so, if it is enough for the user to create a Spatial Index of spherical
+As so, if it is enough for the user to create a spatial index of spherical
 geometries, like soma placement, he should rather use
-:class:`spatial_index.SphereIndex`. For the cases where Spatial Indexing of
+:class:`brain_indexer.SphereIndex`. For the cases where spatial indexing of
 cylindrical or mixed geometries is required, e.g. full neuron geometries, the
-user shall use  :class:`spatial_index.MorphIndex`. Furthermore, the latter
+user shall use  :class:`brain_indexer.MorphIndex`. Furthermore, the latter
 features higher level methods to help in the load of entire Neuron morphologies.
 
 I/O Policy
 ----------
 The rules are
-  * SpatialIndex will create intermediate directories if required.
-  * SpatialIndex will throw a meaningful error message when trying to open a
-    missing file. Please use ``spatial_index::util::open_ifstream`` to open an
+  * brain-indexer will create intermediate directories if required.
+  * brain-indexer will throw a meaningful error message when trying to open a
+    missing file. Please use ``brain_indexer::util::open_ifstream`` to open an
     ``std::ifstream`` with the appropriate checks.
 
-There's also ``spatial_index::util::open_ofstream`` to open output file streams.
+There's also ``brain_indexer::util::open_ofstream`` to open output file streams.
 
 Logging Policy
 --------------
@@ -78,12 +78,12 @@ The Python side should use
 
 .. code-block:: python
 
-    import spatial_index
+    import brain_indexer
 
-    spatial_index.logger.info("Hi, let's get started.")
-    spatial_index.logger.warning("This is how to log warnings.")
+    brain_indexer.logger.info("Hi, let's get started.")
+    brain_indexer.logger.warning("This is how to log warnings.")
 
-    spatial_index.logger.error(
+    brain_indexer.logger.error(
         "For demonstration purposes we will raise and exception now."
     )
     raise ValueError("Mysterious error.")
@@ -91,14 +91,14 @@ The Python side should use
 Please don't write to the root logger via ``logging.info`` or similar.
 
 The C++ core allows registering a callback to which all logging is forwarded.
-When used as a Python library SpatialIndex will register (a wrapper around) the
-Python logger ``spatial_index.logger`` as the callback. Therefore, all log
+When used as a Python library brain-indexer will register (a wrapper around) the
+Python logger ``brain_indexer.logger`` as the callback. Therefore, all log
 messages from the C++ side are handles by the Python logging library. A different
 logger can be registered by
 
 .. code-block:: python
 
-    spatial_index.register_logger(some_other_logger)
+    brain_indexer.register_logger(some_other_logger)
 
 
 This enables, with reasonable effort, to send logs to a specific file (one per
@@ -108,9 +108,9 @@ On the C++ side please use:
 
 .. code-block:: c++
 
-    #include <spatial_index/logging.hpp>
+    #include <brain_indexer/logging.hpp>
 
-    namespace spatial_index {
+    namespace brain_indexer {
        log_info("Hello!");
        log_info(boost::format("Hello %s!") % "Alice");
 
@@ -125,7 +125,7 @@ While nobody admits using ``printf`` debugging, here's a trick:
 
 .. code-block:: c++
 
-    #include <spatial_index/logging.hpp>
+    #include <brain_indexer/logging.hpp>
 
     SI_LOG_DEBUG("bla....");
     SI_LOG_DEBUG_IF(
@@ -142,7 +142,7 @@ therefore get a clean stream of messages from each MPI rank.
 Environment Variables
 ---------------------
 
-The following environmental variables are used by SpatialIndex:
+The following environmental variables are used by brain-indexer:
 
 * ``SI_LOG_SEVERITY``: can be used to control the minimum severity that log message need to have.
   Valid values are ``INFO``, ``WARN``, ``ERROR``, ``DEBUG``.
@@ -155,7 +155,7 @@ The following environmental variables are used by SpatialIndex:
 Boost Serialization & Struct Versioning
 ---------------------------------------
 
-SpatialIndex uses ``boost::serialization`` to write indexes to disk. In order
+brain-indexer uses ``boost::serialization`` to write indexes to disk. In order
 to be able to at least detect old indexes; and ideally be able to also open
 them, we need to version each serialized struct.
 
@@ -173,7 +173,7 @@ There are a few things to respect:
   serialized through the old protocol, i.e. without a ``serialize`` method in
   the base.
 
-SpatialIndex defines a constant ``SPATIAL_INDEX_STRUCT_VERSION`` which defines the
+brain-indexer defines a constant ``SPATIAL_INDEX_STRUCT_VERSION`` which defines the
 version of the structs that are serialized. This is the global version that every
 struct will use. Therefore, when creating a new class that needs to be
 serialized, e.g., because it's part of something that's being serialized, then
@@ -191,7 +191,7 @@ permitted.
 This also affect the ``inline`` policy, i.e. everything needs to either be a
 template or be inline ot avoid violations of the ODR.
 
-In order to check that all headers ``<spatial_index/*.hpp>`` adhere to these rules
+In order to check that all headers ``<brain_indexer/*.hpp>`` adhere to these rules
 we've added one compilation unit per header in ``tests/cpp/check_headers/*.cpp``.
 These simply include the header and then the compiler can check if the rules are
 adhered. In order to generate the required dummy code, we have a script:

@@ -1,4 +1,4 @@
-import spatial_index
+import brain_indexer
 from mpi4py import MPI
 
 
@@ -9,6 +9,6 @@ def call_some_mpi_from_python():
 
 if __name__ == "__main__":
     call_some_mpi_from_python()
-    spatial_index.core.call_some_mpi_from_cxx()
+    brain_indexer.core.call_some_mpi_from_cxx()
 
     print("Seems like MPI and mpi4py are compatible.")

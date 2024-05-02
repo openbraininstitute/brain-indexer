@@ -1,11 +1,11 @@
-#define BOOST_TEST_MODULE SpatialIndex_UnitTests
+#define BOOST_TEST_MODULE BrainIndexer_UnitTests
 #include <boost/test/unit_test.hpp>
 
 #include <iostream>
 #include <vector>
-#include <spatial_index/query_ordering.hpp>
+#include <brain_indexer/query_ordering.hpp>
 
-using namespace spatial_index;
+using namespace brain_indexer;
 
 BOOST_AUTO_TEST_CASE(SFCOrderingTest) {
     std::vector<Point3Dx> points{

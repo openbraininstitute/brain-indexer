@@ -8,7 +8,7 @@
 import os
 import sys
 import libsonata
-from spatial_index import MorphIndexBuilder
+from brain_indexer import MorphIndexBuilder
 
 
 # Loading some small circuits and morphology files on BB5

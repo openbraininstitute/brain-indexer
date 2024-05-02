@@ -1,6 +1,6 @@
 import argparse
 
-from spatial_index.synthetic_index import UniformFactory
+from brain_indexer.synthetic_index import UniformFactory
 
 
 if __name__ == "__main__":

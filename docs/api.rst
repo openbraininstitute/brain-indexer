@@ -1,7 +1,7 @@
 ========================
-Spatial Index Python API
+brain-indexer Python API
 ========================
-.. automodule:: spatial_index
+.. automodule:: brain_indexer
 
 
 High-Level Index API

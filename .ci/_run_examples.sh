@@ -6,11 +6,11 @@ set -euxo pipefail
 cd ${SI_DIR:-"."}
 pwd
 
-rm -r usecase1 || true
-rm -r circuit2k || true
-rm -rf tmp-* || true
-rm -r example_segment_index || true
-rm -rf multi_index_2k || true
+rm -rf usecase1
+rm -rf circuit2k
+rm -rf tmp-*
+rm -rf example_segment_index
+rm -rf multi_index_2k
 
 python3 examples/segment_index_sonata.py
 python3 examples/segment_index.py

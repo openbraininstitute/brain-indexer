@@ -1,7 +1,7 @@
 # This file covers correctness of indexes contained in `index.py`.
 
 import numpy as np
-import spatial_index
+import brain_indexer
 
 
 def check_point_index_boxes(index, positions):
@@ -78,7 +78,7 @@ def test_point_index():
     centroids = np.random.uniform(size=(n_elements, 3))
     ids = np.arange(centroids.shape[0])
 
-    index = spatial_index.PointIndexBuilder.from_numpy(centroids, ids)
+    index = brain_indexer.PointIndexBuilder.from_numpy(centroids, ids)
 
     assert len(index) == n_elements
     assert np.size(index.box_query(3 * [-1.0], 3 * [2.0], fields="id")) == n_elements

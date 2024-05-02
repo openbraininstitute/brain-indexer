@@ -1,1 +1,1 @@
-#include <spatial_index/distributed_analysis.hpp>
+#include <brain_indexer/distributed_analysis.hpp>

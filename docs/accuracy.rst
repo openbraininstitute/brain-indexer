@@ -3,7 +3,7 @@ Overlap Detection Details
 
 Collision detection between cylinders and other simple geometry objects is
 surprisingly difficult; and closed formulas seem to not always exist. At the
-same time, using expensive solvers is not ideal in SpatialIndex.
+same time, using expensive solvers is not ideal in brain-indexer.
 
 This page explains, in detail, the different overlap detection methods and the
 approximations they make.

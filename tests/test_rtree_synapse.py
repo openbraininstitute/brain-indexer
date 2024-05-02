@@ -1,7 +1,7 @@
 import numpy as np
 
-from spatial_index import core
-from spatial_index.index import SynapseIndex
+from brain_indexer import core
+from brain_indexer.index import SynapseIndex
 
 points = np.array(
     [

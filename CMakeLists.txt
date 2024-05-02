@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(SpatialIndex DESCRIPTION "BBP Spatial indexing tools"
+project(BrainIndexer DESCRIPTION "BBP Spatial indexing tools"
                      LANGUAGES CXX)
 
 option(SI_MPI "Build with MPI support" ON)
@@ -63,9 +63,9 @@ add_subdirectory(3rdparty/zisa.sfc EXCLUDE_FROM_ALL)
 #
 set(SI_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 
-add_library(SpatialIndex INTERFACE)
-target_include_directories(SpatialIndex INTERFACE ${SI_INCLUDE_DIR})
-target_link_libraries(SpatialIndex
+add_library(BrainIndexer INTERFACE)
+target_include_directories(BrainIndexer INTERFACE ${SI_INCLUDE_DIR})
+target_link_libraries(BrainIndexer
   INTERFACE
     Boost::boost
     Boost::serialization  
@@ -73,11 +73,11 @@ target_link_libraries(SpatialIndex
     nlohmann_json::nlohmann_json
     Zisa::sfc
 )
-target_compile_definitions(SpatialIndex INTERFACE "-DBOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL")
+target_compile_definitions(BrainIndexer INTERFACE "-DBOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL")
 
 if(SI_MPI)
-  target_link_libraries(SpatialIndex INTERFACE MPI::MPI_CXX)
-  target_compile_definitions(SpatialIndex INTERFACE "-DSI_MPI=1")
+  target_link_libraries(BrainIndexer INTERFACE MPI::MPI_CXX)
+  target_compile_definitions(BrainIndexer INTERFACE "-DSI_MPI=1")
 endif()
 
 

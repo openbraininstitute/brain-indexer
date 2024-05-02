@@ -1,15 +1,15 @@
-# SpatialIndex Benchmarking
+# BrainIndexer Benchmarking
 
-This folder contains scripts to benchmark the performance of SpatialIndex.
-The content of this folder is provided as is and it's meant to provide a starting point for benchmarking SpatialIndex. It is not meant to be a complete benchmarking suite and although we will put our best effort in maintaining it, don't expect it to be updated regularly.
+This folder contains scripts to benchmark the performance of BrainIndexer.
+The content of this folder is provided as is and it's meant to provide a starting point for benchmarking BrainIndexer. It is not meant to be a complete benchmarking suite and although we will put our best effort in maintaining it, don't expect it to be updated regularly.
 
 ## Files included
 
 Each of the bash script included in this folder will run a benchmark for a specific use case. The benchmarks are:
 * `FLAT_seg_benchmark.sh`: benchmark for indexing and querying segments using FLAT Index.
 * `FLAT_syn_benchmark.sh`: benchmark for indexing and querying synapses using FLAT Index.
-* `SI_seg_benchmark.sh`: benchmark for indexing and querying segments using SpatialIndex.
-* `SI_syn_benchmark.sh`: benchmark for indexing and querying synapses using SpatialIndex.
+* `SI_seg_benchmark.sh`: benchmark for indexing and querying segments using BrainIndexer.
+* `SI_syn_benchmark.sh`: benchmark for indexing and querying synapses using BrainIndexer.
 
 The folder also includes two other script that are used by the benchmarking scripts:
 * `create_uniform_index.py`: script to create a uniform index of segments or synapses. Can be used as follows:

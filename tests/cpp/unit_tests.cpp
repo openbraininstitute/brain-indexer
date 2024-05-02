@@ -1,11 +1,11 @@
-#define BOOST_TEST_MODULE SpatialIndex_UnitTests
+#define BOOST_TEST_MODULE BrainIndexer_UnitTests
 #include <boost/test/unit_test.hpp>
 
 #include <filesystem>
 #include <random>
 #include <vector>
-#include <spatial_index/index.hpp>
-#include <spatial_index/util.hpp>
+#include <brain_indexer/index.hpp>
+#include <brain_indexer/util.hpp>
 
 // We need unit tests for each kind of tree
 
@@ -15,7 +15,7 @@
 // 4. variant<Spheres, Cylinders>
 // 5. variant<Somas / Segments>
 
-using namespace spatial_index;
+using namespace brain_indexer;
 
 
 const Point3D centers[]{{0., 0., 0.}, {10., 0., 0.}, {20., 0., 0.}};

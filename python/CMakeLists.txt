@@ -1,15 +1,15 @@
 
 set(PY_BINDINGS_SOURCES py_bindings.cpp)
 
-pybind11_add_module(_spatial_index  ${PY_BINDINGS_SOURCES})
+pybind11_add_module(_brain_indexer  ${PY_BINDINGS_SOURCES})
 
-target_link_libraries(_spatial_index PUBLIC SpatialIndex)
-target_compile_definitions(_spatial_index PUBLIC "-DSI_FOR_PYBIND=1")
+target_link_libraries(_brain_indexer PUBLIC BrainIndexer)
+target_compile_definitions(_brain_indexer PUBLIC "-DSI_FOR_PYBIND=1")
 
 if(NOT EXTENSION_OUTPUT_DIRECTORY)
-    set(EXTENSION_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/spatial_index)
+    set(EXTENSION_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/brain_indexer)
 endif()
-set_target_properties(_spatial_index PROPERTIES
+set_target_properties(_brain_indexer PROPERTIES
                       LIBRARY_OUTPUT_DIRECTORY ${EXTENSION_OUTPUT_DIRECTORY})
 
-install(TARGETS _spatial_index LIBRARY DESTINATION ${SKBUILD_PLATLIB_DIR}/spatial_index)
+install(TARGETS _brain_indexer LIBRARY DESTINATION ${SKBUILD_PLATLIB_DIR}/brain_indexer)

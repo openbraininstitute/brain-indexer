@@ -2,7 +2,7 @@ add_definitions("-Wextra")
 
 function (SI_UNIT_TEST_BUILD test_src)
     add_executable(${test_src} cpp/${test_src}.cpp)
-    target_link_libraries(${test_src} SpatialIndex Boost::unit_test_framework)
+    target_link_libraries(${test_src} BrainIndexer Boost::unit_test_framework)
     if(NOT Boost_USE_STATIC_LIBS)
         target_compile_definitions(${test_src} PUBLIC "-DBOOST_TEST_DYN_LINK=TRUE")
     endif()
@@ -20,7 +20,7 @@ endfunction()
 
 function(SI_CPP_EXAMPLE test_src)
     add_executable(${test_src} cpp/examples/${test_src}.cpp)
-    target_link_libraries(${test_src} SpatialIndex)
+    target_link_libraries(${test_src} BrainIndexer)
     add_test(NAME ${test_src} COMMAND ${test_src})
 endfunction()
 

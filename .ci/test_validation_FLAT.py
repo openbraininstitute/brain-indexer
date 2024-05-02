@@ -9,8 +9,8 @@ import numpy as np
 import os
 import sys
 
-import spatial_index
-from spatial_index import MorphIndexBuilder
+import brain_indexer
+from brain_indexer import MorphIndexBuilder
 
 # Loading some small circuits and morphology files on BB5
 CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/jenkins/cellular/circuit-2k"
@@ -25,7 +25,7 @@ REF_FILE = os.path.join(REF_PATH, "query_2k_v6.csv")
 
 def do_multi_index_query_serial(corner, opposite_corner):
     from mpi4py import MPI
-    from spatial_index import MorphMultiIndexBuilder
+    from brain_indexer import MorphMultiIndexBuilder
 
     output_dir = "tmp-jdiwo"
     MorphMultiIndexBuilder.from_sonata_file(
@@ -35,7 +35,7 @@ def do_multi_index_query_serial(corner, opposite_corner):
     )
 
     if MPI.COMM_WORLD.Get_rank() == 0:
-        index = spatial_index.open_index(output_dir, max_cache_size_mb=1000)
+        index = brain_indexer.open_index(output_dir, max_cache_size_mb=1000)
         return index.box_query(corner, opposite_corner, fields="ids")
 
 

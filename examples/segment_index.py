@@ -10,8 +10,8 @@ import sys
 
 import numpy as np
 
-import spatial_index
-from spatial_index import MorphIndexBuilder
+import brain_indexer
+from brain_indexer import MorphIndexBuilder
 
 
 # Loading some small circuits and morphology files on BB5
@@ -43,7 +43,7 @@ def build_query_segment_index(min_corner=[-50, 0, 0], max_corner=[0, 50, 50]):
     if not os.path.exists(INDEX_FILENAME):
         build_segment_index()
 
-    index = spatial_index.open_index(INDEX_FILENAME)
+    index = brain_indexer.open_index(INDEX_FILENAME)
     print(type(index))
     print("Done. Performing queries")
 

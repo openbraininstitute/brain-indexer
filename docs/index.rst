@@ -1,5 +1,5 @@
-BBP Spatial Index
-=================
+brain-indexer
+=============
 
 .. note::
 
@@ -7,7 +7,7 @@ BBP Spatial Index
    if you spot any missing content or inconsistencies, please contact us and
    we'll fix it.
 
-The documentation of SpatialIndex contains the following sections:
+The documentation of brain-indexer contains the following sections:
 
 .. toctree::
    :maxdepth: 1

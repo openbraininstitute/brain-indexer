@@ -8,7 +8,7 @@
 import os
 
 import numpy as np
-from spatial_index import MorphIndexBuilder
+from brain_indexer import MorphIndexBuilder
 from line_profiler import LineProfiler
 
 

@@ -1,7 +1,7 @@
-#include <spatial_index/entries.hpp>
-#include <spatial_index/index.hpp>
+#include <brain_indexer/entries.hpp>
+#include <brain_indexer/index.hpp>
 
-namespace si = spatial_index;
+namespace si = brain_indexer;
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
 

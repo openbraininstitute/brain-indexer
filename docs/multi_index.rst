@@ -3,7 +3,7 @@
 Multi Index
 ===========
 A multi-index is a hierarchy of regular indexes. The flavour of spatial index
-used by SpatialIndex is an R-tree. An R-tree is a tree and every internal node
+used by brain-indexer is an R-tree. An R-tree is a tree and every internal node
 stores the combined bounding box of all its descendants. The leaves of the tree
 are the segments, somas or synapses. Therefore, one can imagine cutting the
 tree at a certain depth and storing each subtree individually. This isn't quite
@@ -116,7 +116,7 @@ have documented for others, please let us know.
 
 Synapse Indexes for Target GIDs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-SpatialIndex allows building multi-indexes only of those synapses which have a
+brain-indexer allows building multi-indexes only of those synapses which have a
 target GID from a user specified list.
 
 In order to save memory, it can be useful to construct this list only on one
@@ -125,7 +125,7 @@ MPI rank, and let SI deal with distributing them.
 .. code-block:: python
 
     from mpi4py import MPI
-    from spatial_index import SynapseMultiIndexBuilder
+    from brain_indexer import SynapseMultiIndexBuilder
 
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()

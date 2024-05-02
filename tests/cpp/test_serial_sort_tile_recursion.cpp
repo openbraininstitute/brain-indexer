@@ -1,15 +1,15 @@
 #define BOOST_TEST_NO_MAIN
-#define BOOST_TEST_MODULE SpatialIndex_UnitTests
+#define BOOST_TEST_MODULE BrainIndexer_UnitTests
 #include <boost/test/unit_test.hpp>
 namespace bt = boost::unit_test;
 
 #include <memory>
 #include <random>
 
-#include <spatial_index/distributed_sorting.hpp>
-#include <spatial_index/multi_index.hpp>
-#include <spatial_index/sort_tile_recursion.hpp>
-#include <spatial_index/util.hpp>
+#include <brain_indexer/distributed_sorting.hpp>
+#include <brain_indexer/multi_index.hpp>
+#include <brain_indexer/sort_tile_recursion.hpp>
+#include <brain_indexer/util.hpp>
 
 #include <boost/geometry/geometries/adapted/std_array.hpp>
 #include <boost/geometry/geometries/point_xyz.hpp>
@@ -18,7 +18,7 @@ namespace bt = boost::unit_test;
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
 
-using namespace spatial_index;
+using namespace brain_indexer;
 
 
 BOOST_AUTO_TEST_CASE(CheckIntLog2) {

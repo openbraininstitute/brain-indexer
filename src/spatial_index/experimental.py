@@ -1,1 +1,0 @@
-from ._spatial_index.experimental import space_filling_order # noqa

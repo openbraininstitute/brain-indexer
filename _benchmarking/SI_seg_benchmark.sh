@@ -16,7 +16,7 @@
 #SBATCH --mem=0
 
 # Load modules
-module load unstable spatial-index
+module load unstable brain-indexer
 
 # Or alternatively load your venv
 # . venv/bin/activate

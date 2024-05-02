@@ -2,7 +2,7 @@ import logging
 import tempfile
 import os
 
-import spatial_index
+import brain_indexer
 
 
 def test_register_logger():
@@ -23,13 +23,13 @@ def test_register_logger():
         file_logger.setLevel(logging.DEBUG)
         file_logger.addHandler(logging.FileHandler(filename))
 
-        spatial_index.register_logger(file_logger)
+        brain_indexer.register_logger(file_logger)
 
-        spatial_index.logger.info(info_message_py)
-        spatial_index.logger.warning(warn_message_py)
-        spatial_index.logger.error(error_message_py)
+        brain_indexer.logger.info(info_message_py)
+        brain_indexer.logger.warning(warn_message_py)
+        brain_indexer.logger.error(error_message_py)
 
-        spatial_index.core.tests.write_logs(
+        brain_indexer.core.tests.write_logs(
             debug_message_cpp,
             cond_debug_message_cpp,
             info_message_cpp,

@@ -3,7 +3,7 @@
 Inserting Elements Into an Index
 ================================
 
-The spatial indexes used in SpatialIndex are R-trees. In principle R-trees allow
+The spatial indexes used in brain-indexer are R-trees. In principle R-trees allow
 inserting elements one-by-one. However, the efficiency of queries depends on the
 internal structure of the R-tree. If knowledge about all points is known
 upfront, the structure of the R-tree can be optimized better than when each

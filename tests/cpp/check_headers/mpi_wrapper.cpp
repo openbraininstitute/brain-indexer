@@ -1,1 +1,1 @@
-#include <spatial_index/mpi_wrapper.hpp>
+#include <brain_indexer/mpi_wrapper.hpp>

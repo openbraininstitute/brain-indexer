@@ -1,13 +1,13 @@
 #!/bin/env python
-# This file is part of SpatialIndex, the new-gen spatial indexer for BBP
+# This file is part of BrainIndexer, the new-gen spatial indexer for BBP
 # Copyright Blue Brain Project 2020-2021. All rights reserved
 
 import os.path
 import pytest
 from libsonata import Selection
 
-import spatial_index
-from spatial_index import SynapseIndexBuilder
+import brain_indexer
+from brain_indexer import SynapseIndexBuilder
 
 _CURDIR = os.path.dirname(__file__)
 EDGE_FILE = os.path.join(_CURDIR, "data", "edges.h5")
@@ -21,7 +21,7 @@ def test_syn_index():
     index = SynapseIndexBuilder.from_sonata_file(EDGE_FILE, POPULATION)
     print("Index size:", len(index))
 
-    sonata_dataset = spatial_index.io.open_sonata_edges(EDGE_FILE, POPULATION)
+    sonata_dataset = brain_indexer.io.open_sonata_edges(EDGE_FILE, POPULATION)
     assert sonata_dataset.size == len(index)
 
     query_shape = index.bounds()

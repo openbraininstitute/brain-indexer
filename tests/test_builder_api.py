@@ -6,9 +6,9 @@
 import pytest
 import os
 
-from spatial_index import open_index
-from spatial_index import IndexResolver
-from spatial_index.io import MetaData, shared_temporary_directory
+from brain_indexer import open_index
+from brain_indexer import IndexResolver
+from brain_indexer.io import MetaData, shared_temporary_directory
 
 
 CIRCUIT_10_DIR = "tests/data/tiny_circuits/circuit-10"

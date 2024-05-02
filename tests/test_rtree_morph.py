@@ -8,8 +8,8 @@ import os.path
 import sys
 import pytest
 
-from spatial_index import core
-from spatial_index import MorphIndex, SectionType
+from brain_indexer import core
+from brain_indexer import MorphIndex, SectionType
 
 # Add this dir to path so we can import the other tests
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))

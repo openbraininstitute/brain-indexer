@@ -10,7 +10,7 @@ queries are simply performed by querying each index separately.
 Multi-Population Queries
 ------------------------
 
-In SI, this has been implemented through ``MultiPopulationIndex``. Which
+In brain-indexer, this has been implemented through ``MultiPopulationIndex``. Which
 supports the same API as regular indexes, with a few additions. See
 :ref:`Queries` for more details.
 

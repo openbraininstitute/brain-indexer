@@ -16,8 +16,8 @@ import os.path
 
 from mpi4py import MPI
 
-import spatial_index
-from spatial_index import SynapseMultiIndexBuilder
+import brain_indexer
+from brain_indexer import SynapseMultiIndexBuilder
 
 
 CIRCUIT_2K = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v4/circuit-2k"
@@ -37,7 +37,7 @@ def example_create_multi_index_from_sonata():
 def example_query_multi_index():
     if MPI.COMM_WORLD.Get_rank() == 0:
         # The index may use at most roughly 1e6 bytes.
-        core_index = spatial_index.open_index(OUTPUT_DIR, max_cache_size_mb=100)
+        core_index = brain_indexer.open_index(OUTPUT_DIR, max_cache_size_mb=100)
 
         # Define a query window by its two extreme corners, and run the
         # query.

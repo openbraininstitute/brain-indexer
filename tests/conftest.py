@@ -1,7 +1,7 @@
 import subprocess
 from pathlib import Path
 
-import spatial_index.io
+import brain_indexer.io
 
 TINY_DATA_DIR = Path(__file__).parent / "data/tiny_circuits"
 CIRCUIT_MORPH_DIR = TINY_DATA_DIR / "circuit-10"
@@ -19,25 +19,25 @@ NO_SONATA_MORPH_MULTI = (
 def generate_syn_index():
     subprocess.run(["bash", str(CIRCUIT_SYN_DIR / "generate.sh")])
 
-    meta_data = spatial_index.io.read_json(NO_SONATA_SYN_MEM)
+    meta_data = brain_indexer.io.read_json(NO_SONATA_SYN_MEM)
     del meta_data["extended"]
-    spatial_index.io.write_json(NO_SONATA_SYN_MEM, meta_data)
+    brain_indexer.io.write_json(NO_SONATA_SYN_MEM, meta_data)
 
-    meta_data = spatial_index.io.read_json(NO_SONATA_SYN_MULTI)
+    meta_data = brain_indexer.io.read_json(NO_SONATA_SYN_MULTI)
     del meta_data["extended"]
-    spatial_index.io.write_json(NO_SONATA_SYN_MULTI, meta_data)
+    brain_indexer.io.write_json(NO_SONATA_SYN_MULTI, meta_data)
 
 
 def generate_morph_index():
     subprocess.run(["bash", str(CIRCUIT_MORPH_DIR / "generate.sh")])
 
-    meta_data = spatial_index.io.read_json(NO_SONATA_MORPH_MEM)
+    meta_data = brain_indexer.io.read_json(NO_SONATA_MORPH_MEM)
     del meta_data["extended"]
-    spatial_index.io.write_json(NO_SONATA_MORPH_MEM, meta_data)
+    brain_indexer.io.write_json(NO_SONATA_MORPH_MEM, meta_data)
 
-    meta_data = spatial_index.io.read_json(NO_SONATA_MORPH_MULTI)
+    meta_data = brain_indexer.io.read_json(NO_SONATA_MORPH_MULTI)
     del meta_data["extended"]
-    spatial_index.io.write_json(NO_SONATA_MORPH_MULTI, meta_data)
+    brain_indexer.io.write_json(NO_SONATA_MORPH_MULTI, meta_data)
 
 
 def pytest_configure(config):

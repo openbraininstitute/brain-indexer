@@ -1,12 +1,12 @@
-#define BOOST_TEST_MODULE SpatialIndex_UnitTests
+#define BOOST_TEST_MODULE BrainIndexer_UnitTests
 #include <boost/test/unit_test.hpp>
 
 #include <random>
 #include <vector>
-#include <spatial_index/index.hpp>
-#include <spatial_index/util.hpp>
+#include <brain_indexer/index.hpp>
+#include <brain_indexer/util.hpp>
 
-using namespace spatial_index;
+using namespace brain_indexer;
 
 BOOST_AUTO_TEST_CASE(ClampTest) {
     BOOST_CHECK(clamp(0.34, 0.4, 0.5) == CoordType(0.4));

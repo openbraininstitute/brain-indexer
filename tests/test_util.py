@@ -1,8 +1,8 @@
 import pytest
 
-from spatial_index.util import is_strictly_sensible_filename
-from spatial_index.util import strip_singleton_non_string_iterable
-from spatial_index.util import factor
+from brain_indexer.util import is_strictly_sensible_filename
+from brain_indexer.util import strip_singleton_non_string_iterable
+from brain_indexer.util import factor
 
 
 def test_strictly_sensible_filename():
@@ -75,7 +75,7 @@ def test_mpi_with_excepthook(with_hook):
     from mpi4py import MPI
 
     if with_hook:
-        from spatial_index.util import register_mpi_excepthook
+        from brain_indexer.util import register_mpi_excepthook
         register_mpi_excepthook()
 
     if MPI.COMM_WORLD.Get_rank() == 0:

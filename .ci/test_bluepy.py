@@ -7,7 +7,7 @@
 
 import os
 import numpy as np
-import spatial_index
+import brain_indexer
 
 DATADIR = "/gpfs/bbp.cscs.ch/project/proj12/spatial_index/v5"
 BLUECONFIG_2K = os.path.join(DATADIR, "bluepy_validation/BlueConfig")
@@ -70,7 +70,7 @@ def test_bluepy_validation():
 
     N_QUERIES = 200
 
-    indexer = spatial_index.open_index(CIRCUIT_2K_SI)
+    indexer = brain_indexer.open_index(CIRCUIT_2K_SI)
     bluepy_cache = BluepyCache(Circuit(BLUECONFIG_2K))
 
     i = 0

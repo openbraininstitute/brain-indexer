@@ -3,12 +3,12 @@
 #include <iostream>
 #include <pybind11/eval.h>
 
-#include <spatial_index/logging.hpp>
-#include <spatial_index/query_ordering.hpp>
+#include <brain_indexer/logging.hpp>
+#include <brain_indexer/query_ordering.hpp>
 
 namespace bg = boost::geometry;
 
-namespace spatial_index {
+namespace brain_indexer {
 namespace py_bindings {
 
 
@@ -16,7 +16,7 @@ namespace py_bindings {
 /// 1 - Generic bindings
 ///
 
-// We provide bindings to spatial indexes of spheres since they'r space efficient
+// We provide bindings to spatial indexes of points since they are space efficient
 inline void create_IndexedPoint_bindings(py::module& m) {
     using Class = IndexedPoint;
     py::class_<Class>(m, "IndexedPoint")
@@ -35,7 +35,7 @@ inline void create_IndexedPoint_bindings(py::module& m) {
 }
 
 
-// We provide bindings to spatial indexes of spheres since they'r space efficient
+// We provide bindings to spatial indexes of spheres since they are space efficient
 inline void create_Sphere_bindings(py::module& m) {
     using Class = IndexedSphere;
     py::class_<Class>(m, "IndexedSphere")
@@ -451,12 +451,12 @@ inline py::class_<Class> create_IndexTree_bindings(py::module& m,
                                                    const char* class_name) {
     return generic_IndexTree_bindings<T, SomaT, Class>(m, class_name)
 
-    .def(py::init<>(), "Constructor of an empty SpatialIndex.")
+    .def(py::init<>(), "Constructor of an empty BrainIndexer.")
 
     /// Load tree dump
     .def(py::init<const std::string&>(),
         R"(
-        Loads a Spatial Index from a dump()'ed file on disk.
+        Loads a spatial index from a dump()'ed file on disk.
 
         Args:
             filename(str): The file path to read the spatial index from.
@@ -497,7 +497,7 @@ inline void add_IndexTree_deprecated_ctors(py::class_<Class>& c) {
         py::arg("centroids"),
         py::arg("radii").none(true),
         R"(
-        Creates a SpatialIndex prefilled with Spheres given their centroids and radii
+        Creates a BrainIndexer prefilled with Spheres given their centroids and radii
         or Points (radii = None) automatically numbered.
 
         Args:
@@ -528,7 +528,7 @@ inline void add_IndexTree_deprecated_ctors(py::class_<Class>& c) {
         py::arg("radii").none(true),
         py::arg("py_ids"),
         R"(
-        Creates a SpatialIndex prefilled with spheres with explicit ids
+        Creates a BrainIndexer prefilled with spheres with explicit ids
         or points with explicit ids and radii = None.
 
         Args:
@@ -648,7 +648,7 @@ inline void create_SphereIndex_bindings(py::module& m, const char* class_name) {
           py::arg("radii"),
           py::arg("ids"),
           R"(
-        Creates a SpatialIndex prefilled with spheres with explicit ids
+        Creates a BrainIndexer prefilled with spheres with explicit ids
         or points with explicit ids and radii = None.
 
         Args:
@@ -1532,4 +1532,4 @@ inline void create_experimental_space_filling_order(py::module& m) {
 }
 
 }  // namespace py_bindings
-}  // namespace spatial_index
+}  // namespace brain_indexer

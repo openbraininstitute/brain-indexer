@@ -1,6 +1,6 @@
 
 #include "rtree_index.hpp"
-#include <spatial_index/logging.hpp>
+#include <brain_indexer/logging.hpp>
 
 #if SI_MPI == 1
 #include "distributed_analysis.hpp"
@@ -8,7 +8,7 @@
 
 namespace si_python = si::py_bindings;
 
-namespace spatial_index { namespace py_bindings {
+namespace brain_indexer { namespace py_bindings {
 
 void check_signals() {
     if (PyErr_CheckSignals() != 0) {
@@ -16,10 +16,10 @@ void check_signals() {
     }
 }
 
-}}  // namespace spatial_index::py_bindings
+}}  // namespace brain_indexer::py_bindings
 
 
-PYBIND11_MODULE(_spatial_index, m) {
+PYBIND11_MODULE(_brain_indexer, m) {
 
     m.def("_minimum_log_severity",
         []() -> si::LogSeverity {

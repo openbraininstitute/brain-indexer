@@ -1,4 +1,4 @@
-from spatial_index import SynapseIndexBuilder
+from brain_indexer import SynapseIndexBuilder
 from timeit import default_timer as timer
 
 import os.path

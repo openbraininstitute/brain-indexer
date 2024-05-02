@@ -17,8 +17,8 @@ output_dir="$(mktemp -d ~/tmp-spatial_index-XXXXX)"
 direct_spi="${output_dir}/direct"
 circuit_spi="${output_dir}/circuit"
 
-spatial-index-nodes --progress-bar "${nodes_file}" "${morphology_dir}" -o "${direct_spi}"
-spatial-index-circuit segments --progress-bar "${circuit_config_file}" -o "${circuit_spi}"
+brain-indexer-nodes --progress-bar "${nodes_file}" "${morphology_dir}" -o "${direct_spi}"
+brain-indexer-circuit segments --progress-bar "${circuit_config_file}" -o "${circuit_spi}"
 
 assert_indexes_are_equal "${direct_spi}" "${circuit_spi}"
 
@@ -27,8 +27,8 @@ then
     multi_direct_spi="${output_dir}/multi_direct"
     multi_circuit_spi="${output_dir}/multi_circuit"
 
-    srun -n${n_mpi_ranks} spatial-index-nodes "${nodes_file}" "${morphology_dir}" -o "${multi_direct_spi}" --multi-index
-    srun -n${n_mpi_ranks} spatial-index-circuit segments "${circuit_config_file}" -o "${multi_circuit_spi}" --multi-index
+    srun -n${n_mpi_ranks} brain-indexer-nodes "${nodes_file}" "${morphology_dir}" -o "${multi_direct_spi}" --multi-index
+    srun -n${n_mpi_ranks} brain-indexer-circuit segments "${circuit_config_file}" -o "${multi_circuit_spi}" --multi-index
 
     assert_indexes_are_equal "${direct_spi}" "${multi_direct_spi}"
     assert_indexes_are_equal "${direct_spi}" "${multi_circuit_spi}"

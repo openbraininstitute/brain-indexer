@@ -1,9 +1,9 @@
 #include <filesystem>
 
-#include <spatial_index/index.hpp>
+#include <brain_indexer/index.hpp>
 
 
-using namespace spatial_index;
+using namespace brain_indexer;
 
 int main() {
     // create the rtree using default constructor

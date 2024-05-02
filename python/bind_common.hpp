@@ -1,19 +1,19 @@
 #pragma once
 
-#include <spatial_index/index.hpp>
-#include "spatial_index/multi_index.hpp"
-#include <spatial_index/util.hpp>
+#include <brain_indexer/index.hpp>
+#include "brain_indexer/multi_index.hpp"
+#include <brain_indexer/util.hpp>
 
 
 #include "bind11_utils.hpp"
 
 namespace bgi = boost::geometry::index;
-namespace si = spatial_index;
+namespace si = brain_indexer;
 namespace py = pybind11;
 namespace pyutil = pybind_utils;
 
 
-namespace spatial_index {
+namespace brain_indexer {
 namespace py_bindings {
 
 using namespace py::literals;
@@ -118,4 +118,4 @@ inline void mark_deprecated(const std::string& deprecation_message) {
 
 
 }  // namespace py_bindings
-}  // namespace spatial_index
+}  // namespace brain_indexer

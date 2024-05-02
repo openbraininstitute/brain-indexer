@@ -5,8 +5,8 @@
     index them and perform some queries
 """
 
-import spatial_index
-from spatial_index import SynapseIndexBuilder
+import brain_indexer
+from brain_indexer import SynapseIndexBuilder
 from libsonata import Selection
 
 import os.path
@@ -33,7 +33,7 @@ def example_syn_index():
     z_coords = index.box_query(min_corner, max_corner, fields="afferent_center_z")
 
     # or by using the `ids`:
-    sonata_dataset = spatial_index.io.open_sonata_edges(EDGE_FILE, "All")
+    sonata_dataset = brain_indexer.io.open_sonata_edges(EDGE_FILE, "All")
     z_coords = sonata_dataset.get_attribute(
         "afferent_center_z", Selection(ids_in_region)
     )

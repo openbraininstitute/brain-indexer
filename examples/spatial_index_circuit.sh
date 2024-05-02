@@ -8,7 +8,7 @@ then
     exit -1
 fi
 
-output_dir=$(mktemp -d ~/tmp-spatial_index-XXXXX)
+output_dir=$(mktemp -d ~/tmp-brain_indexer-XXXXX)
 
 
 # This circuit config expects the CWD to be the directory in which the config
@@ -18,7 +18,7 @@ pushd ${SI_DIR}/tests/data
 circuit_config_seg="circuit_config-2k.json"
 
 # One-liner to generate an index of segments.
-spatial-index-circuit segments "${circuit_config_seg}" -o "${output_dir}/circuit"
+brain-indexer-circuit segments "${circuit_config_seg}" -o "${output_dir}/circuit"
 
 # One-liner to generate an index of synapses.
-spatial-index-circuit synapses "${circuit_config_seg}" -o "${output_dir}/circuit"
+brain-indexer-circuit synapses "${circuit_config_seg}" -o "${output_dir}/circuit"

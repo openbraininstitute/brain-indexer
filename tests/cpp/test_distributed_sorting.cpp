@@ -1,17 +1,17 @@
 #define BOOST_TEST_NO_MAIN
-#define BOOST_TEST_MODULE SpatialIndex_UnitTests
+#define BOOST_TEST_MODULE BrainIndexer_UnitTests
 #include <boost/test/unit_test.hpp>
 namespace bt = boost::unit_test;
 
-#include <spatial_index/mpi_wrapper.hpp>
-#include <spatial_index/distributed_sorting.hpp>
-#include <spatial_index/sort_tile_recursion.hpp>
+#include <brain_indexer/mpi_wrapper.hpp>
+#include <brain_indexer/distributed_sorting.hpp>
+#include <brain_indexer/sort_tile_recursion.hpp>
 
 #include <array>
 #include <vector>
 #include <random>
 
-using namespace spatial_index;
+using namespace brain_indexer;
 
 struct Sortable {
     double value;
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(DistributedSortingTests) {
     auto unsorted = random_values((mpi_rank == 0 ? n_r0 : n_r1), mpi_rank);
     auto sorted = unsorted;  // force a copy.
 
-    using DMS = spatial_index::DistributedMemorySorter<Sortable, GetValue>;
+    using DMS = brain_indexer::DistributedMemorySorter<Sortable, GetValue>;
     DMS::sort_and_balance(sorted, *comm);
 
     // Round up division on rank 0, but not on rank 1.

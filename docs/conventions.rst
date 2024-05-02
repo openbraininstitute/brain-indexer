@@ -1,7 +1,7 @@
 Conventions
 ===========
 
-In order to use SpatialIndex with other neurscientific tools certain conventions
+In order to use brain-indexer with other neurscientific tools certain conventions
 need to be followed. This page details these assumptions for synapse and
 morphology indexes.
 
@@ -18,7 +18,7 @@ axon. A section consists of a sequence of points along the center line of the
 section and the radius of the section at those locations.
 
 A natural interpretation of these discrete values is as piecewise linear center
-lines with a piecewise linear radius. However, in SI we only deal with
+lines with a piecewise linear radius. However, in brain-indexer we only deal with
 cylinders. The **radius** of the cylinder is the average of the radii at each
 endpoint.
 

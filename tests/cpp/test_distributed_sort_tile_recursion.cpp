@@ -1,11 +1,11 @@
 #define BOOST_TEST_NO_MAIN
-#define BOOST_TEST_MODULE SpatialIndex_UnitTests
+#define BOOST_TEST_MODULE BrainIndexer_UnitTests
 #include <boost/test/unit_test.hpp>
 namespace bt = boost::unit_test;
 
-#include <spatial_index/distributed_sort_tile_recursion.hpp>
+#include <brain_indexer/distributed_sort_tile_recursion.hpp>
 
-using namespace spatial_index;
+using namespace brain_indexer;
 
 BOOST_AUTO_TEST_CASE(IsValidCommunicatorSize) {
     BOOST_REQUIRE(is_valid_comm_size(1));

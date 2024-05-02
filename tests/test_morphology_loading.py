@@ -1,13 +1,11 @@
 """
-    Blue Brain Project - Spatial-Index
-
-    Test indexing circuits, from SONATA and morphology libraries
+Test indexing circuits, from SONATA and morphology libraries
 """
 import os
 
 import numpy.testing as nptest
 
-from spatial_index.morphology_builder import MorphIndexBuilder
+from brain_indexer.morphology_builder import MorphIndexBuilder
 
 import morphio
 import quaternion as npq

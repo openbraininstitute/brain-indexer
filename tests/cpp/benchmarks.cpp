@@ -1,13 +1,13 @@
-#define BOOST_TEST_MODULE SpatialIndex_Benchmarks
+#define BOOST_TEST_MODULE BrainIndexer_Benchmarks
 #include <boost/test/unit_test.hpp>
 #include <boost/timer/timer.hpp>
 
 #include <numeric>
-#include <spatial_index/index.hpp>
-#include <spatial_index/util.hpp>
+#include <brain_indexer/index.hpp>
+#include <brain_indexer/util.hpp>
 
 
-using namespace spatial_index;
+using namespace brain_indexer;
 using namespace boost::timer;
 
 

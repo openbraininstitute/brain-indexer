@@ -34,12 +34,12 @@ this. Migration instructions are provided in the corresponding bullet point.
 
   * General restructuring of code and CI.
 
-  * Added test to ensure consistency of morphology IDs between SpatialIndex and
+  * Added test to ensure consistency of morphology IDs between BrainIndexer and
     `libsonata`.
 
 **Deprecation**
   * We've deprecated the certain constructors of `core.MorphIndex` and
-    `core.SynapseIndex`. Users of SpatialIndex aren't expected to be using
+    `core.SynapseIndex`. Users of BrainIndexer aren't expected to be using
     these classes directly.
 
 **Removal**
@@ -70,7 +70,7 @@ Version 1.2.0
     improve cache reuse of multi-indexes.
 
 **Improvements**
-  * Document SpatialIndex environment variables.
+  * Document BrainIndexer environment variables.
   * Document important performance tricks.
   * Fix morphology builder to return SONATA enabled indexes.
   * Relax the minimum number of synapses in a multi-index.

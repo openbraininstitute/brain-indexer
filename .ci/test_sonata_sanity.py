@@ -14,7 +14,7 @@
 
 import morphio
 import os
-import spatial_index
+import brain_indexer
 import numpy as np
 import quaternion as npq
 CIRCUIT_2K = "tests/data/tiny_circuits/circuit-10/"
@@ -42,7 +42,7 @@ def rototranslate(xyz, model):
 
 
 def get_spatial_indices(index_path, min, max):
-    index = spatial_index.open_index(index_path, max_cache_size_mb=1000)
+    index = brain_indexer.open_index(index_path, max_cache_size_mb=1000)
     pos_keys = ["x", "y", "z"]
     rot_keys = [f"orientation_{key}" for key in ["w", "x", "y", "z"]]
     matches = index.box_query(

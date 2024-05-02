@@ -1,8 +1,8 @@
 #pragma once
 
-#include <spatial_index/distributed_analysis.hpp>
+#include <brain_indexer/distributed_analysis.hpp>
 
-namespace spatial_index {
+namespace brain_indexer {
 namespace py_bindings {
 
 inline void create_call_some_mpi_from_cxx_bindings(py::module& m) {

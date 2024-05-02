@@ -1,7 +1,7 @@
 import pytest
 
 import os
-from spatial_index.io import shared_temporary_directory
+from brain_indexer.io import shared_temporary_directory
 
 
 @pytest.mark.mpi

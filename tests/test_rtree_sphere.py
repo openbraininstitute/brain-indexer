@@ -2,18 +2,18 @@ import tempfile
 
 import numpy as np
 
-import spatial_index
-from spatial_index import core, SphereIndexBuilder
+import brain_indexer
+from brain_indexer import core, SphereIndexBuilder
 
 IndexClass = core.SphereIndex
 
 
 def _any_query_id(core_index, query_shape, query_name):
     if isinstance(core_index, core.MorphIndex):
-        index = spatial_index.MorphIndex(core_index)
+        index = brain_indexer.MorphIndex(core_index)
         field = "gid"
     elif isinstance(core_index, core.SphereIndex):
-        index = spatial_index.SphereIndex(core_index)
+        index = brain_indexer.SphereIndex(core_index)
         field = "id"
     else:
         raise RuntimeError("Broken test logic.")

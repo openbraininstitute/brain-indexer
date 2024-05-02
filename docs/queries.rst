@@ -112,7 +112,7 @@ Examples
 
 .. code-block:: python
 
-    >>> index = spatial_index.open(morph_index_path)
+    >>> index = brain_indexer.open(morph_index_path)
 
     >>> index.box_query(*window, fields="gid")
     np.array([12, 3, 32, ...], np.int64)
@@ -223,7 +223,7 @@ Examples
 
 .. code-block:: python
 
-    >>> index = spatial_index.open_index(morph_index_path)
+    >>> index = brain_indexer.open_index(morph_index_path)
     >>> index.box_query(*window, accuracy="best_effort")
     {
       "gid": ...,
@@ -280,7 +280,7 @@ could be implemented as:
 
 However, this can't take advantage of the short circuiting trick, i.e., to
 return ``True`` as soon as the first element has been found. Therefore,
-SpatialIndex provides a method for this.
+brain-indexer provides a method for this.
 
 .. code-block:: python
 

@@ -1,16 +1,16 @@
 #define BOOST_TEST_NO_MAIN
-#define BOOST_TEST_MODULE SpatialIndex_UnitTests
+#define BOOST_TEST_MODULE BrainIndexer_UnitTests
 #include <boost/test/unit_test.hpp>
 namespace bt = boost::unit_test;
 
 #include <random>
 #include <vector>
 
-#include <spatial_index/index.hpp>
-#include <spatial_index/multi_index.hpp>
-#include <spatial_index/util.hpp>
+#include <brain_indexer/index.hpp>
+#include <brain_indexer/multi_index.hpp>
+#include <brain_indexer/util.hpp>
 
-using namespace spatial_index;
+using namespace brain_indexer;
 
 using EveryEntry = boost::variant<IndexedSubtreeBox, Soma, Segment>;
 

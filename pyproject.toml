@@ -1,6 +1,6 @@
 [project]
-name = "Spatial-Index"
-description = "A Spatial Index implementation for spheres, morphologies and synapses"
+name = "brain-indexer"
+description = "A spatial index implementation for spheres, morphologies and synapses"
 authors = [{ name="Blue Brain Project", email = "bbp-ou-hpc@epfl.ch" } ]
 license = {text = "Blue Brain Project Licence"}
 # maintainer is the field chosen for docs `contributors`
@@ -33,15 +33,15 @@ dependencies = ["numpy>=1.13.1",
 optional-dependencies.mpi = ["mpi4py"]
 
 [project.scripts]
-spatial-index-nodes = "spatial_index.commands:spatial_index_nodes"
-spatial-index-synapses = "spatial_index.commands:spatial_index_synapses"
-spatial-index-circuit = "spatial_index.commands:spatial_index_circuit"
-spatial-index-compare="spatial_index.commands:spatial_index_compare"
+brain-indexer-nodes = "brain_indexer.commands:brain_indexer_nodes"
+brain-indexer-synapses = "brain_indexer.commands:brain_indexer_synapses"
+brain-indexer-circuit = "brain_indexer.commands:brain_indexer_circuit"
+brain-indexer-compare="brain_indexer.commands:brain_indexer_compare"
 
 [project.urls]
-Repository = "ssh://git@bbpgitlab.epfl.ch:hpc/SpatialIndex.git"
-Tracker = "https://bbpteam.epfl.ch/project/issues/projects/SPIND"
-Homepage = "https://bbpgitlab.epfl.ch/hpc/SpatialIndex"
+Repository = "https://github.com/BlueBrain/brain-indexer.git"
+Tracker = "https://github.com/BlueBrain/brain-indexer/issues"
+Homepage = "https://github.com/BlueBrain/brain-indexer"
 
 [build-system]
 requires = [
@@ -55,7 +55,7 @@ build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
 metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
-wheel.packages = ["src/spatial_index"]
+wheel.packages = ["src/brain_indexer"]
 logging.level = "DEBUG"
 
 [tool.scikit-build.cmake]

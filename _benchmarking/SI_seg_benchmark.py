@@ -1,10 +1,10 @@
 import numpy as np
 import sys
 
-from spatial_index import MorphIndexBuilder
+from brain_indexer import MorphIndexBuilder
 from timeit import default_timer as timer
 
-import spatial_index
+import brain_indexer
 
 print("SEGMENT INDEX BENCHMARKING IN PROGRESS... PLEASE WAIT!")
 
@@ -21,7 +21,7 @@ builder.process_all(progress=False)
 
 # Alternatively you can use the uniform index created
 # using the create_uniform_index.py script
-# index = spatial_index.open_index("uniform_index")
+# index = brain_indexer.open_index("uniform_index")
 
 end = timer()
 index_time = end - start

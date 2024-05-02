@@ -12,11 +12,11 @@ Consider the following example
 
 .. code-block:: python
 
-   import spatial_index
+   import brain_indexer
 
    query_boxes = make_query_boxes(n_queries)
    for box in query_boxes:
-       index = spatial_index.open_index(index_path)
+       index = brain_indexer.open_index(index_path)
        results = index.box_query(*box)
 
 
@@ -28,9 +28,9 @@ ever possible restructure as follows:
 
 .. code-block:: python
 
-    import spatial_index
+    import brain_indexer
 
-    index = spatial_index.open_index(index_path)
+    index = brain_indexer.open_index(index_path)
 
     query_boxes = make_query_boxes(n_queries)
     for box in query_boxes:
@@ -42,7 +42,7 @@ Multi-Index: Cache-Friendliness
 
 For multi-indexes it's important to remember that they keep parts of the tree
 in memory. For large circuits storing the entire index in memory would required
-on the order of TBs of RAM. Hence, SpatialIndex isn't able to keep the entire
+on the order of TBs of RAM. Hence, brain-indexer isn't able to keep the entire
 index in memory. Instead multi-indexes have a cache of a configurable size,
 once the cache is full, a part of the tree needs to be evicted. If that part is
 used again during a later query it'll need to be loaded from the filesystem
@@ -60,20 +60,20 @@ If you're seeing high eviction numbers, e.g. if the number of unique sub-trees
 loaded is small compared to the number of evictions, then you might benefit
 from reordering the queries.
 
-SpatialIndex implements functionality to order the queries, based on
+brain-indexer implements functionality to order the queries, based on
 space-filling curves. This can be used as follows:
 
 .. code-block:: python
 
-    import spatial_index
-    import spatial_index.experimental
+    import brain_indexer
+    import brain_indexer.experimental
 
-    index = spatial_index.open_index(index_path)
+    index = brain_indexer.open_index(index_path)
 
     query_boxes = make_query_boxes(n_queries)
     centroids = compute_centroids(query_boxes)
 
-    query_order = spatial_index.experimental.space_filling_order(centroids)
+    query_order = brain_indexer.experimental.space_filling_order(centroids)
     query_boxes = [query_boxes[i] for i in query_order]
 
     for box in query_boxes:
