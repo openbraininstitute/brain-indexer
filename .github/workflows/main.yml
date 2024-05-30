@@ -1,0 +1,39 @@
+name: Run all tests
+
+on:
+  push:
+    branches: ['main']
+    tags: ['v?[0-9]+.[0-9]+.[0-9]+']
+  pull_request:
+
+jobs:
+  cache_boost:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ["ubuntu-latest", "macos-14"]
+        boost_minor: [85]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: ./.github/actions/boost-cache
+      id: cache-boost
+      with:
+        os: ${{ matrix.os }}
+        boost_minor: ${{ matrix.boost_minor }}
+
+  test_cxx:
+    uses: ./.github/workflows/ctest.yml
+    secrets: inherit
+    needs: [cache_boost]
+
+  test_python:
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
+    needs: [cache_boost]
+
+  publish:
+    uses: ./.github/workflows/publish.yml
+    secrets: inherit
+    needs: [cache_boost]
