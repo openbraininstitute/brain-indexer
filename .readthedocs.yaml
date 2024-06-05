@@ -1,0 +1,20 @@
+version: 2
+
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3.12"
+  jobs:
+    post_checkout:
+      - git submodule update --init
+    post_install:
+      - wget -qO- https://boostorg.jfrog.io/artifactory/main/release/1.85.0/source/boost_1_85_0.tar.bz2 | tar xjf -
+      - cd boost_1_85_0 && ./bootstrap.sh && ./b2 --prefix=../boost --with-serialization --with-filesystem --with-test install
+      - env CMAKE_PREFIX_PATH=boost SKBUILD_CMAKE_DEFINE="CMAKE_INSTALL_RPATH=$PWD/boost/lib;SI_MPI=OFF" pip install .
+
+sphinx:
+  configuration: docs/conf.py
+
+python:
+   install:
+   - requirements: docs/requirements.txt
