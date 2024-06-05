@@ -1,0 +1,64 @@
+name: Run integration test and examples
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ["ubuntu-latest"]
+        boost_minor: [85]
+        python-version: ['3.12']
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Ubuntu system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install libopenmpi-dev
+
+    - name: Download artifacts produced by the build_wheels job
+      uses: actions/download-artifact@v4
+      with:
+        pattern: cibw-wheels-*
+        path: dist/
+        merge-multiple: true
+
+    - name: Install a wheel
+      run: |
+        pip install --find-links file://$PWD/dist brain-indexer 
+
+    - name: Run integration
+      run: |
+        python .ci/test_sonata_sanity.py
+
+    - uses: actions/checkout@v4
+      with:
+        repository: BlueBrain/sonata-extension
+        ref: 17be54d3d100f268d840565ac7d085e037d956a8
+        path: sonata-extension
+
+    - uses: ./.github/actions/mpi-setup
+
+    - name: Run usecase 1
+      run: |
+        export SONATA_EXTENSION_DIR=sonata-extension
+        sh .ci/test_circuit_config-usecase1.sh
+
+    - name: Run usecases 2-5
+      run: |
+        export SONATA_EXTENSION_DIR=sonata-extension
+        sh .ci/test_circuit_config-usecase2.sh
+        sh .ci/test_circuit_config-usecase3.sh
+        sh .ci/test_circuit_config-usecase4.sh
+        sh .ci/test_circuit_config-usecase5.sh
