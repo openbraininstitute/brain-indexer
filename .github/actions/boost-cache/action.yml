@@ -29,7 +29,7 @@ runs:
     if: steps.cache-boost.outputs.cache-hit != 'true'
     shell: bash
     run: |
-      wget -qO- https://boostorg.jfrog.io/artifactory/main/release/1.${{ inputs.boost_minor }}.0/source/boost_1_${{ inputs.boost_minor }}_0.tar.bz2 | tar xjf -
+      wget -qO- https://archives.boost.io/release/1.${{ inputs.boost_minor }}.0/source/boost_1_${{ inputs.boost_minor }}_0.tar.bz2 | tar xjf -
       cd boost_1_${{ inputs.boost_minor }}_0
       ./bootstrap.sh
       ./b2 --prefix=../boost --with-serialization --with-filesystem --with-test install
