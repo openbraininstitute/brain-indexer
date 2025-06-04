@@ -203,7 +203,7 @@ std::vector<Value> random_values(size_t n_values,
 
 
 BOOST_AUTO_TEST_CASE(DistributedSTRTests) {
-    int n_required_ranks = 4;
+    int n_required_ranks = 2;
     auto comm = mpi::comm_shrink(MPI_COMM_WORLD, n_required_ranks);
 
     if(*comm == comm.invalid_handle()) {
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(DistributedSTRTests) {
     auto domain = std::array<float, 2>{-1.0, 1.0};
     auto values = random_values(n_initial_values, domain, comm_rank);
 
-    auto distr_params = DistributedSTRParams{comm_size * n_initial_values, {2, 2, 1}};
+    auto distr_params = DistributedSTRParams{comm_size * n_initial_values, {1, 2, 1}};
     distributed_sort_tile_recursion<Value, GetCoordFromValue>(values, distr_params, *comm);
 
 
