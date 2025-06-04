@@ -23,7 +23,7 @@ brain-indexer requires Boost with a minimum version of 1.79.0, but preferably 1.
 newer.  If your system does not provide such a version, one can install a more recent one
 into `/opt/boost/` as follows:
 ```console
-wget -qO- https://boostorg.jfrog.io/artifactory/main/release/1.85.0/source/boost_1_85_0.tar.bz2 | tar xjf -
+wget -qO- https://archives.boost.io/release/1.85.0/source/boost_1_85_0.tar.bz2 | tar xjf -
 cd boost_1_85_0
 ./bootstrap.sh
 ./b2 --prefix=/opt/boost --with-serialization --with-filesystem --with-test install
