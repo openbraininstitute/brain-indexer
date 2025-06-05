@@ -40,7 +40,7 @@ jobs:
 
     - name: Install a wheel
       run: |
-        pip install --no-index --find-links file://$PWD/dist brain-indexer
+        pip install -find-links file://$PWD/dist --pre brain-indexer
 
     - name: Run integration
       run: |
