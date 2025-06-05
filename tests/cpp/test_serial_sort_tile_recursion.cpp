@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(DistributedSTRTests) {
     auto domain = std::array<float, 2>{-1.0, 1.0};
     auto values = random_values(n_initial_values, domain, comm_rank);
 
-    auto distr_params = DistributedSTRParams{comm_size * n_initial_values, {1, 2, 1}};
+    auto distr_params = DistributedSTRParams{comm_size * n_initial_values, rank_distribution(comm_size)};
     distributed_sort_tile_recursion<Value, GetCoordFromValue>(values, distr_params, *comm);
 
 
