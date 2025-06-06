@@ -34,9 +34,13 @@ jobs:
         path: dist/
         merge-multiple: true
 
+    - name: Display structure of downloaded files
+      run: ls -R
+      working-directory: dist
+
     - name: Install a wheel
       run: |
-        pip install --find-links file://$PWD/dist brain-indexer 
+        pip install --find-links file://$PWD/dist --pre brain-indexer
 
     - name: Run integration
       run: |

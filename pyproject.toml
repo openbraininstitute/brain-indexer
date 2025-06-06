@@ -3,7 +3,8 @@ name = "brain-indexer"
 description = "A spatial index implementation for spheres, morphologies and synapses"
 readme = "README.md"
 authors = [{ name="Blue Brain Project", email = "bbp-ou-hpc@epfl.ch" } ]
-license = {"file" = "LICENSE.txt"}
+license = "Apache-2.0"
+license-files = ["LICENSE.txt"]
 # maintainer is the field chosen for docs `contributors`
 maintainers = [{name="Fernando Pereira"}, {name="Antonio Bellotta"}, {name="Luc Dominic Grosheintz-Laval"}]
 dynamic = ["version"]
@@ -12,8 +13,7 @@ classifiers = [
    "Development Status :: 3 - Alpha",
    "Programming Language :: C++",
    "Programming Language :: Python",
-   "Topic :: Scientific/Engineering",
-   "License :: OSI Approved :: Apache Software License",
+   "Topic :: Scientific/Engineering"
 ]
 requires-python = ">=3.9"
 dependencies = ["numpy>=1.13.1",
@@ -77,7 +77,7 @@ test-command = ["python -m pytest {project}/tests"]
 [tool.cibuildwheel.linux]
 before-all = """
 yum install -y wget
-wget -qO- https://boostorg.jfrog.io/artifactory/main/release/1.85.0/source/boost_1_85_0.tar.bz2 | tar xjf -
+wget -qO- https://archives.boost.io/release/1.85.0/source/boost_1_85_0.tar.bz2 | tar xjf -
 cd boost_1_85_0
 ./bootstrap.sh
 ./b2 --prefix=/opt/boost --with-serialization --with-filesystem --with-test install

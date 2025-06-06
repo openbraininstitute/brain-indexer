@@ -34,6 +34,9 @@ jobs:
     needs: [cache_boost]
 
   publish:
+    permissions:
+      id-token: write
+      contents: read
     uses: ./.github/workflows/publish.yml
     secrets: inherit
     needs: [cache_boost]

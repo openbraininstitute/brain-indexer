@@ -15,7 +15,7 @@ endfunction()
 
 function(SI_MPI_UNIT_TEST test_src)
     si_unit_test_build(${test_src})
-    add_test(NAME ${test_src} COMMAND ${${PROJECT}_MPIEXEC} ${${PROJECT}_MPIEXEC_NPROC_FLAG} 4 "${CMAKE_CURRENT_BINARY_DIR}/${test_src}")
+    add_test(NAME ${test_src} COMMAND ${${PROJECT}_MPIEXEC} ${${PROJECT}_MPIEXEC_NPROC_FLAG} 2 "${CMAKE_CURRENT_BINARY_DIR}/${test_src}")
 endfunction()
 
 function(SI_CPP_EXAMPLE test_src)
