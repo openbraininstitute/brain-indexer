@@ -1,6 +1,36 @@
 Change Log
 ==========
 
+Version 3.1.0
+-------------
+
+**Fixes**
+  * Bump pybind11 to the latest tag v3.0.0rc1, for macOS
+
+Version 3.0.0
+-------------
+
+**Features**
+  * SPIND-269 OPENSOURCE-109 Rename to brain-indexer
+
+**Improvements**
+  * Specify the README, verify wheels, add py39. (#8)
+  * Add readthedocs glue. (#4)
+  * Add more CI, remove obsolete bits (#3)
+  * Add CI for unit tests, flake8, wheels/sdist. (#2)
+  * Add open sourcing bits. (#1)
+  * Add a small Boost caching action.
+  * Move to pyproject.toml
+  * Enable Mac CI, plus fixes.
+  * Update ZisaSFC SHA (experimental fs).
+  * Remove invalid morphology.
+  * Include the actual number of MPI ranks in error message.
+  * Use `--ntasks=N` and explain `N`.
+
+**Fixes**
+  * Fix classifiers, remove old Dockerfile (#9)
+  * Fix publisher (#7)
+
 Version 2.1.0
 -------------
 
