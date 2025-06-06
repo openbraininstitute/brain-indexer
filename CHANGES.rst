@@ -1,14 +1,23 @@
 Change Log
 ==========
 
+Version 3.1.1
+-------------
+**6 June 2025**
+
+**Fixes**
+  * pypi trusted publishing workaround
+
 Version 3.1.0
 -------------
+**6 June 2025**
 
 **Fixes**
   * Bump pybind11 to the latest tag v3.0.0rc1, for macOS
 
 Version 3.0.0
 -------------
+**6 June 2024**
 
 **Features**
   * SPIND-269 OPENSOURCE-109 Rename to brain-indexer
