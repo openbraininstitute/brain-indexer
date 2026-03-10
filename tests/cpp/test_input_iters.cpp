@@ -44,12 +44,12 @@ BOOST_AUTO_TEST_CASE(SOA_Reader) {
 }
 
 
-BOOST_AUTO_TEST_CASE(SOA_Iterator) {
+BOOST_AUTO_TEST_CASE(SOA_Iterator_forward) {
     struct S { int a, b; };
     std::vector<int> v1{1, 2, 3, 4}, v2{5, 6, 7, 8};
     auto soa = util::make_soa_reader<S>(v1, v2);
 
-    int i=0;
+    int i = 0;
     for(auto iter=soa.begin(); iter < soa.end(); ++iter, i++) {
         const auto item = *iter;
         BOOST_TEST(item.a == v1[i]);
@@ -58,12 +58,97 @@ BOOST_AUTO_TEST_CASE(SOA_Iterator) {
     BOOST_TEST( i == 4 );
 
     // Awesome range loops
-    i=0;
+    i = 0;
     for(auto item : soa) {
         BOOST_TEST(item.a == v1[i]);
         BOOST_TEST(item.b == v2[i]);
         i++;
     }
+}
+
+
+BOOST_AUTO_TEST_CASE(SOA_Iterator_backward) {
+    struct S { int a, b; };
+    std::vector<int> v1{1, 2, 3, 4}, v2{5, 6, 7, 8};
+    auto soa = util::make_soa_reader<S>(v1, v2);
+
+    int i = soa.size() - 1;
+    for(auto iter = soa.end() - 1; iter > soa.begin(); --iter, i--) {
+        const auto item = *iter;
+        BOOST_TEST(item.a == v1[i]);
+        BOOST_TEST(item.b == v2[i]);
+    }
+    BOOST_TEST(i == 0);
+}
+
+
+BOOST_AUTO_TEST_CASE(SOA_Iterator_arithmetic) {
+    struct S { int a, b; };
+    //std::vector<int> v1{1, 2, 3, 4, 5, 6, 7, 8}, v2{10, 20, 30, 40, 50, 60, 70, 80};
+    std::vector<int> v1{1, 2, 3, 4}, v2{5, 6, 7, 8};
+    auto soa = util::make_soa_reader<S>(v1, v2);
+
+    // operator+
+    auto iter1 = soa.begin();
+    auto iter2 = iter1 + 3;
+    BOOST_TEST((*iter2).a == 4);
+    BOOST_TEST((*iter2).b == 8);
+
+    // operator+=
+    auto iter3 = soa.begin();
+    iter3 += 2;
+    BOOST_TEST((*iter3).a == 3);
+    BOOST_TEST((*iter3).b == 7);
+
+    // operator-
+    auto iter4 = soa.begin() + 3;
+    auto iter5 = iter4 - 2;
+    BOOST_TEST((*iter5).a == 2);
+    BOOST_TEST((*iter5).b == 6);
+
+    // operator-=
+    auto iter6 = soa.begin() + 3;
+    iter6 -= 2;
+    BOOST_TEST((*iter6).a == 2);
+    BOOST_TEST((*iter6).b == 6);
+
+    // operator--
+    auto iter7 = soa.begin() + 3;
+    --iter7;
+    BOOST_TEST((*iter7).a == 3);
+    BOOST_TEST((*iter7).b == 7);
+
+    // operator==
+    auto iter10 = soa.begin() + 2;
+    auto iter11 = soa.end() - 2;
+    bool eq_result = (iter10 == iter11);
+    BOOST_TEST(eq_result == true);
+
+    // operator!=
+    auto iter12 = soa.begin();
+    auto iter13 = soa.begin() + 1;
+    bool neq_result = (iter12 != iter13);
+    BOOST_TEST(neq_result == true);
+
+    // operator<
+    bool lt_result = (soa.begin() < soa.end());
+    BOOST_TEST(lt_result == true);
+
+    // operator<=
+    bool lte_result1 = (soa.begin() <= soa.end());
+    BOOST_TEST(lte_result1 == true);
+    bool lte_result2 = (soa.begin() <= soa.begin());
+    BOOST_TEST(lte_result2 == true);
+
+    // operator>
+    bool gt_result = (soa.end() > soa.begin());
+    BOOST_TEST(gt_result == true);
+
+    // operator>=
+    bool gte_result1 = (soa.end() >= soa.begin());
+    BOOST_TEST(gte_result1 == true);
+    bool gte_result2 = (soa.begin() >= soa.begin());
+    BOOST_TEST(gte_result2 == true);
 }
 
 
