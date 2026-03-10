@@ -24,7 +24,7 @@ struct indexed_iterator_base {
         tmp += i;
         return tmp;
     }
-        inline CRT operator-(size_t i) const noexcept {
+    inline CRT operator-(size_t i) const noexcept {
         CRT tmp = static_cast<const CRT&>(*this);
         tmp -= i;
         return tmp;
