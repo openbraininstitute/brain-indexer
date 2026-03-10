@@ -84,7 +84,6 @@ BOOST_AUTO_TEST_CASE(SOA_Iterator_backward) {
 
 BOOST_AUTO_TEST_CASE(SOA_Iterator_arithmetic) {
     struct S { int a, b; };
-    //std::vector<int> v1{1, 2, 3, 4, 5, 6, 7, 8}, v2{10, 20, 30, 40, 50, 60, 70, 80};
     std::vector<int> v1{1, 2, 3, 4}, v2{5, 6, 7, 8};
     auto soa = util::make_soa_reader<S>(v1, v2);
 
