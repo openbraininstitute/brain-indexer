@@ -5,8 +5,8 @@ on:
 
 env:
   CIBW_BUILD: 'cp*'
-  # Skip cp314t-*, since there are no wheels for libsonata
-  CIBW_SKIP: 'cp314t-*'
+  # Skip the following, since there are no wheels for libsonata
+  CIBW_SKIP: 'cp314t-* *-musllinux_* *-manylinux_i686'
 
 jobs:
   build_sdist:
