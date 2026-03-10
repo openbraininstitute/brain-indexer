@@ -3,6 +3,11 @@ name: Publish wheels and sdist tarball to PyPi
 on:
   workflow_call:
 
+env:
+  CIBW_BUILD: 'cp*'
+  # Skip cp314t-*, since there are no wheels for libsonata
+  CIBW_SKIP: 'cp314t-*'
+
 jobs:
   build_sdist:
     name: Build source distribution
