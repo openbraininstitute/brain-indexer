@@ -19,7 +19,12 @@ struct indexed_iterator_base {
     size_t i_;
     inline CRT& operator+=(size_t i) noexcept { i_ += i; return *static_cast<CRT*>(this); }
     inline CRT& operator-=(size_t i) noexcept { i_ += i; return *static_cast<CRT*>(this); }
-    inline CRT& operator+(size_t i) && noexcept { return (*this)+=i; }
+    //inline CRT& operator+(size_t i) && noexcept { return (*this)+=i; }
+    inline CRT operator+(size_t i) const noexcept {
+        CRT tmp = static_cast<const CRT&>(*this);
+        tmp += i;
+        return tmp;
+    }
     inline CRT& operator-(size_t i) && noexcept { return (*this)+=i; }
     inline CRT& operator++() noexcept { return (*this)+=1; }
     inline CRT& operator--() noexcept { return (*this)-=1; }
