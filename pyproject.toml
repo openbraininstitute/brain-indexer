@@ -2,11 +2,10 @@
 name = "brain-indexer"
 description = "A spatial index implementation for spheres, morphologies and synapses"
 readme = "README.md"
-authors = [{ name="Blue Brain Project", email = "bbp-ou-hpc@epfl.ch" } ]
+authors = [{name = "Blue Brain Project, EPFL"}]
+maintainers = [{ name = "Open Brain Institute" }]
 license = "Apache-2.0"
 license-files = ["LICENSE.txt"]
-# maintainer is the field chosen for docs `contributors`
-maintainers = [{name="Fernando Pereira"}, {name="Antonio Bellotta"}, {name="Luc Dominic Grosheintz-Laval"}]
 dynamic = ["version"]
 
 classifiers = [
