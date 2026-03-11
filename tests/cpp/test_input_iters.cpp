@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(SOA_Iterator_forward) {
     std::vector<int> v1{1, 2, 3, 4}, v2{5, 6, 7, 8};
     auto soa = util::make_soa_reader<S>(v1, v2);
 
-    int i = 0;
+    size_t i = 0;
     for(auto iter=soa.begin(); iter < soa.end(); ++iter, i++) {
         const auto item = *iter;
         BOOST_TEST(item.a == v1[i]);
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(SOA_Iterator_backward) {
     std::vector<int> v1{1, 2, 3, 4}, v2{5, 6, 7, 8};
     auto soa = util::make_soa_reader<S>(v1, v2);
 
-    int i = soa.size() - 1;
+    size_t i = soa.size() - 1;
     for(auto iter = soa.end() - 1; iter > soa.begin(); --iter, i--) {
         const auto item = *iter;
         BOOST_TEST(item.a == v1[i]);
