@@ -148,6 +148,45 @@ BOOST_AUTO_TEST_CASE(SOA_Iterator_arithmetic) {
     BOOST_TEST(gte_result1 == true);
     bool gte_result2 = (soa.begin() >= soa.begin());
     BOOST_TEST(gte_result2 == true);
+
+    // operator[] subscript
+    auto iter14 = soa.begin() + 1;
+    BOOST_TEST(iter14[0].a == 2);
+    BOOST_TEST(iter14[2].a == 4);
+
+    /* Checks for signed difference_type vs unsigned size_t */
+    // iterator difference (positive)
+    auto diff1 = (soa.begin() + 3) - soa.begin();
+    BOOST_TEST(diff1 == 3);
+
+    // iterator difference (negative)
+    auto diff2 = soa.begin() - (soa.begin() + 2);
+    BOOST_TEST(diff2 == -2);
+
+    // negative offsets with operator+
+    auto iter15 = soa.begin() + 3;
+    auto iter16 = iter15 + (-2);
+    BOOST_TEST((*iter16).a == 2);
+    BOOST_TEST((*iter16).b == 6);
+
+    // negative offsets with operator+=
+    auto iter17 = soa.begin() + 3;
+    iter17 += -1;
+    BOOST_TEST((*iter17).a == 3);
+    BOOST_TEST((*iter17).b == 7);
+
+    // negative offsets with operator- (should move forward)
+    auto iter18 = soa.begin() + 1;
+    auto iter19 = iter18 - (-2);
+    BOOST_TEST((*iter19).a == 4);
+    BOOST_TEST((*iter19).b == 8);
+
+    // negative offsets with operator-= (should move forward)
+    auto iter20 = soa.begin() + 1;
+    iter20 -= -2;
+    BOOST_TEST((*iter20).a == 4);
+    BOOST_TEST((*iter20).b == 8);
+
 }
 
 
