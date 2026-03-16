@@ -11,22 +11,43 @@ namespace detail {
 template <typename CRT, typename ValueT>
 struct indexed_iterator_base {
     using iterator_category = std::random_access_iterator_tag;
-    using difference_type   = size_t;
+    using difference_type   = std::ptrdiff_t;
     using value_type        = ValueT;
     using reference         = const ValueT&;  // Support Temporaries
     using pointer           = ValueT*;
 
     size_t i_;
-    inline CRT& operator+=(size_t i) noexcept { i_ += i; return *static_cast<CRT*>(this); }
-    inline CRT& operator-=(size_t i) noexcept { i_ += i; return *static_cast<CRT*>(this); }
-    inline CRT& operator+(size_t i) && noexcept { return (*this)+=i; }
-    inline CRT& operator-(size_t i) && noexcept { return (*this)+=i; }
+
+    /* i_ is unsigned type, as it is an index.
+     * difference_type is signed, as recommended in the docs.
+     * The standard allows negative values for iterator arithmetic in in random access iterators,
+     * therefore we need to use a signed type (std::ptrdiff_t) in +=, -=, + and - operators.
+     * We also need to be careful when doing arithmetic operations with i_, as it can result in
+     * a negative value, which could still be correct (e.g. -3 positions from end()).
+     * Therefore, we need to convert i_ to a signed type in operator- function.
+     */
+
+    inline CRT& operator+=(difference_type i) noexcept { i_ += i; return *static_cast<CRT*>(this); }
+    inline CRT& operator-=(difference_type i) noexcept { i_ -= i; return *static_cast<CRT*>(this); }
+    inline CRT operator+(difference_type i) const noexcept {
+        CRT tmp = static_cast<const CRT&>(*this);
+        tmp += i;
+        return tmp;
+    }
+    inline CRT operator-(difference_type i) const noexcept {
+        CRT tmp = static_cast<const CRT&>(*this);
+        tmp -= i;
+        return tmp;
+    }
     inline CRT& operator++() noexcept { return (*this)+=1; }
     inline CRT& operator--() noexcept { return (*this)-=1; }
-    inline difference_type operator-(const CRT& rhs) const noexcept { return i_ - rhs.i_; }
+    inline difference_type operator-(const CRT& rhs) const noexcept { return static_cast<difference_type>(i_) - static_cast<difference_type>(rhs.i_); }
     inline bool operator==(const CRT& rhs) const noexcept { return i_ == rhs.i_; }
     inline bool operator!=(const CRT& rhs) const noexcept  { return i_ != rhs.i_; }
     inline bool operator<(const CRT& rhs) const noexcept  { return i_ < rhs.i_; }
+    inline bool operator<=(const CRT& rhs) const noexcept  { return i_ <= rhs.i_; }
+    inline bool operator>(const CRT& rhs) const noexcept  { return i_ > rhs.i_; }
+    inline bool operator>=(const CRT& rhs) const noexcept  { return i_ >= rhs.i_; }
 
     // get(size_t i);  // To be implemented in subclass
     // Note: we use decltype because get() may return by value, by [const]ref...
