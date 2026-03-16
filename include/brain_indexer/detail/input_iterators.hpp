@@ -41,7 +41,7 @@ struct indexed_iterator_base {
     }
     inline CRT& operator++() noexcept { return (*this)+=1; }
     inline CRT& operator--() noexcept { return (*this)-=1; }
-    inline difference_type operator-(const CRT& rhs) const noexcept { return (difference_type)i_ - (difference_type)rhs.i_; }
+    inline difference_type operator-(const CRT& rhs) const noexcept { return static_cast<difference_type>(i_) - static_cast<difference_type>(rhs.i_); }
     inline bool operator==(const CRT& rhs) const noexcept { return i_ == rhs.i_; }
     inline bool operator!=(const CRT& rhs) const noexcept  { return i_ != rhs.i_; }
     inline bool operator<(const CRT& rhs) const noexcept  { return i_ < rhs.i_; }
