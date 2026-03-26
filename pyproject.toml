@@ -58,6 +58,7 @@ minimum-version = "3.5.0"
 
 [tool.scikit-build.cmake.define]
 SI_UNIT_TESTS="OFF"
+SI_MPI="OFF"
 
 [tool.setuptools_scm]
 
